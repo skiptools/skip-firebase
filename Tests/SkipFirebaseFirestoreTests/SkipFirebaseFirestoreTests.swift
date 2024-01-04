@@ -22,7 +22,10 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let options = FirebaseOptions(googleAppID: "1:599015466373:ios:918f07f9e07f56b03890ec", gcmSenderID: "599015466373")
         options.projectID = "skip-firebase-demo"
         options.storageBucket = "skip-firebase-demo.appspot.com"
-        options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"]
+        options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"] ?? String(data: Data(base64Encoded: "QUl6YVN5QkdFQUljRTZLbzhCeldBaEMwWnhqMXdBdEtEMXdyOUk0")!, encoding: .utf8)
+        if options.apiKey == nil {
+            return XCTFail("no api key set in SKIP_FIREBASE_API_KEY environment")
+        }
 
         let appName = "SkipFirebaseDemo"
         FirebaseApp.configure(name: appName, options: options)
