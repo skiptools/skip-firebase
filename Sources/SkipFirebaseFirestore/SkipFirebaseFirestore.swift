@@ -7,9 +7,9 @@ import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
 public final class Firestore {
-    fileprivate let store: com.google.firebase.firestore.FirebaseFirestore
+    public let store: com.google.firebase.firestore.FirebaseFirestore
 
-    private init(store: com.google.firebase.firestore.FirebaseFirestore) {
+    public init(store: com.google.firebase.firestore.FirebaseFirestore) {
         self.store = store
     }
 
@@ -17,15 +17,39 @@ public final class Firestore {
         return Firestore(store: com.google.firebase.firestore.FirebaseFirestore.getInstance(app.app, database))
     }
 
+    public static func firestore(app: FirebaseApp) -> Firestore {
+        return Firestore(store: com.google.firebase.firestore.FirebaseFirestore.getInstance(app.app))
+    }
+
+    public static func firestore() -> Firestore {
+        return Firestore(store: com.google.firebase.firestore.FirebaseFirestore.getInstance())
+    }
+
     public func collection(_ collectionPath: String) -> CollectionReference {
         CollectionReference(ref: store.collection(collectionPath))
+    }
+
+    public func terminate() async {
+        store.terminate().await()
+    }
+
+    public func clearPersistence() async {
+        store.clearPersistence().await()
+    }
+
+    public func disableNetwork() async {
+        store.disableNetwork().await()
+    }
+
+    public func enableNetwork() async {
+        store.enableNetwork().await()
     }
 }
 
 public final class CollectionReference {
-    fileprivate let ref: com.google.firebase.firestore.CollectionReference
+    public let ref: com.google.firebase.firestore.CollectionReference
 
-    fileprivate init(ref: com.google.firebase.firestore.CollectionReference) {
+    public init(ref: com.google.firebase.firestore.CollectionReference) {
         self.ref = ref
     }
 
@@ -37,20 +61,29 @@ public final class CollectionReference {
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: ref.document(path))
     }
+
+    public func document() -> DocumentReference {
+        DocumentReference(ref: ref.document())
+    }
+
+    public func addDocument(data: [String: Any]) async throws -> DocumentReference {
+        // SKIP NOWARN
+        try await DocumentReference(ref: try await ref.add(deepKotlin(dict: data)).await())
+    }
 }
 
 public final class Query {
-    fileprivate let query: com.google.firebase.firestore.Query
+    public let query: com.google.firebase.firestore.Query
 
-    fileprivate init(query: com.google.firebase.firestore.Query) {
+    public init(query: com.google.firebase.firestore.Query) {
         self.query = query
     }
 }
 
 public final class QuerySnapshot {
-    fileprivate let query: com.google.firebase.firestore.QuerySnapshot
+    public let query: com.google.firebase.firestore.QuerySnapshot
 
-    fileprivate init(query: com.google.firebase.firestore.QuerySnapshot) {
+    public init(query: com.google.firebase.firestore.QuerySnapshot) {
         self.query = query
     }
 
@@ -60,9 +93,9 @@ public final class QuerySnapshot {
 }
 
 public final class DocumentSnapshot {
-    fileprivate let doc: com.google.firebase.firestore.DocumentSnapshot
+    public let doc: com.google.firebase.firestore.DocumentSnapshot
 
-    fileprivate init(doc: com.google.firebase.firestore.DocumentSnapshot) {
+    public init(doc: com.google.firebase.firestore.DocumentSnapshot) {
         self.doc = doc
     }
 
@@ -87,15 +120,27 @@ public final class DocumentSnapshot {
 }
 
 public final class DocumentReference {
-    fileprivate let ref: com.google.firebase.firestore.DocumentReference
+    public let ref: com.google.firebase.firestore.DocumentReference
 
-    fileprivate init(ref: com.google.firebase.firestore.DocumentReference) {
+    public init(ref: com.google.firebase.firestore.DocumentReference) {
         self.ref = ref
+    }
+
+    public var firestore: Firestore {
+        Firestore(store: ref.firestore)
     }
 
     public func getDocument() async throws -> DocumentSnapshot {
         // SKIP NOWARN
         DocumentSnapshot(doc: try await ref.get().await())
+    }
+
+    public var parent: CollectionReference {
+        CollectionReference(ref: ref.parent)
+    }
+
+    public var documentID: String {
+        ref.getId()
     }
 
     public func setData(_ keyValues: [Any: Any], merge: Bool = false) async throws {

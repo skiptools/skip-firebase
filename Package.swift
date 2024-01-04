@@ -15,25 +15,17 @@ let package = Package(
     products: [
         .library(name: "SkipFirebaseCore", targets: ["SkipFirebaseCore"]),
         .library(name: "SkipFirebaseFirestore", targets: ["SkipFirebaseFirestore"]),
-        // "FirebaseAnalytics"
-        // "FirebaseAnalyticsWithoutAdIdSupport"
-        // "FirebaseAnalyticsOnDeviceConversion"
-        // "FirebaseAuth"
-        // "FirebaseAppCheck"
-        // "FirebaseAppDistribution-Beta"
-        // "FirebaseCrashlytics"
-        // "FirebaseDatabase"
-        // "FirebaseDynamicLinks"
-        // "FirebaseFirestore"
-        // "FirebaseFunctions"
-        // "FirebaseInAppMessaging-Beta"
-        // "FirebaseInstallations"
-        // "FirebaseMessaging"
-        // "FirebaseMLModelDownloader"
-        // "FirebasePerformance"
-        // "FirebaseRemoteConfig"
-        // "FirebaseRemoteConfig"
-        // "FirebaseStorage"
+        //.library(name: "SkipFirebaseAuth", targets: ["SkipFirebaseAuth"]),
+        //.library(name: "SkipFirebaseAppCheck", targets: ["SkipFirebaseAppCheck"]),
+        //.library(name: "SkipFirebaseMessaging", targets: ["SkipFirebaseMessaging"]),
+        //.library(name: "SkipFirebaseCrashlytics", targets: ["SkipFirebaseCrashlytics"]),
+        //.library(name: "SkipFirebaseAnalytics", targets: ["SkipFirebaseAnalytics"]),
+        //.library(name: "SkipFirebaseRemoteConfig", targets: ["SkipFirebaseRemoteConfig"]),
+        //.library(name: "SkipFirebaseDatabase", targets: ["SkipFirebaseDatabase"]),
+        //.library(name: "SkipFirebaseFunctions", targets: ["SkipFirebaseFunctions"]),
+        //.library(name: "SkipFirebaseInstallations", targets: ["SkipFirebaseInstallations"]),
+        //.library(name: "SkipFirebasePerformance", targets: ["SkipFirebasePerformance"]),
+        //.library(name: "SkipFirebaseStorage", targets: ["SkipFirebaseStorage"]),
     ],
     dependencies: [
         .package(url: "https://source.skip.tools/skip.git", from: "0.7.16"),

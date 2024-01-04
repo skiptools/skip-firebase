@@ -18,23 +18,52 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
 
 // SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseFirestoreTests: XCTestCase {
-    func testSkipFirestore() async throws {
+    let appName = "SkipFirebaseDemo"
+
+    override func setUp() {
+        // the app is registered statically, so check to see if it has been registered
+        if let app = FirebaseApp.app(name: appName) {
+            app.isDataCollectionDefaultEnabled = false
+            return
+        }
+
+        // this is generally loaded from the system's GoogleService-Info.plist / google-services.json using the default constructor, but for the sake of the test case we manually set it up here
         let options = FirebaseOptions(googleAppID: "1:599015466373:ios:918f07f9e07f56b03890ec", gcmSenderID: "599015466373")
+
+        XCTAssertNil(options.apiKey)
+        XCTAssertNil(options.projectID)
+        XCTAssertNil(options.storageBucket)
+        XCTAssertNil(options.databaseURL)
+        #if !SKIP // TODO: add options to FirebaseOptions
+        XCTAssertNil(options.appGroupID)
+        XCTAssertNil(options.clientID)
+        XCTAssertNil(options.deepLinkURLScheme)
+        #endif
+
         options.projectID = "skip-firebase-demo"
         options.storageBucket = "skip-firebase-demo.appspot.com"
-        options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"] ?? String(data: Data(base64Encoded: "QUl6YVN5QkdFQUljRTZLbzhCeldBaEMwWnhqMXdBdEtEMXdyOUk0")!, encoding: .utf8)
+
+        options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"] ?? String(data: Data(base64Encoded: "QUl6YVN5QzV2bDFNYUc2S0hMOU15V1kyWGhxTHZCdVJsVEhrc3lR")!, encoding: .utf8)
         if options.apiKey == nil {
             return XCTFail("no api key set in SKIP_FIREBASE_API_KEY environment")
         }
 
-        let appName = "SkipFirebaseDemo"
+        if ({ 0 == 1 }())  {
+            // these are just to validate the existance of the API
+            FirebaseApp.configure()
+            FirebaseApp.configure(options: options)
+        }
+
         FirebaseApp.configure(name: appName, options: options)
-        let app = try XCTUnwrap(FirebaseApp.app(name: appName))
+    }
+
+    func testSkipFirestore() async throws {
+        let app: FirebaseApp = try XCTUnwrap(FirebaseApp.app(name: appName))
         app.isDataCollectionDefaultEnabled = false
         XCTAssertEqual(appName, app.name)
 
         let dbname = "(default)"
-        let db = Firestore.firestore(app: app, database: dbname)
+        let db: Firestore = Firestore.firestore(app: app, database: dbname)
 
         let citiesRef = db.collection("cities")
 
@@ -47,6 +76,32 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
         let bos = citiesRef.document("BOS")
 
+
+        if ({ 0 == 1 }())  {
+            // these are just to validate the existance of the API
+
+            //let _ = await app.delete()
+
+            let _ = citiesRef.document()
+            let doc = citiesRef.document("XXX")
+            let _ = doc.documentID
+            let _ = doc.parent.document().firestore
+
+            try await db.disableNetwork()
+            try await db.enableNetwork()
+
+            try await db.clearPersistence()
+            try await db.terminate()
+
+            //try await db.terminate()
+//            _ = try await db.runTransaction { transaction, errorPtr in
+//                transaction.setData([:], forDocument: bos)
+//            }
+
+            // test encodable API variants
+            //try citiesRef.addDocument(from: ["dict": "value"])
+            //try citiesRef.addDocument(from: ["array", "value"])
+        }
         try await bos.setData([
             "name": "Boston",
             "state": "MA",
@@ -107,6 +162,43 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
             }
         }
     }
+
+    func testFirestoreQuery() async throws {
+        let app = try XCTUnwrap(FirebaseApp.app(name: appName))
+        app.isDataCollectionDefaultEnabled = false
+        XCTAssertEqual(appName, app.name)
+
+        let db = Firestore.firestore(app: app)
+
+        let tblref = db.collection("testFirestoreQuery")
+        let doc = try await tblref.addDocument(data: [
+            "when": Date.now.timeIntervalSince1970
+        ])
+        logger.log("testFirestoreQuery: id=\(doc.documentID)")
+
+        #if !SKIP
+
+        var changes = 0
+        let reg = tblref.addSnapshotListener(includeMetadataChanges: true, listener: { querySnapshot, error in
+            changes += 1
+            guard let querySnapshot else {
+                return XCTFail("no query snapshot")
+            }
+            logger.log("querySnapshot: \(querySnapshot)")
+            for diff in querySnapshot.documentChanges {
+                logger.log("  diff: \(diff)")
+            }
+        })
+        defer { reg.remove() }
+
+        XCTAssertEqual(0, changes)
+        let doc2 = try await tblref.addDocument(data: [
+            "when": Date.now.timeIntervalSince1970
+        ])
+        XCTAssertEqual(2, changes)
+        #endif
+    }
+
 
     func testSkipBase() throws {
         logger.log("running testSkipBase")

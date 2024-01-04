@@ -24,11 +24,26 @@ public final class FirebaseApp {
         return
     }
 
+    public static func configure(options: FirebaseOptions) {
+        _ = com.google.firebase.FirebaseApp.initializeApp(skip.foundation.ProcessInfo.processInfo.androidContext, options.buildOptions())
+        return
+    }
+
+    public static func configure() {
+        _ = com.google.firebase.FirebaseApp.initializeApp(skip.foundation.ProcessInfo.processInfo.androidContext)
+        return
+    }
+
     public static func app(name: String) -> FirebaseApp? {
         guard let app = try? com.google.firebase.FirebaseApp.getInstance(name) else {
             return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
         }
         return FirebaseApp(app: app)
+    }
+
+    @available(*, unavailable)
+    public func delete() async -> Bool {
+        return false
     }
 }
 
@@ -38,6 +53,7 @@ public final class FirebaseOptions {
     public var projectID: String?
     public var storageBucket: String?
     public var apiKey: String?
+    public var databaseURL: String?
 
     public init(googleAppID: String, gcmSenderID: String) {
         self.googleAppID = googleAppID
@@ -58,6 +74,10 @@ public final class FirebaseOptions {
 
         if let apiKey = apiKey {
             builder = builder.setApiKey(apiKey)
+        }
+
+        if let databaseURL = databaseURL {
+            builder = builder.setDatabaseUrl(databaseURL)
         }
 
         return builder.build()
