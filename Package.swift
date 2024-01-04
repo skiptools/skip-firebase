@@ -9,7 +9,7 @@ import Foundation
 let skipstone = [Target.PluginUsage.plugin(name: "skipstone", package: "skip")]
 
 let package = Package(
-    name: "skip-base",
+    name: "skip-firebase",
     defaultLocalization: "en",
     platforms: [.iOS(.v16), .macOS(.v13), .tvOS(.v16), .watchOS(.v9), .macCatalyst(.v16)],
     products: [

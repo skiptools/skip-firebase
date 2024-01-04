@@ -1,4 +1,4 @@
-name: skip-base
+name: skip-firebase
 on:
   push:
     branches: '*'
