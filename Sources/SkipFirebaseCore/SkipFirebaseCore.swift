@@ -41,9 +41,9 @@ public final class FirebaseApp {
         return FirebaseApp(app: app)
     }
 
-    @available(*, unavailable)
-    public func delete() async -> Bool {
-        return false
+    public func delete() -> Bool {
+        app.delete()
+        return true
     }
 }
 

@@ -57,6 +57,16 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         FirebaseApp.configure(name: appName, options: options)
     }
 
+    #if SKIP
+    override func tearDown() throws {
+        FirebaseApp.app(name: appName)?.delete()
+    }
+    #else
+    override func tearDown() async throws {
+        await FirebaseApp.app(name: appName)?.delete()
+    }
+    #endif
+
     func testSkipFirestore() async throws {
         let app: FirebaseApp = try XCTUnwrap(FirebaseApp.app(name: appName))
         app.isDataCollectionDefaultEnabled = false
@@ -191,11 +201,16 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         })
         defer { reg.remove() }
 
+        let when = Date.now.timeIntervalSince1970
         XCTAssertEqual(0, changes)
-        let doc2 = try await tblref.addDocument(data: [
-            "when": Date.now.timeIntervalSince1970
+
+        let doc2Ref = try await tblref.addDocument(data: [
+            "when": when
         ])
         XCTAssertEqual(2, changes)
+
+        let doc2 = try await doc2Ref.getDocument()
+        XCTAssertEqual(when, doc2.get("when") as? Double)
         #endif
     }
 
