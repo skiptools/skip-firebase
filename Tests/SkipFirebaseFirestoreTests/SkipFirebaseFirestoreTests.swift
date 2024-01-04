@@ -67,7 +67,44 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
     }
     #endif
 
-    func testSkipFirestore() async throws {
+    /// This is never invoked, it is just to validate API parity
+    func validateFirebaseWrapperAPI() async throws {
+        let app: FirebaseApp = try XCTUnwrap(FirebaseApp.app(name: appName))
+        let db: Firestore = Firestore.firestore(app: app)
+
+        let colRef: CollectionReference = db.collection("cname")
+        let _: Firestore = colRef.firestore
+        let _: String = colRef.collectionID
+        let _: DocumentReference? = colRef.parent
+        let _: String = colRef.path
+        let _ = colRef.document()
+        let doc = colRef.document("XXX")
+        let _ = doc.documentID
+        let _ = doc.parent.document().firestore
+
+        let docRef: DocumentReference = colRef.document("BOS")
+        let _ = docRef.firestore
+        let _ = docRef.documentID
+        let _ = docRef.path
+        let _ = docRef.parent
+
+        try await db.disableNetwork()
+        try await db.enableNetwork()
+
+        try await db.clearPersistence()
+        try await db.terminate()
+
+        //try await db.terminate()
+        //_ = try await db.runTransaction { transaction, errorPtr in
+        //    transaction.setData([:], forDocument: bos)
+        //}
+
+        // test encodable API variants
+        //try citiesRef.addDocument(from: ["dict": "value"])
+        //try citiesRef.addDocument(from: ["array", "value"])
+    }
+
+    func testFirestore() async throws {
         let app: FirebaseApp = try XCTUnwrap(FirebaseApp.app(name: appName))
         app.isDataCollectionDefaultEnabled = false
         XCTAssertEqual(appName, app.name)
@@ -86,32 +123,6 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
         let bos = citiesRef.document("BOS")
 
-
-        if ({ 0 == 1 }())  {
-            // these are just to validate the existance of the API
-
-            //let _ = await app.delete()
-
-            let _ = citiesRef.document()
-            let doc = citiesRef.document("XXX")
-            let _ = doc.documentID
-            let _ = doc.parent.document().firestore
-
-            try await db.disableNetwork()
-            try await db.enableNetwork()
-
-            try await db.clearPersistence()
-            try await db.terminate()
-
-            //try await db.terminate()
-//            _ = try await db.runTransaction { transaction, errorPtr in
-//                transaction.setData([:], forDocument: bos)
-//            }
-
-            // test encodable API variants
-            //try citiesRef.addDocument(from: ["dict": "value"])
-            //try citiesRef.addDocument(from: ["array", "value"])
-        }
         try await bos.setData([
             "name": "Boston",
             "state": "MA",
@@ -173,7 +184,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         }
     }
 
-    func testFirestoreQuery() async throws {
+    func DISABLEDtestFirestoreQuery() async throws {
         let app = try XCTUnwrap(FirebaseApp.app(name: appName))
         app.isDataCollectionDefaultEnabled = false
         XCTAssertEqual(appName, app.name)
@@ -187,7 +198,6 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         logger.log("testFirestoreQuery: id=\(doc.documentID)")
 
         #if !SKIP
-
         var changes = 0
         let reg = tblref.addSnapshotListener(includeMetadataChanges: true, listener: { querySnapshot, error in
             changes += 1

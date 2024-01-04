@@ -53,6 +53,23 @@ public final class CollectionReference {
         self.ref = ref
     }
 
+    public var firestore: Firestore {
+        Firestore(store: ref.firestore)
+    }
+
+    public var collectionID: String {
+        ref.getId()
+    }
+
+    public var parent: DocumentReference? {
+        guard let parent = ref.parent else { return nil }
+        return DocumentReference(ref: parent)
+    }
+
+    public var path: String {
+        ref.path
+    }
+
     public func getDocuments() async throws -> QuerySnapshot {
         // SKIP NOWARN
         QuerySnapshot(query: try await ref.get().await())
@@ -141,6 +158,10 @@ public final class DocumentReference {
 
     public var documentID: String {
         ref.getId()
+    }
+
+    public var path: String {
+        ref.path
     }
 
     public func setData(_ keyValues: [Any: Any], merge: Bool = false) async throws {
