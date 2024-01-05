@@ -6,6 +6,9 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
+// https://firebase.google.com/docs/reference/swift/firebasecrashlytics/api/reference/Classes/Crashlytics
+// https://firebase.google.com/docs/reference/android/com/google/firebase/crashlytics/FirebaseCrashlytics
+
 public final class Crashlytics {
     public let _crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics
 
@@ -16,5 +19,9 @@ public final class Crashlytics {
     public static func crashlytics() -> Crashlytics {
         Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance())
     }
+
+//    public static func crashlytics(app: FirebaseApp) -> Crashlytics {
+//        Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance(app.app))
+//    }
 }
 #endif

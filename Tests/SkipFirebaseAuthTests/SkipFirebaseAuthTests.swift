@@ -20,6 +20,7 @@ final class SkipFirebaseAuthTests: XCTestCase {
     func testSkipFirebaseAuthTests() async throws {
         if false {
             let _: Auth = Auth.auth()
+            let _: Auth = Auth.auth(app: FirebaseApp.app()!)
         }
     }
 }

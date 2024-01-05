@@ -3,10 +3,14 @@
 // as published by the Free Software Foundation https://fsf.org
 
 #if SKIP
+
+// https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp
+// https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp
+
 public final class FirebaseApp {
     public let app: com.google.firebase.FirebaseApp
 
-    private init(app: com.google.firebase.FirebaseApp) {
+    public init(app: com.google.firebase.FirebaseApp) {
         self.app = app
     }
 
@@ -32,6 +36,13 @@ public final class FirebaseApp {
     public static func configure() {
         _ = com.google.firebase.FirebaseApp.initializeApp(skip.foundation.ProcessInfo.processInfo.androidContext)
         return
+    }
+
+    public static func app() -> FirebaseApp? {
+        guard let app = try? com.google.firebase.FirebaseApp.getInstance() else {
+            return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
+        }
+        return FirebaseApp(app: app)
     }
 
     public static func app(name: String) -> FirebaseApp? {

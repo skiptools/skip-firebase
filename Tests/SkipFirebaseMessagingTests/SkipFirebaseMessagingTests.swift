@@ -19,7 +19,9 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseMessagingTests", category: "
 final class SkipFirebaseMessagingTests: XCTestCase {
     func testSkipFirebaseMessagingTests() async throws {
         if false {
-            let _: Messaging = Messaging.messaging()
+            let messaging: Messaging = Messaging.messaging()
+            try await messaging.subscribe(toTopic: "someTopic")
+            try await messaging.unsubscribe(fromTopic: "someTopic")
         }
     }
 }

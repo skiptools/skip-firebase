@@ -6,6 +6,9 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
+// https://firebase.google.com/docs/reference/swift/firebasedatabase/api/reference/Classes/Database
+// https://firebase.google.com/docs/reference/android/com/google/firebase/database/FirebaseDatabase
+
 public final class Database {
     public let database: com.google.firebase.database.FirebaseDatabase
 
@@ -15,6 +18,10 @@ public final class Database {
 
     public static func database() -> Database {
         Database(database: com.google.firebase.database.FirebaseDatabase.getInstance())
+    }
+
+    public static func database(app: FirebaseApp) -> Database {
+        Database(database: com.google.firebase.database.FirebaseDatabase.getInstance(app.app))
     }
 }
 #endif

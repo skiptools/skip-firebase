@@ -16,5 +16,14 @@ public final class Installations {
     public static func installations() -> Installations {
         Installations(installations: com.google.firebase.installations.FirebaseInstallations.getInstance())
     }
+
+    public static func installations(app: FirebaseApp) -> Installations {
+        Installations(installations: com.google.firebase.installations.FirebaseInstallations.getInstance(app.app))
+    }
 }
 #endif
+
+//import FirebaseInstallations
+//private func demoFirebaseInstallations() async throws {
+//    let _ = try await Installations.installations().installationID()
+//}

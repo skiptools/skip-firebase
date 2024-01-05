@@ -6,6 +6,9 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
+// https://firebase.google.com/docs/reference/swift/firebaseanalytics/api/reference/Classes/Analytics
+// https://firebase.google.com/docs/reference/android/com/google/firebase/analytics/FirebaseAnalytics
+
 public final class Analytics {
     public let analytics: com.google.firebase.analytics.FirebaseAnalytics
 

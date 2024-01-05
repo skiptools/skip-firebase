@@ -16,5 +16,14 @@ public final class RemoteConfig {
     public static func remoteConfig() -> RemoteConfig {
         RemoteConfig(remoteconfig: com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance())
     }
+
+    public static func remoteConfig(app: FirebaseApp) -> RemoteConfig {
+        RemoteConfig(remoteconfig: com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance(app.app))
+    }
 }
 #endif
+
+//import FirebaseRemoteConfig
+//private func demoRemoteConfig() {
+//    let _ = RemoteConfig.remoteConfig().configSettings.minimumFetchInterval
+//}

@@ -5,13 +5,7 @@ The Swift side uses the official Firebase iOS SDK directly,
 with the various `SkipFirebase*` modules passing the transpiled calls
 through to the Firebase Android SDK.
 
-**Note**: This is a preview package `SkipFirebaseFirestore` module
-
-## Modules
-
-The modules in the SkipFirebase framework project mirror the division of the SwiftPM
-modules in the Firebase iOS SDK (at https://github.com/firebase/firebase-ios-sdk),
-which is also mirrored in the division of the Firebase Kotlin Android SDK (at https://github.com/firebase/firebase-android-sdk).
+## Package
 
 An example of a Skip app projects using the `Firestore` and `Messaging` API can be seen
 from the command:
@@ -68,12 +62,109 @@ let package = Package(
 
 ```
 
-The individual modules are as follows:
+## Usage
 
+For a Skip app, the simplest way to setup Firebase support is to
+create a Firebase project at https://console.firebase.google.com/project.
+Follow the Firebase setup instructions to obtain the 
+`GoogleService-Info.plist` and `google-services.json` files and
+add them to the iOS and Android sides of the project.
+
+You will then be able to access the singleton type for each of the
+imported Firebase modules.
+
+### Testing
+
+For unit testing, where there isn't a standard place to store the
+`GoogleService-Info.plist` and `google-services.json` configuration files,
+you can create an configure the app using the `SkipFirebaseCore.FirebaseApp`
+API manually from the information provided from the Firebase console, like so:
+
+```swift
+import SkipFirebaseCore
+import SkipFirebaseAuth
+import SkipFirebaseStorage
+import SkipFirebaseDatabase
+import SkipFirebaseAppCheck
+import SkipFirebaseFunctions
+import SkipFirebaseFirestore
+import SkipFirebaseMessaging
+import SkipFirebaseCrashlytics
+import SkipFirebaseRemoteConfig
+import SkipFirebaseInstallations
+
+let appName = "myapp"
+let options = FirebaseOptions(googleAppID: "1:GCM:ios:HASH", gcmSenderID: "GCM")
+options.projectID = "some-firebase-projectid"
+options.storageBucket = "some-firebase-demo.appspot.com"
+options.apiKey = "some-api-key"
+
+FirebaseApp.configure(name: appName, options: options)
+guard let app = FirebaseApp.app(name: appName) else {
+    fatalError("Cannot load Firebase config")
+}
+
+// customize the app here
+app.isDataCollectionDefaultEnabled = false
+
+// use the app to create and test services
+let auth = Auth.auth(app: app)
+let storage = Storage.storage(app: app)
+let database = Database.database(app: app)
+let appcheck = AppCheck.appCheck(app: app)
+let functions = Functions.functions(app: app)
+let firestore = Firestore.firestore(app: app)
+let crashlytics = Crashlytics.crashlytics(app: app)
+let remoteconfig = RemoteConfig.remoteConfig(app: app)
+let installations = Installations.installations(app: app)
+
+```
+
+
+## Package
+
+The modules in the SkipFirebase framework project mirror the division of the SwiftPM
+modules in the Firebase iOS SDK (at https://github.com/firebase/firebase-ios-sdk),
+which is also mirrored in the division of the Firebase Kotlin Android gradle modules (at https://github.com/firebase/firebase-android-sdk).
+
+The individual modules of the SkipFirebase framework are as follows:
+
+
+### SkipFirebaseCore
+
+Provides Skip parity to the [FirebaseApp](https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp) API for the Swift and Kotlin sides of the Firebase API.
+
+
+Example usage:
+
+```swift
+#if !SKIP
+import FirebaseCore
+#else
+import SkipFirebaseCore
+#endif
+
+// use the default FirebaseApp configured for the app
+let app: FirebaseApp? = FirebaseApp.app()
+
+// …or use create a customized FirebaseApp
+let options = FirebaseOptions(googleAppID: "1:GCM:ios:HASH", gcmSenderID: "GCM")
+
+options.projectID = "some-firebase-projectid"
+options.storageBucket = "some-firebase-demo.appspot.com"
+options.apiKey = "some-api-key"
+
+FirebaseApp.configure(name: appName, options: options)
+
+guard let app = FirebaseApp.app(name: appName) else {
+    fatalError("Cannot load Firebase config")
+}
+
+```
 
 ### SkipFirebaseFirestore
 
-Provides Skip parity to the [FirebaseFirestore](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Firestore) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseFirestore](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Firestore) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -99,7 +190,7 @@ of these modules is needed.
 
 ### SkipFirebaseAnalytics
 
-Provides Skip parity to the [FirebaseAnalytics](https://firebase.google.com/docs/reference/swift/firebaseanalytics/api/reference/Classes/Analytics) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseAnalytics](https://firebase.google.com/docs/reference/swift/firebaseanalytics/api/reference/Classes/Analytics) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -111,13 +202,12 @@ import FirebaseAnalytics
 import SkipFirebaseAnalytics
 #endif
 
-let analytics = Analytics.analytics()
-let result = try await analytics.update()
+Analytics.logEvent("event_name", parameters: ["key": "value"])
 ```
 
 ### SkipFirebaseAppCheck
 
-Provides Skip parity to the [FirebaseAppCheck](https://firebase.google.com/docs/reference/swift/firebaseappcheck/api/reference/Classes/AppCheck) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseAppCheck](https://firebase.google.com/docs/reference/swift/firebaseappcheck/api/reference/Classes/AppCheck) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -135,7 +225,7 @@ let result = try await appcheck.update()
 
 ### SkipFirebaseAuth
 
-Provides Skip parity to the [FirebaseAuth](https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseAuth](https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -153,7 +243,7 @@ let result = try await auth.update()
 
 ### SkipFirebaseCrashlytics
 
-Provides Skip parity to the [FirebaseCrashlytics](https://firebase.google.com/docs/reference/swift/firebasecrashlytics/api/reference/Classes/Crashlytics) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseCrashlytics](https://firebase.google.com/docs/reference/swift/firebasecrashlytics/api/reference/Classes/Crashlytics) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -171,7 +261,7 @@ let result = try await crashlytics.update()
 
 ### SkipFirebaseDatabase
 
-Provides Skip parity to the [FirebaseDatabase](https://firebase.google.com/docs/reference/swift/firebasedatabase/api/reference/Classes/Database) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseDatabase](https://firebase.google.com/docs/reference/swift/firebasedatabase/api/reference/Classes/Database) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -189,7 +279,7 @@ let result = try await database.update()
 
 ### SkipFirebaseFunctions
 
-Provides Skip parity to the [FirebaseFunctions](https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseFunctions](https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -207,7 +297,7 @@ let result = try await functions.update()
 
 ### SkipFirebaseInstallations
 
-Provides Skip parity to the [FirebaseInstallations](https://firebase.google.com/docs/reference/swift/firebaseinstallations/api/reference/Classes/Installations) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseInstallations](https://firebase.google.com/docs/reference/swift/firebaseinstallations/api/reference/Classes/Installations) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -225,7 +315,7 @@ let result = try await installations.update()
 
 ### SkipFirebaseMessaging
 
-Provides Skip parity to the [FirebaseMessaging](https://firebase.google.com/docs/reference/swift/firebasemessaging/api/reference/Classes/Messaging) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseMessaging](https://firebase.google.com/docs/reference/swift/firebasemessaging/api/reference/Classes/Messaging) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -238,12 +328,23 @@ import SkipFirebaseMessaging
 #endif
 
 let messaging = Messaging.messaging()
+
+// not yet implemented in Skip
+messaging.token { token, error in
+ if let error = error {
+   print("Error fetching FCM registration token: \(error)")
+ } else if let token = token {
+   print("FCM registration token: \(token)")
+   // Here you can send the token to your server and store it for future use
+ }
+}
+
 let result = try await messaging.update()
 ```
 
 ### SkipFirebaseRemoteConfig
 
-Provides Skip parity to the [FirebaseRemoteConfig](https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseRemoteConfig](https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
@@ -261,7 +362,7 @@ let result = try await remoteconfig.update()
 
 ### SkipFirebaseStorage
 
-Provides Skip parity to the [FirebaseStorage](https://firebase.google.com/docs/reference/swift/firebasestorage/api/reference/Classes/Storage) API for the Swift and Kotlin sides of the Firebase API.
+Provides rudimentary Skip parity to the [FirebaseStorage](https://firebase.google.com/docs/reference/swift/firebasestorage/api/reference/Classes/Storage) API for the Swift and Kotlin sides of the Firebase API.
 
 
 Example usage:
