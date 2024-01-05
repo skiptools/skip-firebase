@@ -4,13 +4,18 @@
 
 import SkipFirebaseCore
 #if SKIP
-//import kotlinx.coroutines.tasks.await
-//
-//public final class FirebaseCrashlytics {
-//    public let crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics
-//
-//    public init(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics) {
-//        self.crashlytics = crashlytics
-//    }
-//}
+import kotlinx.coroutines.tasks.await
+
+public final class Crashlytics {
+    public let _crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics
+
+    public init(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics) {
+        self._crashlytics = crashlytics
+    }
+
+    public static func crashlytics() -> Crashlytics {
+        return Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance())
+
+    }
+}
 #endif

@@ -5,13 +5,20 @@
 import XCTest
 import OSLog
 import Foundation
+#if !SKIP
+import FirebaseCore
+import FirebaseAnalytics
+#else
 import SkipFirebaseCore
+import SkipFirebaseAnalytics
+#endif
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "Tests")
 
 // SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseAnalyticsTests: XCTestCase {
     func testSkipFirebaseAnalyticsTests() async throws {
+        //let instance = FirebaseAnalytics.
     }
 }
 

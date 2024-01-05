@@ -5,7 +5,13 @@
 import XCTest
 import OSLog
 import Foundation
+#if !SKIP
+import FirebaseCore
+import FirebaseFunctions
+#else
 import SkipFirebaseCore
+import SkipFirebaseFunctions
+#endif
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseFunctionsTests", category: "Tests")
 
