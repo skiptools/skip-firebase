@@ -72,21 +72,18 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let app: FirebaseApp = try XCTUnwrap(FirebaseApp.app(name: appName))
         let db: Firestore = Firestore.firestore(app: app)
 
-        let colRef: CollectionReference = db.collection("cname")
+        let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
         let _: String = colRef.collectionID
         let _: DocumentReference? = colRef.parent
         let _: String = colRef.path
         let _ = colRef.document()
-        let doc = colRef.document("XXX")
-        let _ = doc.documentID
-        let _ = doc.parent.document().firestore
 
-        let docRef: DocumentReference = colRef.document("BOS")
-        let _ = docRef.firestore
-        let _ = docRef.documentID
-        let _ = docRef.path
-        let _ = docRef.parent
+        let docRef: DocumentReference = colRef.document("")
+        let _: Firestore = docRef.firestore
+        let _: String = docRef.documentID
+        let _: String = docRef.path
+        let _: CollectionReference = docRef.parent
 
         try await db.disableNetwork()
         try await db.enableNetwork()

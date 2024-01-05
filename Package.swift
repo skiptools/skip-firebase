@@ -15,17 +15,16 @@ let package = Package(
     products: [
         .library(name: "SkipFirebaseCore", targets: ["SkipFirebaseCore"]),
         .library(name: "SkipFirebaseFirestore", targets: ["SkipFirebaseFirestore"]),
-        //.library(name: "SkipFirebaseAuth", targets: ["SkipFirebaseAuth"]),
-        //.library(name: "SkipFirebaseAppCheck", targets: ["SkipFirebaseAppCheck"]),
-        //.library(name: "SkipFirebaseMessaging", targets: ["SkipFirebaseMessaging"]),
-        //.library(name: "SkipFirebaseCrashlytics", targets: ["SkipFirebaseCrashlytics"]),
-        //.library(name: "SkipFirebaseAnalytics", targets: ["SkipFirebaseAnalytics"]),
-        //.library(name: "SkipFirebaseRemoteConfig", targets: ["SkipFirebaseRemoteConfig"]),
-        //.library(name: "SkipFirebaseDatabase", targets: ["SkipFirebaseDatabase"]),
-        //.library(name: "SkipFirebaseFunctions", targets: ["SkipFirebaseFunctions"]),
-        //.library(name: "SkipFirebaseInstallations", targets: ["SkipFirebaseInstallations"]),
-        //.library(name: "SkipFirebasePerformance", targets: ["SkipFirebasePerformance"]),
-        //.library(name: "SkipFirebaseStorage", targets: ["SkipFirebaseStorage"]),
+        .library(name: "SkipFirebaseAuth", targets: ["SkipFirebaseAuth"]),
+        .library(name: "SkipFirebaseAppCheck", targets: ["SkipFirebaseAppCheck"]),
+        .library(name: "SkipFirebaseMessaging", targets: ["SkipFirebaseMessaging"]),
+        .library(name: "SkipFirebaseCrashlytics", targets: ["SkipFirebaseCrashlytics"]),
+        .library(name: "SkipFirebaseAnalytics", targets: ["SkipFirebaseAnalytics"]),
+        .library(name: "SkipFirebaseRemoteConfig", targets: ["SkipFirebaseRemoteConfig"]),
+        .library(name: "SkipFirebaseDatabase", targets: ["SkipFirebaseDatabase"]),
+        .library(name: "SkipFirebaseFunctions", targets: ["SkipFirebaseFunctions"]),
+        .library(name: "SkipFirebaseInstallations", targets: ["SkipFirebaseInstallations"]),
+        .library(name: "SkipFirebaseStorage", targets: ["SkipFirebaseStorage"]),
     ],
     dependencies: [
         .package(url: "https://source.skip.tools/skip.git", from: "0.7.16"),
@@ -52,6 +51,96 @@ let package = Package(
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseFirestoreTests", dependencies: [
             "SkipFirebaseFirestore",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseAuth", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseAuthTests", dependencies: [
+            "SkipFirebaseAuth",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseAppCheck", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseAppCheck", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseAppCheckTests", dependencies: [
+            "SkipFirebaseAppCheck",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseMessaging", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseMessaging", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseMessagingTests", dependencies: [
+            "SkipFirebaseMessaging",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseCrashlytics", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseCrashlytics", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseCrashlyticsTests", dependencies: [
+            "SkipFirebaseCrashlytics",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseAnalytics", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseAnalyticsTests", dependencies: [
+            "SkipFirebaseAnalytics",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseRemoteConfig", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseRemoteConfigTests", dependencies: [
+            "SkipFirebaseRemoteConfig",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseDatabase", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseDatabase", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseDatabaseTests", dependencies: [
+            "SkipFirebaseDatabase",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseFunctions", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseFunctions", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseFunctionsTests", dependencies: [
+            "SkipFirebaseFunctions",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseInstallations", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseInstallations", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseInstallationsTests", dependencies: [
+            "SkipFirebaseInstallations",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebaseStorage", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebaseStorageTests", dependencies: [
+            "SkipFirebaseStorage",
             .product(name: "SkipTest", package: "skip")
         ], resources: [.process("Resources")], plugins: skipstone),
     ]
