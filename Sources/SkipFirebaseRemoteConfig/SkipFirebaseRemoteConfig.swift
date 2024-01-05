@@ -6,11 +6,15 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseRemoteConfig {
+public final class RemoteConfig {
     public let remoteconfig: com.google.firebase.remoteconfig.FirebaseRemoteConfig
 
     public init(remoteconfig: com.google.firebase.remoteconfig.FirebaseRemoteConfig) {
         self.remoteconfig = remoteconfig
+    }
+
+    public static func remoteConfig() -> RemoteConfig {
+        RemoteConfig(remoteconfig: com.google.firebase.remoteconfig.FirebaseRemoteConfig.getInstance())
     }
 }
 #endif

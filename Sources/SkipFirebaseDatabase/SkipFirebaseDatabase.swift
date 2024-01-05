@@ -6,11 +6,15 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseDatabase {
+public final class Database {
     public let database: com.google.firebase.database.FirebaseDatabase
 
     public init(database: com.google.firebase.database.FirebaseDatabase) {
         self.database = database
+    }
+
+    public static func database() -> Database {
+        Database(database: com.google.firebase.database.FirebaseDatabase.getInstance())
     }
 }
 #endif

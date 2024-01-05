@@ -6,11 +6,15 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseMessaging {
+public final class Messaging {
     public let messaging: com.google.firebase.messaging.FirebaseMessaging
 
     public init(messaging: com.google.firebase.messaging.FirebaseMessaging) {
         self.messaging = messaging
+    }
+
+    public static func messaging() -> Messaging {
+        Messaging(messaging: com.google.firebase.messaging.FirebaseMessaging.getInstance())
     }
 }
 #endif

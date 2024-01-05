@@ -6,11 +6,15 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseStorage {
+public final class Storage {
     public let storage: com.google.firebase.storage.FirebaseStorage
 
     public init(storage: com.google.firebase.storage.FirebaseStorage) {
         self.storage = storage
+    }
+
+    public static func storage() -> Storage {
+        Storage(storage: com.google.firebase.storage.FirebaseStorage.getInstance())
     }
 }
 #endif

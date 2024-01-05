@@ -18,6 +18,9 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseMessagingTests", category: "
 // SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseMessagingTests: XCTestCase {
     func testSkipFirebaseMessagingTests() async throws {
+        if false {
+            let _: Messaging = Messaging.messaging()
+        }
     }
 }
 

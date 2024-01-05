@@ -14,8 +14,7 @@ public final class Crashlytics {
     }
 
     public static func crashlytics() -> Crashlytics {
-        return Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance())
-
+        Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance())
     }
 }
 #endif

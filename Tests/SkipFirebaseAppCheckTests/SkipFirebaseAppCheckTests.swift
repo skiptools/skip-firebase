@@ -18,7 +18,9 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseAppCheckTests", category: "T
 // SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseAppCheckTests: XCTestCase {
     func testSkipFirebaseAppCheckTests() async throws {
-        //let instance = FirebaseAppCheck.instance
+        if false {
+            let _: AppCheck = AppCheck.appCheck()
+        }
     }
 }
 

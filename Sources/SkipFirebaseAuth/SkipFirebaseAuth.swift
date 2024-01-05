@@ -6,11 +6,16 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseAuth {
+public final class Auth {
     public let auth: com.google.firebase.auth.FirebaseAuth
 
     public init(auth: com.google.firebase.auth.FirebaseAuth) {
         self.auth = auth
     }
+
+    public static func auth() -> Auth {
+        Auth(auth: com.google.firebase.auth.FirebaseAuth.getInstance())
+    }
 }
 #endif
+

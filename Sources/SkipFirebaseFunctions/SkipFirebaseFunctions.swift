@@ -6,11 +6,16 @@ import SkipFirebaseCore
 #if SKIP
 import kotlinx.coroutines.tasks.await
 
-public final class FirebaseFunctions {
+public final class Functions {
     public let functions: com.google.firebase.functions.FirebaseFunctions
 
     public init(functions: com.google.firebase.functions.FirebaseFunctions) {
         self.functions = functions
     }
+
+    public static func functions() -> Functions {
+        Functions(functions: com.google.firebase.functions.FirebaseFunctions.getInstance())
+    }
+
 }
 #endif
