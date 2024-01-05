@@ -71,7 +71,18 @@ Follow the Firebase setup instructions to obtain the
 add them to the iOS and Android sides of the project.
 
 You will then be able to access the singleton type for each of the
-imported Firebase modules.
+imported Firebase modules, like so:
+
+```swift
+
+```
+
+### Common Errors 
+
+#### Error in adb logcat: FirebaseApp: Default FirebaseApp failed to initialize because no default options were found. This usually means that com.google.gms:google-services was not applied to your gradle project.
+
+The app's `com.google.gms:google-services` plugin must be applied to the `build.gradle.kts` file for the app's target.
+
 
 ### Testing
 

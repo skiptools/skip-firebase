@@ -39,17 +39,28 @@ public final class FirebaseApp {
     }
 
     public static func app() -> FirebaseApp? {
-        guard let app = try? com.google.firebase.FirebaseApp.getInstance() else {
-            return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
+        do {
+            guard let app = try com.google.firebase.FirebaseApp.getInstance() else {
+                return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
+            }
+            return FirebaseApp(app: app)
+        } catch {
+            android.util.Log.e("SkipFirebaseCore", "error getting FirebaseApp instance", error as? Throwable)
+            return nil
         }
-        return FirebaseApp(app: app)
     }
 
     public static func app(name: String) -> FirebaseApp? {
-        guard let app = try? com.google.firebase.FirebaseApp.getInstance(name) else {
-            return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
+        do {
+            guard let app = try? com.google.firebase.FirebaseApp.getInstance(name) else {
+                return nil // Firebase throws an exception if getInstance fails, but Swift expects just a nil return
+            }
+            return FirebaseApp(app: app)
+        } catch {
+            // the Swift API raises an NSException, which will crash a Swft app
+            android.util.Log.e("SkipFirebaseCore", "error getting FirebaseApp instance named '\(name)'", error as? Throwable)
+            return nil
         }
-        return FirebaseApp(app: app)
     }
 
     public func delete() -> Bool {
@@ -57,6 +68,10 @@ public final class FirebaseApp {
         return true
     }
 }
+
+
+// https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseOptions
+// https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseOptions
 
 public final class FirebaseOptions {
     public var googleAppID: String
