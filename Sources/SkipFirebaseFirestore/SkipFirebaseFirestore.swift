@@ -251,6 +251,14 @@ public class Query {
             listener(qs, err)
         })
     }
+
+    public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
+        ListenerRegistration(reg: query.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
+            let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
+            let err: Error? = error?.aserror()
+            listener(qs, err)
+        })
+    }
 }
 
 public class CollectionReference : Query {
@@ -572,7 +580,7 @@ public class DocumentReference {
         ref.path
     }
 
-    public func setData(_ keyValues: [Any: Any], merge: Bool = false) async throws {
+    public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
         if merge == true {
             // SKIP NOWARN
             try await ref.set(deepKotlin(dict: keyValues), com.google.firebase.firestore.SetOptions.merge())
