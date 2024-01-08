@@ -75,11 +75,27 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
         let _: String = colRef.collectionID
-        let _: DocumentReference? = colRef.parent
+        let dref: DocumentReference? = colRef.parent
+        let _ = dref?.path
+        let _ = dref?.parent
+
         let _: String = colRef.path
         let _ = colRef.document()
+        let _ = colRef.collectionID
+        let _ = colRef.parent
+        let _ = colRef.path
+        try await colRef.addDocument(data: ["x": 0.0])
 
-        let _: AggregateQuery = colRef.count
+        let aq: AggregateQuery = colRef.count
+        let _ = aq.query
+
+        let aqs: AggregateQuerySnapshot = try await aq.getAggregation(source: AggregateSource.server)
+        let _ = aqs.count
+        let _: AggregateQuery = aqs.query
+
+        let af: AggregateField = AggregateField.average("ABC")
+        let _ = aqs.get(af)
+
 
         let _: Query = colRef.limit(to: 10)
 
@@ -112,8 +128,16 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let _: Query = colRef.whereField(fp, isLessThan: "x")
 
 
-        let listenerRef: ListenerRegistration = colRef.addSnapshotListener { query, error in
-
+        let listenerRef: ListenerRegistration = colRef.addSnapshotListener { snap, error in
+            if let snap = snap {
+                let _: [DocumentChange] = snap.documentChanges
+                let _: [DocumentChange] = snap.documentChanges(includeMetadataChanges: true)
+                let _: [QueryDocumentSnapshot] = snap.documents
+                let _: Query = snap.query
+                let _: Int = snap.count
+                let _: Bool = snap.isEmpty
+                let _: SnapshotMetadata = snap.metadata
+            }
         }
         listenerRef.remove()
 

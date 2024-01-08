@@ -4,6 +4,8 @@
 
 import SkipFirebaseCore
 #if SKIP
+// utility to convert from Play services tasks into Kotlin coroutines
+// https://developers.google.com/android/guides/tasks#kotlin_coroutine
 import kotlinx.coroutines.tasks.await
 
 public final class Firestore {
@@ -63,12 +65,12 @@ public class FieldPath : Equatable {
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.fieldPath == rhs.fieldPath
-    }
-
     public var description: String {
         fieldPath.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.fieldPath == rhs.fieldPath
     }
 }
 
@@ -83,6 +85,18 @@ public class AggregateQuery {
     public var description: String {
         query.toString()
     }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.query == rhs.query
+    }
+
+    public func getAggregation(source: AggregateSource) async throws -> AggregateQuerySnapshot {
+        switch source {
+        case .server:
+            // SKIP NOWARN
+            return try await AggregateQuerySnapshot(snap: query.get(com.google.firebase.firestore.AggregateSource.SERVER).await())
+        }
+    }
 }
 
 public class Filter {
@@ -90,6 +104,27 @@ public class Filter {
 
     public init(filter: com.google.firebase.firestore.Filter = com.google.firebase.firestore.Filter()) {
         self.filter = filter
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.filter == rhs.filter
+    }
+}
+
+
+public class SnapshotMetadata {
+    public let meta: com.google.firebase.firestore.SnapshotMetadata
+
+    public init(meta: com.google.firebase.firestore.SnapshotMetadata) {
+        self.meta = meta
+    }
+
+    public var description: String {
+        meta.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.meta == rhs.meta
     }
 }
 
@@ -102,6 +137,10 @@ public class Query {
 
     public var description: String {
         query.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.query == rhs.query
     }
 
     public var count: AggregateQuery {
@@ -207,14 +246,14 @@ public class Query {
 
     public func addSnapshotListener(_ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: query.addSnapshotListener { snapshot, error in
-            let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(query: snapshot!)
+            let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
             let err: Error? = error?.aserror()
             listener(qs, err)
         })
     }
 }
 
-public final class CollectionReference : Query {
+public class CollectionReference : Query {
     //public let ref: com.google.firebase.firestore.CollectionReference
     public var ref: com.google.firebase.firestore.CollectionReference {
         self.query as! com.google.firebase.firestore.CollectionReference
@@ -243,7 +282,7 @@ public final class CollectionReference : Query {
 
     public func getDocuments() async throws -> QuerySnapshot {
         // SKIP NOWARN
-        QuerySnapshot(query: try await ref.get().await())
+        QuerySnapshot(snap: try await ref.get().await())
     }
 
     public func document(_ path: String) -> DocumentReference {
@@ -261,23 +300,27 @@ public final class CollectionReference : Query {
 }
 
 
-public final class ListenerRegistration {
+public class ListenerRegistration {
     public let reg: com.google.firebase.firestore.ListenerRegistration
 
     public init(reg: com.google.firebase.firestore.ListenerRegistration) {
         self.reg = reg
     }
 
-    public func remove() {
-        reg.remove()
-    }
-
     public var description: String {
         reg.toString()
     }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.reg == rhs.reg
+    }
+
+    public func remove() {
+        reg.remove()
+    }
 }
 
-public final class Transaction {
+public class Transaction {
     public let transaction: com.google.firebase.firestore.Transaction
 
     public init(transaction: com.google.firebase.firestore.Transaction) {
@@ -287,25 +330,168 @@ public final class Transaction {
     public var description: String {
         transaction.toString()
     }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.transaction == rhs.transaction
+    }
 }
 
-public final class QuerySnapshot {
-    public let query: com.google.firebase.firestore.QuerySnapshot
+public class QuerySnapshot {
+    public let snap: com.google.firebase.firestore.QuerySnapshot
 
-    public init(query: com.google.firebase.firestore.QuerySnapshot) {
-        self.query = query
+    public init(snap: com.google.firebase.firestore.QuerySnapshot) {
+        self.snap = snap
     }
 
     public var description: String {
-        query.toString()
+        snap.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.snap == rhs.snap
+    }
+
+    public var count: Int {
+        snap.size()
+    }
+
+    public var isEmpty: Bool {
+        snap.isEmpty()
+    }
+
+    public var metadata: SnapshotMetadata {
+        SnapshotMetadata(snap.metadata)
+    }
+
+    public var query: Query {
+        Query(query: snap.query)
     }
 
     public var documents: [DocumentSnapshot] {
-        Array(query.documents.map({ DocumentSnapshot(doc: $0) }))
+        Array(snap.documents.map({ DocumentSnapshot(doc: $0) }))
+    }
+
+    public var documentChanges: [DocumentChange] {
+        Array(snap.getDocumentChanges().map({ DocumentChange(change: $0) }))
+    }
+
+    public func documentChanges(includeMetadataChanges: Bool) -> [DocumentChange] {
+        Array(snap.getDocumentChanges(includeMetadataChanges
+           ? com.google.firebase.firestore.MetadataChanges.INCLUDE
+           : com.google.firebase.firestore.MetadataChanges.EXCLUDE)
+            .map({ DocumentChange(change: $0) }))
     }
 }
 
-public final class DocumentSnapshot {
+public enum AggregateSource {
+    case server
+}
+
+public struct AggregateField {
+    public let agg: com.google.firebase.firestore.AggregateField
+
+    public init(agg: com.google.firebase.firestore.AggregateField) {
+        self.agg = agg
+    }
+
+    public var description: String {
+        agg.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.agg == rhs.agg
+    }
+
+    public static func count() -> AggregateField {
+        AggregateField(agg: com.google.firebase.firestore.AggregateField.count())
+    }
+
+    public static func average(_ fieldName: String) -> AggregateField {
+        AggregateField(agg: com.google.firebase.firestore.AggregateField.average(fieldName))
+    }
+
+    public static func average(_ field: FieldPath) -> AggregateField {
+        AggregateField(agg: com.google.firebase.firestore.AggregateField.average(field.fieldPath))
+    }
+
+    public static func sum(_ fieldName: String) -> AggregateField {
+        AggregateField(agg: com.google.firebase.firestore.AggregateField.sum(fieldName))
+    }
+
+    public static func sum(_ field: FieldPath) -> AggregateField {
+        AggregateField(agg: com.google.firebase.firestore.AggregateField.sum(field.fieldPath))
+    }
+}
+
+public class AggregateQuerySnapshot {
+    public let snap: com.google.firebase.firestore.AggregateQuerySnapshot
+
+    public init(snap: com.google.firebase.firestore.AggregateQuerySnapshot) {
+        self.snap = snap
+    }
+
+    public var description: String {
+        snap.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.snap == rhs.snap
+    }
+
+    public var count: Int64 {
+        snap.count
+    }
+
+    public var query: AggregateQuery {
+        AggregateQuery(query: snap.query)
+    }
+
+    public func get(_ aggregateField: AggregateField) -> Any? {
+        guard let value = snap.get(aggregateField.agg) else {
+            return nil
+        }
+        return deepSwift(value: value)
+    }
+}
+
+public class DocumentChange {
+    public let change: com.google.firebase.firestore.DocumentChange
+
+    public init(change: com.google.firebase.firestore.DocumentChange) {
+        self.change = change
+    }
+
+    public var description: String {
+        change.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.change == rhs.change
+    }
+
+    public var document: QueryDocumentSnapshot {
+        QueryDocumentSnapshot(snapshot: change.document)
+    }
+
+    public var type: DocumentChangeType {
+        switch change.type {
+        case com.google.firebase.firestore.DocumentChange.Type.ADDED: 
+            return DocumentChangeType.added
+        case com.google.firebase.firestore.DocumentChange.Type.MODIFIED: 
+            return DocumentChangeType.modified
+        case com.google.firebase.firestore.DocumentChange.Type.REMOVED: 
+            return DocumentChangeType.removed
+        }
+    }
+}
+
+public enum DocumentChangeType {
+    case added
+    case modified
+    case removed
+}
+
+public class DocumentSnapshot {
     public let doc: com.google.firebase.firestore.DocumentSnapshot
 
     public init(doc: com.google.firebase.firestore.DocumentSnapshot) {
@@ -314,6 +500,10 @@ public final class DocumentSnapshot {
 
     public var description: String {
         doc.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.doc == rhs.doc
     }
 
     public var documentID: String {
@@ -336,7 +526,17 @@ public final class DocumentSnapshot {
     }
 }
 
-public final class DocumentReference {
+public class QueryDocumentSnapshot : DocumentSnapshot {
+    public var snapshot: com.google.firebase.firestore.QueryDocumentSnapshot {
+        doc as! com.google.firebase.firestore.QueryDocumentSnapshot
+    }
+
+    public init(snapshot: com.google.firebase.firestore.QueryDocumentSnapshot) {
+        super.init(doc: snapshot)
+    }
+}
+
+public class DocumentReference {
     public let ref: com.google.firebase.firestore.DocumentReference
 
     public init(ref: com.google.firebase.firestore.DocumentReference) {
@@ -345,6 +545,10 @@ public final class DocumentReference {
 
     public var description: String {
         ref.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.ref == rhs.ref
     }
 
     public var firestore: Firestore {
@@ -383,6 +587,8 @@ public final class DocumentReference {
         try await ref.update(deepKotlin(dict: keyValues))
     }
 }
+
+// MARK: Utilies for converting between Swift and Kotlin types
 
 fileprivate func deepKotlin(value: Any) -> Any {
     if let dictionary = value as? Dictionary<Any, Any> {
