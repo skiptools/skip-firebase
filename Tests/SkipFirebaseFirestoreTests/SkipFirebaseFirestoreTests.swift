@@ -79,6 +79,39 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let _: String = colRef.path
         let _ = colRef.document()
 
+        let _: AggregateQuery = colRef.count
+
+        let _: Query = colRef.limit(to: 10)
+
+        let _: Query = colRef.order(by: "x")
+        let _: Query = colRef.order(by: "x", descending: true)
+
+        let _: Query = colRef.whereFilter(Filter())
+
+        let _: Query = colRef.whereField("x", in: ["x"])
+        //let _: Query = colRef.whereField("x", notIn: ["x"])
+        let _: Query = colRef.whereField("x", isEqualTo: "x")
+        let _: Query = colRef.whereField("x", arrayContains: "x")
+        let _: Query = colRef.whereField("x", arrayContainsAny: ["x"])
+        let _: Query = colRef.whereField("x", isGreaterThan: "x")
+        let _: Query = colRef.whereField("x", isGreaterThanOrEqualTo: "x")
+        let _: Query = colRef.whereField("x", isNotEqualTo: "x")
+        let _: Query = colRef.whereField("x", isLessThanOrEqualTo: "x")
+        let _: Query = colRef.whereField("x", isLessThan: "x")
+
+        let fp: FieldPath = FieldPath(["x", "y"])
+        let _: Query = colRef.whereField(fp, in: ["x"])
+        //let _: Query = colRef.whereField(fp, notIn: ["x"])
+        let _: Query = colRef.whereField(fp, isEqualTo: "x")
+        let _: Query = colRef.whereField(fp, arrayContains: "x")
+        let _: Query = colRef.whereField(fp, arrayContainsAny: ["x"])
+        let _: Query = colRef.whereField(fp, isGreaterThan: "x")
+        let _: Query = colRef.whereField(fp, isGreaterThanOrEqualTo: "x")
+        let _: Query = colRef.whereField(fp, isNotEqualTo: "x")
+        let _: Query = colRef.whereField(fp, isLessThanOrEqualTo: "x")
+        let _: Query = colRef.whereField(fp, isLessThan: "x")
+
+
         let docRef: DocumentReference = colRef.document("")
         let _: Firestore = docRef.firestore
         let _: String = docRef.documentID
