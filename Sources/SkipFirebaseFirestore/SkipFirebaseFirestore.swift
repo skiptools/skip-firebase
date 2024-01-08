@@ -204,6 +204,14 @@ public class Query {
     public func whereField(_ field: FieldPath, arrayContainsAny: [Any]) -> Query {
         Query(query: query.whereArrayContainsAny(field.fieldPath, arrayContainsAny.kotlin()))
     }
+
+    public func addSnapshotListener(_ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
+        ListenerRegistration(reg: query.addSnapshotListener { snapshot, error in
+            let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(query: snapshot!)
+            let err: Error? = error?.aserror()
+            listener(qs, err)
+        })
+    }
 }
 
 public final class CollectionReference : Query {
@@ -249,6 +257,23 @@ public final class CollectionReference : Query {
     public func addDocument(data: [String: Any]) async throws -> DocumentReference {
         // SKIP NOWARN
         try await DocumentReference(ref: try await ref.add(deepKotlin(dict: data)).await())
+    }
+}
+
+
+public final class ListenerRegistration {
+    public let reg: com.google.firebase.firestore.ListenerRegistration
+
+    public init(reg: com.google.firebase.firestore.ListenerRegistration) {
+        self.reg = reg
+    }
+
+    public func remove() {
+        reg.remove()
+    }
+
+    public var description: String {
+        reg.toString()
     }
 }
 

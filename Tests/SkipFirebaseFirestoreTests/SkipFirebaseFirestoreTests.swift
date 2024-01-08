@@ -112,6 +112,11 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         let _: Query = colRef.whereField(fp, isLessThan: "x")
 
 
+        let listenerRef: ListenerRegistration = colRef.addSnapshotListener { query, error in
+
+        }
+        listenerRef.remove()
+
         let docRef: DocumentReference = colRef.document("")
         let _: Firestore = docRef.firestore
         let _: String = docRef.documentID
