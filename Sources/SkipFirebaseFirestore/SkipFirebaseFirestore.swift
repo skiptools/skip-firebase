@@ -72,6 +72,10 @@ public class FieldPath : Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.fieldPath == rhs.fieldPath
     }
+
+    public static func documentID() -> FieldPath {
+        FieldPath(fieldPath: com.google.firebase.firestore.FieldPath.documentId())
+    }
 }
 
 /// A query that calculates aggregations over an underlying query.
@@ -375,8 +379,8 @@ public class QuerySnapshot {
         Query(query: snap.query)
     }
 
-    public var documents: [DocumentSnapshot] {
-        Array(snap.documents.map({ DocumentSnapshot(doc: $0) }))
+    public var documents: [QueryDocumentSnapshot] {
+        Array(snap.documents.map({ QueryDocumentSnapshot(snapshot: $0 as! com.google.firebase.firestore.QueryDocumentSnapshot) }))
     }
 
     public var documentChanges: [DocumentChange] {
@@ -542,6 +546,10 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
     public init(snapshot: com.google.firebase.firestore.QueryDocumentSnapshot) {
         super.init(doc: snapshot)
     }
+
+    public var reference: DocumentReference {
+        DocumentReference(ref: snapshot.reference)
+    }
 }
 
 public class DocumentReference {
@@ -578,6 +586,10 @@ public class DocumentReference {
 
     public var path: String {
         ref.path
+    }
+
+    public func delete() async throws {
+        try await ref.delete().await()
     }
 
     public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
