@@ -14,8 +14,28 @@ public final class FirebaseApp {
         self.app = app
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.FirebaseApp {
+        app
+    }
+
+    public var description: String {
+        app.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.app == rhs.app
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(app.hashCode())
+    }
+
     public var name: String {
         app.name
+    }
+
+    public var options: FirebaseOptions {
+        FirebaseOptions(options: app.options)
     }
 
     public var isDataCollectionDefaultEnabled: Bool {
@@ -75,7 +95,7 @@ public final class FirebaseApp {
 
 public final class FirebaseOptions {
     public var googleAppID: String
-    public var gcmSenderID: String
+    public var gcmSenderID: String!
     public var projectID: String?
     public var storageBucket: String?
     public var apiKey: String?
@@ -84,6 +104,15 @@ public final class FirebaseOptions {
     public init(googleAppID: String, gcmSenderID: String) {
         self.googleAppID = googleAppID
         self.gcmSenderID = gcmSenderID
+    }
+
+    public init(options: com.google.firebase.FirebaseOptions) {
+        self.googleAppID = options.applicationId
+        self.gcmSenderID = options.gcmSenderId ?? ""
+        self.projectID = options.projectId
+        self.storageBucket = options.storageBucket
+        self.apiKey = options.apiKey
+        self.databaseURL = options.databaseUrl
     }
 
     func buildOptions() -> com.google.firebase.FirebaseOptions {

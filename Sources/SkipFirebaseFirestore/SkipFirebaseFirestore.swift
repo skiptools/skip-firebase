@@ -2,6 +2,7 @@
 // under the terms of the GNU Lesser General Public License 3.0
 // as published by the Free Software Foundation https://fsf.org
 
+import Foundation
 import SkipFirebaseCore
 #if SKIP
 // utility to convert from Play services tasks into Kotlin coroutines
@@ -54,6 +55,23 @@ public final class Firestore {
     public func enableNetwork() async {
         store.enableNetwork().await()
     }
+
+    public func loadBundle(_ data: Data) async -> LoadBundleTaskProgress {
+        return LoadBundleTaskProgress(progress: store.loadBundle(data.kotlin()).await())
+    }
+
+    // TODO: SkipFoundation.InputStream
+//    public func loadBundle(_ inputStream: InputStream) async {
+//        store.loadBundle(inputStream.kotlin()).await()
+//    }
+
+    public func getQuery(named name: String) async -> Query? {
+        // SKIP NOWARN
+        guard let query = await store.getNamedQuery(name).await() else {
+            return nil
+        }
+        return Query(query: query)
+    }
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
@@ -89,6 +107,60 @@ public class FieldPath : Hashable {
     public static func documentID() -> FieldPath {
         FieldPath(fieldPath: com.google.firebase.firestore.FieldPath.documentId())
     }
+}
+
+
+public class LoadBundleTaskProgress {
+    public let progress: com.google.firebase.firestore.LoadBundleTaskProgress
+
+    public init(progress: com.google.firebase.firestore.LoadBundleTaskProgress) {
+        self.progress = progress
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.LoadBundleTaskProgress {
+        progress
+    }
+
+    public var description: String {
+        progress.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.progress == rhs.progress
+    }
+
+    public var totalDocuments: Int {
+        progress.totalDocuments
+    }
+
+    public var documentsLoaded: Int {
+        progress.documentsLoaded
+    }
+
+    public var bytesLoaded: Int64 {
+        progress.bytesLoaded
+    }
+
+    public var totalBytes: Int64 {
+        progress.totalBytes
+    }
+
+    public var state: LoadBundleTaskState {
+        switch progress.taskState {
+        case com.google.firebase.firestore.LoadBundleTaskProgress.TaskState.ERROR:
+            return LoadBundleTaskState.error
+        case com.google.firebase.firestore.LoadBundleTaskProgress.TaskState.RUNNING:
+            return LoadBundleTaskState.inProgress
+        case com.google.firebase.firestore.LoadBundleTaskProgress.TaskState.SUCCESS:
+            return LoadBundleTaskState.success
+        }
+    }
+}
+
+public enum LoadBundleTaskState {
+    case error
+    case inProgress
+    case success
 }
 
 /// A query that calculates aggregations over an underlying query.
@@ -179,6 +251,11 @@ public class Query {
     public func getDocuments() async throws -> QuerySnapshot {
         // SKIP NOWARN
         QuerySnapshot(snap: try await query.get().await())
+    }
+
+    public func getDocuments(source: FirestoreSource) async throws -> QuerySnapshot {
+        // SKIP NOWARN
+        QuerySnapshot(snap: try await query.get(source.source).await())
     }
 
     public var count: AggregateQuery {
@@ -442,6 +519,20 @@ public class QuerySnapshot {
 
 public enum AggregateSource {
     case server
+}
+
+public enum FirestoreSource {
+    case `default`
+    case server
+    case cache
+
+    public var source: com.google.firebase.firestore.Source {
+        switch self {
+        case `default`: return com.google.firebase.firestore.Source.DEFAULT
+        case cache: return com.google.firebase.firestore.Source.CACHE
+        case server: return com.google.firebase.firestore.Source.SERVER
+        }
+    }
 }
 
 public struct AggregateField {
