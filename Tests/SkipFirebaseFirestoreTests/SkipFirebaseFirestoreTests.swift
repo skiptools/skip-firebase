@@ -16,49 +16,49 @@ import SkipFirebaseFirestore
 
 let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
 
-let appName = "SkipFirebaseDemo"
-
-fileprivate let app: FirebaseApp = {
-    // this is generally loaded from the system's GoogleService-Info.plist / google-services.json using the default constructor, but for the sake of the test case we manually set it up here
-    let options = FirebaseOptions(googleAppID: "1:599015466373:ios:918f07f9e07f56b03890ec", gcmSenderID: "599015466373")
-
-//    XCTAssertNil(options.apiKey)
-//    XCTAssertNil(options.projectID)
-//    XCTAssertNil(options.storageBucket)
-//    XCTAssertNil(options.databaseURL)
-//    #if !SKIP // TODO: add options to FirebaseOptions
-//    XCTAssertNil(options.appGroupID)
-//    XCTAssertNil(options.clientID)
-//    XCTAssertNil(options.deepLinkURLScheme)
-//    #endif
-
-    options.projectID = "skip-firebase-demo"
-    options.storageBucket = "skip-firebase-demo.appspot.com"
-
-    options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"] ?? String(data: Data(base64Encoded: "QUl6YVN5QzV2bDFNYUc2S0hMOU15V1kyWGhxTHZCdVJsVEhrc3lR")!, encoding: .utf8)
-    if options.apiKey == nil {
-        fatalError("no api key set in SKIP_FIREBASE_API_KEY environment")
-    }
-
-    if ({ 0 == 1 }())  {
-        // these are just to validate the existance of the API
-        FirebaseApp.configure()
-        FirebaseApp.configure(options: options)
-    }
-
-    FirebaseApp.configure(name: appName, options: options)
-
-    // the app is registered statically, so check to see if it has been registered
-    if let app = FirebaseApp.app(name: appName) {
-        app.isDataCollectionDefaultEnabled = false
-        return app
-    } else {
-        fatalError("unable to load FirebaseApp.app(name: \"\(appName)\")")
-    }
-}()
-
 // SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseFirestoreTests: XCTestCase {
+
+    static let appName = "SkipFirebaseDemo"
+
+    fileprivate static let app: FirebaseApp = {
+        // this is generally loaded from the system's GoogleService-Info.plist / google-services.json using the default constructor, but for the sake of the test case we manually set it up here
+        let options = FirebaseOptions(googleAppID: "1:599015466373:ios:918f07f9e07f56b03890ec", gcmSenderID: "599015466373")
+
+    //    XCTAssertNil(options.apiKey)
+    //    XCTAssertNil(options.projectID)
+    //    XCTAssertNil(options.storageBucket)
+    //    XCTAssertNil(options.databaseURL)
+    //    #if !SKIP // TODO: add options to FirebaseOptions
+    //    XCTAssertNil(options.appGroupID)
+    //    XCTAssertNil(options.clientID)
+    //    XCTAssertNil(options.deepLinkURLScheme)
+    //    #endif
+
+        options.projectID = "skip-firebase-demo"
+        options.storageBucket = "skip-firebase-demo.appspot.com"
+
+        options.apiKey = ProcessInfo.processInfo.environment["SKIP_FIREBASE_API_KEY"] ?? String(data: Data(base64Encoded: "QUl6YVN5QzV2bDFNYUc2S0hMOU15V1kyWGhxTHZCdVJsVEhrc3lR")!, encoding: .utf8)
+        if options.apiKey == nil {
+            fatalError("no api key set in SKIP_FIREBASE_API_KEY environment")
+        }
+
+        if ({ 0 == 1 }())  {
+            // these are just to validate the existance of the API
+            FirebaseApp.configure()
+            FirebaseApp.configure(options: options)
+        }
+
+        FirebaseApp.configure(name: appName, options: options)
+
+        // the app is registered statically, so check to see if it has been registered
+        if let app = FirebaseApp.app(name: appName) {
+            app.isDataCollectionDefaultEnabled = false
+            return app
+        } else {
+            fatalError("unable to load FirebaseApp.app(name: \"\(appName)\")")
+        }
+    }()
 
 //    #if SKIP
 //    override func tearDown() throws {
@@ -72,7 +72,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
     /// This is never invoked, it is just to validate API parity
     private func validateFirebaseWrapperAPI() async throws {
-        let db: Firestore = Firestore.firestore(app: app)
+        let db: Firestore = Firestore.firestore(app: Self.app)
 
         let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
@@ -166,10 +166,10 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
     }
 
     func testFirestore() async throws {
-        XCTAssertEqual(appName, app.name)
+        XCTAssertEqual(Self.appName, Self.app.name)
 
         let dbname = "(default)"
-        let db: Firestore = Firestore.firestore(app: app, database: dbname)
+        let db: Firestore = Firestore.firestore(app: Self.app, database: dbname)
 
         let citiesRef = db.collection("cities")
 
@@ -243,11 +243,10 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         }
     }
 
-    // Hangs in Swift for some reason
     func testFirestoreQuery() async throws {
-        XCTAssertEqual(appName, app.name)
+        XCTAssertEqual(Self.appName, Self.app.name)
 
-        let db = Firestore.firestore(app: app)
+        let db = Firestore.firestore(app: Self.app)
 
         let tblref = db.collection("testFirestoreQuery")
         let doc = try await tblref.addDocument(data: [
@@ -293,11 +292,11 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
         let appName = "react-native-firebase-testing"
 
-        let options = FirebaseOptions(googleAppID: app.options.googleAppID, gcmSenderID: app.options.gcmSenderID)
+        let options = FirebaseOptions(googleAppID: Self.app.options.googleAppID, gcmSenderID: Self.app.options.gcmSenderID)
         options.projectID = appName
         options.storageBucket = appName + ".appspot.com"
 
-        options.apiKey = app.options.apiKey
+        options.apiKey = Self.app.options.apiKey
         if options.apiKey == nil {
             fatalError("no api key set in SKIP_FIREBASE_API_KEY environment")
         }
@@ -319,6 +318,13 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
         // SKIP NOWARN
         await cacheApp.delete()
+    }
+
+    // Nees to run last (hence "testXXXFirestoreTearDown") or else Swift fails:
+    // runtestFirestoreBundles$SkipFirebaseFirestore_debugUnitTest kotlinx.coroutines.test.UncompletedCoroutinesError: After waiting for 10s, the test coroutine is not completing, there were active child jobs: [DispatchedCoroutine{Active}@3816ef2f]
+    // Suppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call
+    func testXXXFirestoreTearDown() async throws {
+        await Self.app.delete()
     }
 }
 
