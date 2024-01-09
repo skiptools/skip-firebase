@@ -143,6 +143,11 @@ public class Query {
         lhs.query == rhs.query
     }
 
+    public func getDocuments() async throws -> QuerySnapshot {
+        // SKIP NOWARN
+        QuerySnapshot(snap: try await query.get().await())
+    }
+
     public var count: AggregateQuery {
         AggregateQuery(query: query.count())
     }
@@ -286,11 +291,6 @@ public class CollectionReference : Query {
 
     public var path: String {
         ref.path
-    }
-
-    public func getDocuments() async throws -> QuerySnapshot {
-        // SKIP NOWARN
-        QuerySnapshot(snap: try await ref.get().await())
     }
 
     public func document(_ path: String) -> DocumentReference {
