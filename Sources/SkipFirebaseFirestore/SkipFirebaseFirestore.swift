@@ -19,6 +19,10 @@ public final class Firestore {
         store.toString()
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FirebaseFirestore {
+        store
+    }
+
     public static func firestore(app: FirebaseApp, database: String) -> Firestore {
         return Firestore(store: com.google.firebase.firestore.FirebaseFirestore.getInstance(app.app, database))
     }
@@ -53,7 +57,7 @@ public final class Firestore {
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
-public class FieldPath : Equatable {
+public class FieldPath : Hashable {
     public let fieldPath: com.google.firebase.firestore.FieldPath
 
     public init(fieldPath: com.google.firebase.firestore.FieldPath) {
@@ -65,6 +69,10 @@ public class FieldPath : Equatable {
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FieldPath {
+        fieldPath
+    }
+
     public var description: String {
         fieldPath.toString()
     }
@@ -73,6 +81,11 @@ public class FieldPath : Equatable {
         lhs.fieldPath == rhs.fieldPath
     }
 
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(fieldPath.hashCode())
+    }
+
+    /// A special sentinel FieldPath to refer to the ID of a document. It can be used in queries to sort or filter by the document ID.
     public static func documentID() -> FieldPath {
         FieldPath(fieldPath: com.google.firebase.firestore.FieldPath.documentId())
     }
@@ -84,6 +97,10 @@ public class AggregateQuery {
 
     public init(query: com.google.firebase.firestore.AggregateQuery) {
         self.query = query
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuery {
+        query
     }
 
     public var description: String {
@@ -110,6 +127,10 @@ public class Filter {
         self.filter = filter
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Filter {
+        filter
+    }
+
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.filter == rhs.filter
     }
@@ -121,6 +142,10 @@ public class SnapshotMetadata {
 
     public init(meta: com.google.firebase.firestore.SnapshotMetadata) {
         self.meta = meta
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.SnapshotMetadata {
+        meta
     }
 
     public var description: String {
@@ -137,6 +162,10 @@ public class Query {
 
     public init(query: com.google.firebase.firestore.Query) {
         self.query = query
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Query {
+        query
     }
 
     public var description: String {
@@ -280,6 +309,10 @@ public class CollectionReference : Query {
         super.init(query: ref)
     }
 
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.CollectionReference {
+        ref
+    }
+
     public var firestore: Firestore {
         Firestore(store: ref.firestore)
     }
@@ -319,6 +352,10 @@ public class ListenerRegistration {
         self.reg = reg
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.ListenerRegistration {
+        reg
+    }
+
     public var description: String {
         reg.toString()
     }
@@ -339,6 +376,10 @@ public class Transaction {
         self.transaction = transaction
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Transaction {
+        transaction
+    }
+
     public var description: String {
         transaction.toString()
     }
@@ -353,6 +394,10 @@ public class QuerySnapshot {
 
     public init(snap: com.google.firebase.firestore.QuerySnapshot) {
         self.snap = snap
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QuerySnapshot {
+        snap
     }
 
     public var description: String {
@@ -406,6 +451,10 @@ public struct AggregateField {
         self.agg = agg
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateField {
+        agg
+    }
+
     public var description: String {
         agg.toString()
     }
@@ -442,6 +491,10 @@ public class AggregateQuerySnapshot {
         self.snap = snap
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuerySnapshot {
+        snap
+    }
+
     public var description: String {
         snap.toString()
     }
@@ -471,6 +524,10 @@ public class DocumentChange {
 
     public init(change: com.google.firebase.firestore.DocumentChange) {
         self.change = change
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentChange {
+        change
     }
 
     public var description: String {
@@ -510,6 +567,10 @@ public class DocumentSnapshot {
         self.doc = doc
     }
 
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentSnapshot {
+        doc
+    }
+
     public var description: String {
         doc.toString()
     }
@@ -543,6 +604,10 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
         doc as! com.google.firebase.firestore.QueryDocumentSnapshot
     }
 
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QueryDocumentSnapshot {
+        snapshot
+    }
+
     public init(snapshot: com.google.firebase.firestore.QueryDocumentSnapshot) {
         super.init(doc: snapshot)
     }
@@ -557,6 +622,10 @@ public class DocumentReference {
 
     public init(ref: com.google.firebase.firestore.DocumentReference) {
         self.ref = ref
+    }
+
+    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentReference {
+        ref
     }
 
     public var description: String {
@@ -589,6 +658,7 @@ public class DocumentReference {
     }
 
     public func delete() async throws {
+        // SKIP NOWARN
         try await ref.delete().await()
     }
 
@@ -616,7 +686,7 @@ fileprivate func deepKotlin(value: Any) -> Any {
     } else if let collection = value as? Collection<Any> {
         return deepKotlin(collection: collection)
     } else {
-        return value
+        return value.kotlin()
     }
 }
 
@@ -645,7 +715,7 @@ fileprivate func deepSwift(value: Any) -> Any {
     } else if let collection = value as? kotlin.collections.Collection<Any> {
         return deepSwift(collection: collection)
     } else {
-        return value
+        return value.kotlin()
     }
 }
 
