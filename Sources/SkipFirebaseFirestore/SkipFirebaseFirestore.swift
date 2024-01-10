@@ -676,7 +676,7 @@ public class DocumentSnapshot {
 
     public func data() -> [String: Any] {
         if let data = doc.getData() {
-            return Dictionary(data)
+            return deepSwift(map: data)
         } else {
             return [:]
         }
