@@ -7,14 +7,14 @@
 // https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp
 
-public final class FirebaseApp {
+public final class FirebaseApp: KotlinConverting<com.google.firebase.FirebaseApp> {
     public let app: com.google.firebase.FirebaseApp
 
     public init(app: com.google.firebase.FirebaseApp) {
         self.app = app
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.FirebaseApp {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.FirebaseApp {
         app
     }
 

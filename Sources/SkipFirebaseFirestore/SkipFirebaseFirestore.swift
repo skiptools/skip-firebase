@@ -9,7 +9,7 @@ import SkipFirebaseCore
 // https://developers.google.com/android/guides/tasks#kotlin_coroutine
 import kotlinx.coroutines.tasks.await
 
-public final class Firestore {
+public final class Firestore: KotlinConverting<com.google.firebase.firestore.FirebaseFirestore> {
     public let store: com.google.firebase.firestore.FirebaseFirestore
 
     public init(store: com.google.firebase.firestore.FirebaseFirestore) {
@@ -20,7 +20,7 @@ public final class Firestore {
         store.toString()
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FirebaseFirestore {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FirebaseFirestore {
         store
     }
 
@@ -75,7 +75,7 @@ public final class Firestore {
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
-public class FieldPath : Hashable {
+public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestore.FieldPath> {
     public let fieldPath: com.google.firebase.firestore.FieldPath
 
     public init(fieldPath: com.google.firebase.firestore.FieldPath) {
@@ -87,7 +87,7 @@ public class FieldPath : Hashable {
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FieldPath {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FieldPath {
         fieldPath
     }
 
@@ -110,14 +110,14 @@ public class FieldPath : Hashable {
 }
 
 
-public class LoadBundleTaskProgress {
+public class LoadBundleTaskProgress: KotlinConverting<com.google.firebase.firestore.LoadBundleTaskProgress> {
     public let progress: com.google.firebase.firestore.LoadBundleTaskProgress
 
     public init(progress: com.google.firebase.firestore.LoadBundleTaskProgress) {
         self.progress = progress
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.LoadBundleTaskProgress {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.LoadBundleTaskProgress {
         progress
     }
 
@@ -164,14 +164,14 @@ public enum LoadBundleTaskState {
 }
 
 /// A query that calculates aggregations over an underlying query.
-public class AggregateQuery {
+public class AggregateQuery: KotlinConverting<com.google.firebase.firestore.AggregateQuery> {
     public let query: com.google.firebase.firestore.AggregateQuery
 
     public init(query: com.google.firebase.firestore.AggregateQuery) {
         self.query = query
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuery {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuery {
         query
     }
 
@@ -192,14 +192,14 @@ public class AggregateQuery {
     }
 }
 
-public class Filter {
+public class Filter: KotlinConverting<com.google.firebase.firestore.Filter> {
     public let filter: com.google.firebase.firestore.Filter
 
     public init(filter: com.google.firebase.firestore.Filter = com.google.firebase.firestore.Filter()) {
         self.filter = filter
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Filter {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Filter {
         filter
     }
 
@@ -209,14 +209,14 @@ public class Filter {
 }
 
 
-public class SnapshotMetadata {
+public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.SnapshotMetadata> {
     public let meta: com.google.firebase.firestore.SnapshotMetadata
 
     public init(meta: com.google.firebase.firestore.SnapshotMetadata) {
         self.meta = meta
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.SnapshotMetadata {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.SnapshotMetadata {
         meta
     }
 
@@ -229,14 +229,14 @@ public class SnapshotMetadata {
     }
 }
 
-public class Query {
+public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
     public let query: com.google.firebase.firestore.Query
 
     public init(query: com.google.firebase.firestore.Query) {
         self.query = query
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Query {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Query {
         query
     }
 
@@ -386,10 +386,6 @@ public class CollectionReference : Query {
         super.init(query: ref)
     }
 
-    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.CollectionReference {
-        ref
-    }
-
     public var firestore: Firestore {
         Firestore(store: ref.firestore)
     }
@@ -417,19 +413,19 @@ public class CollectionReference : Query {
 
     public func addDocument(data: [String: Any]) async throws -> DocumentReference {
         // SKIP NOWARN
-        try await DocumentReference(ref: try await ref.add(deepKotlin(dict: data)).await())
+        try await DocumentReference(ref: try await ref.add(data.kotlin()).await())
     }
 }
 
 
-public class ListenerRegistration {
+public class ListenerRegistration: KotlinConverting<com.google.firebase.firestore.ListenerRegistration> {
     public let reg: com.google.firebase.firestore.ListenerRegistration
 
     public init(reg: com.google.firebase.firestore.ListenerRegistration) {
         self.reg = reg
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.ListenerRegistration {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.ListenerRegistration {
         reg
     }
 
@@ -446,14 +442,14 @@ public class ListenerRegistration {
     }
 }
 
-public class Transaction {
+public class Transaction: KotlinConverting<com.google.firebase.firestore.Transaction> {
     public let transaction: com.google.firebase.firestore.Transaction
 
     public init(transaction: com.google.firebase.firestore.Transaction) {
         self.transaction = transaction
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Transaction {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Transaction {
         transaction
     }
 
@@ -466,14 +462,14 @@ public class Transaction {
     }
 }
 
-public class QuerySnapshot {
+public class QuerySnapshot: KotlinConverting<com.google.firebase.firestore.QuerySnapshot> {
     public let snap: com.google.firebase.firestore.QuerySnapshot
 
     public init(snap: com.google.firebase.firestore.QuerySnapshot) {
         self.snap = snap
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QuerySnapshot {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QuerySnapshot {
         snap
     }
 
@@ -535,14 +531,14 @@ public enum FirestoreSource {
     }
 }
 
-public struct AggregateField {
+public struct AggregateField: KotlinConverting<com.google.firebase.firestore.AggregateField> {
     public let agg: com.google.firebase.firestore.AggregateField
 
     public init(agg: com.google.firebase.firestore.AggregateField) {
         self.agg = agg
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateField {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateField {
         agg
     }
 
@@ -575,14 +571,14 @@ public struct AggregateField {
     }
 }
 
-public class AggregateQuerySnapshot {
+public class AggregateQuerySnapshot: KotlinConverting<com.google.firebase.firestore.AggregateQuerySnapshot> {
     public let snap: com.google.firebase.firestore.AggregateQuerySnapshot
 
     public init(snap: com.google.firebase.firestore.AggregateQuerySnapshot) {
         self.snap = snap
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuerySnapshot {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuerySnapshot {
         snap
     }
 
@@ -610,14 +606,14 @@ public class AggregateQuerySnapshot {
     }
 }
 
-public class DocumentChange {
+public class DocumentChange: KotlinConverting<com.google.firebase.firestore.DocumentChange> {
     public let change: com.google.firebase.firestore.DocumentChange
 
     public init(change: com.google.firebase.firestore.DocumentChange) {
         self.change = change
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentChange {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentChange {
         change
     }
 
@@ -651,14 +647,14 @@ public enum DocumentChangeType {
     case removed
 }
 
-public class DocumentSnapshot {
+public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.DocumentSnapshot> {
     public let doc: com.google.firebase.firestore.DocumentSnapshot
 
     public init(doc: com.google.firebase.firestore.DocumentSnapshot) {
         self.doc = doc
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentSnapshot {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentSnapshot {
         doc
     }
 
@@ -676,7 +672,7 @@ public class DocumentSnapshot {
 
     public func data() -> [String: Any] {
         if let data = doc.getData() {
-            return Dictionary(data)
+            return deepSwift(map: data)
         } else {
             return [:]
         }
@@ -695,10 +691,6 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
         doc as! com.google.firebase.firestore.QueryDocumentSnapshot
     }
 
-    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QueryDocumentSnapshot {
-        snapshot
-    }
-
     public init(snapshot: com.google.firebase.firestore.QueryDocumentSnapshot) {
         super.init(doc: snapshot)
     }
@@ -708,14 +700,14 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
     }
 }
 
-public class DocumentReference {
+public class DocumentReference: KotlinConverting<com.google.firebase.firestore.DocumentReference> {
     public let ref: com.google.firebase.firestore.DocumentReference
 
     public init(ref: com.google.firebase.firestore.DocumentReference) {
         self.ref = ref
     }
 
-    public func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentReference {
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentReference {
         ref
     }
 
@@ -756,47 +748,20 @@ public class DocumentReference {
     public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
         if merge == true {
             // SKIP NOWARN
-            try await ref.set(deepKotlin(dict: keyValues), com.google.firebase.firestore.SetOptions.merge())
+            try await ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge())
         } else {
             // SKIP NOWARN
-            try await ref.set(deepKotlin(dict: keyValues))
+            try await ref.set(keyValues.kotlin())
         }
     }
 
     public func updateData(_ keyValues: [String: Any]) async throws {
         // SKIP NOWARN
-        try await ref.update(deepKotlin(dict: keyValues))
+        try await ref.update(keyValues.kotlin() as! Map<String, Any>)
     }
 }
 
 // MARK: Utilies for converting between Swift and Kotlin types
-
-fileprivate func deepKotlin(value: Any) -> Any {
-    if let dictionary = value as? Dictionary<Any, Any> {
-        return deepKotlin(dict: dictionary)
-    } else if let collection = value as? Collection<Any> {
-        return deepKotlin(collection: collection)
-    } else {
-        return value.kotlin()
-    }
-}
-
-fileprivate func deepKotlin<T>(dict: Dictionary<T, Any>) -> kotlin.collections.Map<T, Any> {
-    var map = mutableMapOf<T, Any>()
-    for (key, value) in dict {
-        map[key] = deepKotlin(value: value)
-    }
-    return map
-}
-
-fileprivate func deepKotlin(collection: Collection<Any>) -> kotlin.collections.List<Any> {
-    var list = mutableListOf<Any>()
-    for value in collection {
-        list.add(deepKotlin(value: value))
-    }
-    return list
-}
-
 
 fileprivate func deepSwift(value: Any) -> Any {
     if let str = value as? String {
@@ -806,7 +771,7 @@ fileprivate func deepSwift(value: Any) -> Any {
     } else if let collection = value as? kotlin.collections.Collection<Any> {
         return deepSwift(collection: collection)
     } else {
-        return value.kotlin()
+        return value
     }
 }
 

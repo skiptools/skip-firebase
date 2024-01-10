@@ -28,8 +28,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://source.skip.tools/skip.git", from: "0.7.42"),
-        .package(url: "https://source.skip.tools/skip-foundation.git", from: "0.3.15"),
-        .package(url: "https://source.skip.tools/skip-model.git", from: "0.3.3"),
+        .package(url: "https://source.skip.tools/skip-foundation.git", from: "0.4.0"),
+        .package(url: "https://source.skip.tools/skip-model.git", from: "0.4.0"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.17.0")
     ],
     targets: [
