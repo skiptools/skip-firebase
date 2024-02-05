@@ -1,10 +1,21 @@
 # Configuration file for https://skip.tools project
 #
 # Kotlin dependencies and Gradle build options for this module can be configured here
+settings:
+  contents:
+    - block: 'dependencyResolutionManagement'
+      contents:
+        - block: 'versionCatalogs'
+          contents:
+            - block: 'create("libs")'
+              contents:
+                - 'version("firebase", "32.7.1")'
+                - 'library("firebase-bom", "com.google.firebase", "firebase-bom").versionRef("firebase")'
+
 build:
   contents:
     - block: 'dependencies'
       contents:
-        - 'implementation(platform("com.google.firebase:firebase-bom:32.7.0"))'
+        - 'implementation(platform(libs.firebase.bom))'
         - 'implementation("com.google.firebase:firebase-installations")'
         - 'implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services")'
