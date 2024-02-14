@@ -5,6 +5,9 @@ The Swift side uses the official Firebase iOS SDK directly,
 with the various `SkipFirebase*` modules passing the transpiled calls
 through to the Firebase Android SDK.
 
+For an example of using Firebase in a Skip app, see the
+[Fireside Sample](https://github.com/skiptools/skipapp-fireside/).
+
 ## Package
 
 An example of a Skip app projects using the `Firestore` and `Messaging` API can be seen
@@ -79,7 +82,10 @@ imported Firebase modules, like so:
 
 ### Common Errors 
 
-#### Error in adb logcat: FirebaseApp: Default FirebaseApp failed to initialize because no default options were found. This usually means that com.google.gms:google-services was not applied to your gradle project.
+```plaintext
+Error in adb logcat: FirebaseApp: Default FirebaseApp failed to initialize because no default options were found.
+This usually means that com.google.gms:google-services was not applied to your gradle project.
+```
 
 The app's `com.google.gms:google-services` plugin must be applied to the `build.gradle.kts` file for the app's target.
 
