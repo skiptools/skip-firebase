@@ -71,14 +71,57 @@ For a Skip app, the simplest way to setup Firebase support is to
 create a Firebase project at https://console.firebase.google.com/project.
 Follow the Firebase setup instructions to obtain the 
 `GoogleService-Info.plist` and `google-services.json` files and
-add them to the iOS and Android sides of the project.
+add them to the iOS and Android sides of the project:
 
-You will then be able to access the singleton type for each of the
-imported Firebase modules, like so:
+- the `GoogleService-Info.plist` file should be placed in the `Darwin/` folder of the Skip project
+- the `google-services.json` file should be placed in the `Android/app/` folder of the Skip project
+
+In addition, the `com.google.gms.google-services` plugin will need to be added to the 
+Android app's `Android/app/build.gradle.kts` file in order to process the `google-services.json`
+file for the app, like so:
+
+```kotlin
+plugins {
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.android.application)
+    id("skip-build-plugin")
+    id("com.google.gms.google-services") version "4.4.1" apply true
+}
+```
+
+For concrete examples, see the [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project.
+
+Once the Firebase properties are correctly configured, you will then be able to access the singleton type for each of the
+imported Firebase modules. This is typically done using an app-wide singleton within a shared class or actor:
 
 ```swift
+import OSLog
+import Foundation
+import SkipFirebaseFirestore
+
+public actor Model {
+    /// A model singleton
+    public static let shared = Model()
+
+    let logger: Logger = Logger(subsystem: "\(moduleName)", category: "Tests")
+
+    /// The global Firestore instance for the app, configured using the default
+    /// `Android/app/google-services.json` and `Darwin/GoogleService-Info.plist` configuration files
+    /// which can be downloaded for your project from https://console.firebase.google.com/project/
+    public let firestore: Firestore
+
+    private init() throws {
+        logger.log("invoking FirebaseApp.configure()")
+        FirebaseApp.configure()
+        self.firestore = Firestore.firestore()
+    }
+    
+    public func queryData() async throws -> [DataModel] { … }
+    public func saveData(model: DataModel) async throws { … }
+}
 
 ```
+
 
 ### Common Errors 
 
@@ -141,11 +184,10 @@ let installations = Installations.installations(app: app)
 ## Package
 
 The modules in the SkipFirebase framework project mirror the division of the SwiftPM
-modules in the Firebase iOS SDK (at https://github.com/firebase/firebase-ios-sdk),
-which is also mirrored in the division of the Firebase Kotlin Android gradle modules (at https://github.com/firebase/firebase-android-sdk).
+modules in the Firebase iOS SDK (at [https://github.com/firebase/firebase-ios-sdk.git](https://github.com/firebase/firebase-ios-sdk.git)),
+which is also mirrored in the division of the Firebase Kotlin Android gradle modules (at [https://github.com/firebase/firebase-android-sdk.git](https://github.com/firebase/firebase-android-sdk.git)).
 
 The individual modules of the SkipFirebase framework are as follows:
-
 
 ### SkipFirebaseCore
 
@@ -181,8 +223,7 @@ guard let app = FirebaseApp.app(name: appName) else {
 
 ### SkipFirebaseFirestore
 
-Provides rudimentary Skip parity to the [FirebaseFirestore](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Firestore) API for the Swift and Kotlin sides of the Firebase API.
-
+Provides Skip parity to the [FirebaseFirestore](https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Firestore) API for the Swift and Kotlin sides of the Firebase API.
 
 Example usage:
 
@@ -226,6 +267,8 @@ Analytics.logEvent("event_name", parameters: ["key": "value"])
 
 Provides rudimentary Skip parity to the [FirebaseAppCheck](https://firebase.google.com/docs/reference/swift/firebaseappcheck/api/reference/Classes/AppCheck) API for the Swift and Kotlin sides of the Firebase API.
 
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
 
 Example usage:
 
@@ -243,6 +286,9 @@ let result = try await appcheck.update()
 ### SkipFirebaseAuth
 
 Provides rudimentary Skip parity to the [FirebaseAuth](https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth) API for the Swift and Kotlin sides of the Firebase API.
+
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
 
 
 Example usage:
@@ -262,6 +308,9 @@ let result = try await auth.update()
 
 Provides rudimentary Skip parity to the [FirebaseCrashlytics](https://firebase.google.com/docs/reference/swift/firebasecrashlytics/api/reference/Classes/Crashlytics) API for the Swift and Kotlin sides of the Firebase API.
 
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
+
 
 Example usage:
 
@@ -279,6 +328,9 @@ let result = try await crashlytics.update()
 ### SkipFirebaseDatabase
 
 Provides rudimentary Skip parity to the [FirebaseDatabase](https://firebase.google.com/docs/reference/swift/firebasedatabase/api/reference/Classes/Database) API for the Swift and Kotlin sides of the Firebase API.
+
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
 
 
 Example usage:
@@ -298,6 +350,9 @@ let result = try await database.update()
 
 Provides rudimentary Skip parity to the [FirebaseFunctions](https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions) API for the Swift and Kotlin sides of the Firebase API.
 
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
+
 
 Example usage:
 
@@ -316,6 +371,9 @@ let result = try await functions.update()
 
 Provides rudimentary Skip parity to the [FirebaseInstallations](https://firebase.google.com/docs/reference/swift/firebaseinstallations/api/reference/Classes/Installations) API for the Swift and Kotlin sides of the Firebase API.
 
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
+
 
 Example usage:
 
@@ -333,6 +391,9 @@ let result = try await installations.update()
 ### SkipFirebaseMessaging
 
 Provides rudimentary Skip parity to the [FirebaseMessaging](https://firebase.google.com/docs/reference/swift/firebasemessaging/api/reference/Classes/Messaging) API for the Swift and Kotlin sides of the Firebase API.
+
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
 
 
 Example usage:
@@ -363,6 +424,9 @@ let result = try await messaging.update()
 
 Provides rudimentary Skip parity to the [FirebaseRemoteConfig](https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig) API for the Swift and Kotlin sides of the Firebase API.
 
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
+
 
 Example usage:
 
@@ -380,6 +444,9 @@ let result = try await remoteconfig.update()
 ### SkipFirebaseStorage
 
 Provides rudimentary Skip parity to the [FirebaseStorage](https://firebase.google.com/docs/reference/swift/firebasestorage/api/reference/Classes/Storage) API for the Swift and Kotlin sides of the Firebase API.
+
+This module does not yet have any functions implemented. Please submit an [issue](https://github.com/skiptools/skip-firebase/issues) or [pull request](https://github.com/skiptools/skip-firebase/fork) to help implement them.
+{: class="callout warning"}
 
 
 Example usage:
