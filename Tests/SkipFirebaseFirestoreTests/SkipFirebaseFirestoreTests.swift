@@ -190,6 +190,8 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
             }
         }
 
+        XCTAssertEqual(Timestamp(date: Date(timeIntervalSince1970: 12345)), Timestamp(seconds: 12345, nanoseconds: 0))
+
         let bos = citiesRef.document("BOS")
 
         try await bos.setData([
@@ -198,7 +200,8 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
             "country": "USA",
             "capital": false,
             "population": 555000,
-            "regions": ["east_coast", "new_england"]
+            "regions": ["east_coast", "new_england"],
+            "time": Timestamp(date: Date(timeIntervalSince1970: 1234))
         ])
 
         let bdoc = try await bos.getDocument()
@@ -207,6 +210,9 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         XCTAssertNotNil(bdoc.get("regions"))
 
         XCTAssertEqual(["east_coast", "new_england"], bdoc.get("regions") as? [String])
+
+        XCTAssertNotNil(bdoc.get("time"))
+        XCTAssertEqual(Timestamp(date: Date(timeIntervalSince1970: 1234)), bdoc.get("time") as? Timestamp)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
         try await bos.updateData(["population": 675000])

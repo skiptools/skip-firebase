@@ -100,10 +100,10 @@ import Foundation
 import SkipFirebaseFirestore
 
 public actor Model {
-    /// A model singleton
+    /// The shared model singleton
     public static let shared = Model()
 
-    let logger: Logger = Logger(subsystem: "\(moduleName)", category: "Tests")
+    let logger: Logger = Logger(subsystem: "my.app", category: "Model")
 
     /// The global Firestore instance for the app, configured using the default
     /// `Android/app/google-services.json` and `Darwin/GoogleService-Info.plist` configuration files

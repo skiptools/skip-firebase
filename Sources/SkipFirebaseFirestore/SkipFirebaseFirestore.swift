@@ -761,11 +761,45 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 }
 
+public class Timestamp: KotlinConverting<com.google.firebase.Timestamp> {
+    public let timestamp: com.google.firebase.Timestamp
+
+    public init(timestamp: com.google.firebase.Timestamp) {
+        self.timestamp = timestamp
+    }
+
+    public init(date: Date) {
+        self.timestamp = com.google.firebase.Timestamp(date.kotlin())
+    }
+
+    public init(seconds: Int64, nanoseconds: Int32) {
+        self.timestamp = com.google.firebase.Timestamp(seconds, nanoseconds)
+    }
+
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.Timestamp {
+        timestamp
+    }
+
+    public var description: String {
+        timestamp.toString()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.timestamp == rhs.timestamp
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(timestamp)
+    }
+}
+
 // MARK: Utilies for converting between Swift and Kotlin types
 
 fileprivate func deepSwift(value: Any) -> Any {
     if let str = value as? String {
         return str // needed to not be treated as a Collection
+    } else if let ts = value as? com.google.firebase.Timestamp {
+        return Timestamp(timestamp: ts)
     } else if let map = value as? kotlin.collections.Map<Any, Any> {
         return deepSwift(map: map)
     } else if let collection = value as? kotlin.collections.Collection<Any> {

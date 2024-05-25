@@ -3,6 +3,7 @@
 // as published by the Free Software Foundation https://fsf.org
 
 #if SKIP
+import Foundation
 
 // https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp
@@ -138,4 +139,5 @@ public final class FirebaseOptions {
         return builder.build()
     }
 }
+
 #endif
