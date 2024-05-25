@@ -791,6 +791,19 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
     public func hash(into hasher: inout Hasher) {
         hasher.combine(timestamp.hashCode())
     }
+
+    public func toDate() -> Date {
+        Date(platformValue: timestamp.toDate())
+    }
+
+    public var seconds: Int64 {
+        timestamp.seconds
+    }
+
+    public var nanoseconds: Int32 {
+        timestamp.nanoseconds
+    }
+
 }
 
 // MARK: Utilies for converting between Swift and Kotlin types

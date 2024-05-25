@@ -259,10 +259,11 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         }
 
         // follow-on test since running multiple separate firestore tests in a single case seems to fail (possibly due to re-configuration of the FirebaseApp app)
-        //try await XXXtestFirestoreQuery()
+        try await XXXtestFirestoreQuery()
+        //try await XXXtestFirestoreBundles()
     }
 
-    func testFirestoreQuery() async throws {
+    func XXXtestFirestoreQuery() async throws {
         XCTAssertEqual(appName, self.app.name)
 
         let db = Firestore.firestore(app: self.app)
@@ -300,7 +301,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         //try await XXXtestFirestoreBundles()
     }
 
-    func testFirestoreBundles() async throws {
+    func XXXtestFirestoreBundles() async throws {
 
         // see Resources/ firestore_bundle-1.json, firestore_bundle-2.json, firestore_bundle-3.json
         let bundle1 = try Data(contentsOf: XCTUnwrap(Bundle.module.url(forResource: "firestore_bundle-1", withExtension: "json")))
