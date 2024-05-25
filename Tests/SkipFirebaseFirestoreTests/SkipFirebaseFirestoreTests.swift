@@ -262,7 +262,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         //try await XXXtestFirestoreQuery()
     }
 
-    func XXXtestFirestoreQuery() async throws {
+    func testFirestoreQuery() async throws {
         XCTAssertEqual(appName, self.app.name)
 
         let db = Firestore.firestore(app: self.app)
@@ -300,7 +300,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         //try await XXXtestFirestoreBundles()
     }
 
-    func XXXtestFirestoreBundles() async throws {
+    func testFirestoreBundles() async throws {
 
         // see Resources/ firestore_bundle-1.json, firestore_bundle-2.json, firestore_bundle-3.json
         let bundle1 = try Data(contentsOf: XCTUnwrap(Bundle.module.url(forResource: "firestore_bundle-1", withExtension: "json")))

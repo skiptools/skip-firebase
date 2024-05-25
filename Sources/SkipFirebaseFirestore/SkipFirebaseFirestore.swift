@@ -761,7 +761,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 }
 
-public class Timestamp: KotlinConverting<com.google.firebase.Timestamp> {
+public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
     public let timestamp: com.google.firebase.Timestamp
 
     public init(timestamp: com.google.firebase.Timestamp) {
@@ -788,8 +788,8 @@ public class Timestamp: KotlinConverting<com.google.firebase.Timestamp> {
         lhs.timestamp == rhs.timestamp
     }
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(timestamp)
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(fieldPath.hashCode())
     }
 }
 
