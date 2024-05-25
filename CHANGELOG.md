@@ -1,3 +1,15 @@
+## 0.1.1
+
+Released 2024-05-25
+
+  - Add Timestamp properties and functions
+  - Fix Timestamp Hashable
+  - Re-enable tests
+  - Add Timestamp
+  - Bump firebase-bom version to 33.0.0; add more docs to README
+  - ci: update workflow actions location
+  - Update docs to mention sample Fireside app
+
 ## 0.1.0
 
 Released 2024-02-05

@@ -792,8 +792,12 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
         hasher.combine(timestamp.hashCode())
     }
 
-    public func toDate() -> Date {
+    public func dateValue() -> Date {
         Date(platformValue: timestamp.toDate())
+    }
+
+    public func toDate() -> Date {
+        dateValue()
     }
 
     public var seconds: Int64 {
