@@ -789,7 +789,7 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
     }
 
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(fieldPath.hashCode())
+        hasher.combine(timestamp.hashCode())
     }
 }
 
