@@ -1,3 +1,10 @@
+## 0.2.0
+
+Released 2024-07-10
+
+  - Merge pull request #2 from artamata/main
+  - Added basing FirebaseAuth and FirebaseStoreage. For Auth, it includes signIn with email and password, create user with email and password, and ability to change your profile display name. Storage has the ability to get a StorageReference based on path and to get a downloadURL().
+
 ## 0.1.1
 
 Released 2024-05-25

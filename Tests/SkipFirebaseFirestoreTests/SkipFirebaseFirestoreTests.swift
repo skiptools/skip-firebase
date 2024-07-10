@@ -14,7 +14,7 @@ import SkipFirebaseCore
 import SkipFirebaseFirestore
 #endif
 
-let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
+let logger: Logger = Logger(subsystem: "SkipFirebaseFirestoreTests", category: "Tests")
 
 var appName: String = "SkipFirebaseDemo"
 

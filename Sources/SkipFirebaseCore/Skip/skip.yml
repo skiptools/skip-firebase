@@ -9,7 +9,7 @@ settings:
           contents:
             - block: 'create("libs")'
               contents:
-                - 'version("firebase", "33.0.0")'
+                - 'version("firebase", "33.1.1")'
                 - 'library("firebase-bom", "com.google.firebase", "firebase-bom").versionRef("firebase")'
 
 build:
