@@ -12,19 +12,19 @@ import android.net.Uri
 // https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth
 
 public final class Auth {
-    public let platformValue: com.google.firebase.auth.FirebaseAuth
+	public let platformValue: com.google.firebase.auth.FirebaseAuth
 
-    public init(platformValue: com.google.firebase.auth.FirebaseAuth) {
-        self.platformValue = platformValue
-    }
+	public init(platformValue: com.google.firebase.auth.FirebaseAuth) {
+		self.platformValue = platformValue
+	}
 
-    public static func auth() -> Auth {
+	public static func auth() -> Auth {
 		Auth(platformValue: com.google.firebase.auth.FirebaseAuth.getInstance())
-    }
+	}
 
-    public static func auth(app: FirebaseApp) -> Auth {
+	public static func auth(app: FirebaseApp) -> Auth {
 		Auth(platformValue: com.google.firebase.auth.FirebaseAuth.getInstance(app.app))
-    }
+	}
 	
 	public var app: FirebaseApp {
 		FirebaseApp(app: platformValue.getApp())
@@ -49,6 +49,10 @@ public final class Auth {
 
 	public func signOut() throws {
 		try platformValue.signOut()
+	}
+
+	public func sendPasswordReset(withEmail email: String) async throws {
+		try await platformValue.sendPasswordResetEmail(email).await()
 	}
 }
 
