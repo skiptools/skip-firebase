@@ -72,6 +72,14 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         }
         return Query(query: query)
     }
+
+    public func collectionGroup(collectionId: String) -> Query {
+        return Query(query: store.collectionGroup(collectionId)) 
+    }
+
+    public func batch() -> WriteBatch {
+        return WriteBatch(batch: store.batch())
+    }
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
@@ -222,6 +230,10 @@ public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.Sn
 
     public var description: String {
         meta.toString()
+    }
+
+    public var hasPendingWrites: Bool {
+        meta.hasPendingWrites()
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
@@ -631,11 +643,11 @@ public class DocumentChange: KotlinConverting<com.google.firebase.firestore.Docu
 
     public var type: DocumentChangeType {
         switch change.type {
-        case com.google.firebase.firestore.DocumentChange.Type.ADDED: 
+        case com.google.firebase.firestore.DocumentChange.Type.ADDED:
             return DocumentChangeType.added
-        case com.google.firebase.firestore.DocumentChange.Type.MODIFIED: 
+        case com.google.firebase.firestore.DocumentChange.Type.MODIFIED:
             return DocumentChangeType.modified
-        case com.google.firebase.firestore.DocumentChange.Type.REMOVED: 
+        case com.google.firebase.firestore.DocumentChange.Type.REMOVED:
             return DocumentChangeType.removed
         }
     }
@@ -728,6 +740,15 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         DocumentSnapshot(doc: try await ref.get().await())
     }
 
+    public func getDocument(completion: (_ snapshot: DocumentSnapshot?, _ error: (any Error)?) -> Void) {
+        ref.get().addOnSuccessListener { documentSnapshot in
+            completion(DocumentSnapshot(doc: documentSnapshot), nil)
+        }
+        .addOnFailureListener { exception in
+            completion(nil, ErrorException(exception))
+        }
+    }
+
     public var parent: CollectionReference {
         CollectionReference(ref: ref.parent)
     }
@@ -759,6 +780,10 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         // SKIP NOWARN
         try await ref.update(keyValues.kotlin() as! Map<String, Any>)
     }
+
+    public func collection(_ collectionPath: String) -> CollectionReference {
+        CollectionReference(ref: ref.collection(collectionPath))
+  }
 }
 
 public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
@@ -808,6 +833,39 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
         timestamp.nanoseconds
     }
 
+}
+
+public class WriteBatch {
+    public let batch: com.google.firebase.firestore.WriteBatch
+
+    public init(batch: com.google.firebase.firestore.WriteBatch) {
+        self.batch = batch
+    }
+
+    public func commit() async throws {
+        // SKIP NOWARN
+        try await batch.commit().await()
+    }
+
+    public func deleteDocument(_ document: DocumentReference) -> WriteBatch {
+        let newBatch = batch.delete(document.ref)
+        return WriteBatch(batch: newBatch)
+    }
+
+    public func setData( _ data: [String : Any], forDocument document: DocumentReference) -> WriteBatch {
+        let newBatch = batch.set(document.ref, data.kotlin())
+        return WriteBatch(batch: newBatch)
+    }
+    
+    public func setData(_ data: [String : Any], forDocument document: DocumentReference, mergeFields: [String]) -> WriteBatch {
+        let newBatch = batch.set(document.ref, data.kotlin(), com.google.firebase.firestore.SetOptions.mergeFields(mergeFields.toList()))
+        return WriteBatch(batch: newBatch)
+    }
+
+    public func updateData(_ fields: [AnyHashable : Any], forDocument document: DocumentReference) -> WriteBatch {
+        let newBatch = batch.update(document.ref, fields.kotlin() as! Map<String, Any>)
+        return WriteBatch(batch: newBatch)
+    }
 }
 
 // MARK: Utilies for converting between Swift and Kotlin types
