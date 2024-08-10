@@ -27,9 +27,9 @@ let package = Package(
         .library(name: "SkipFirebaseStorage", targets: ["SkipFirebaseStorage"]),
     ],
     dependencies: [
-        .package(url: "https://source.skip.tools/skip.git", from: "0.10.1"),
-        .package(url: "https://source.skip.tools/skip-foundation.git", from: "0.7.0"),
-        .package(url: "https://source.skip.tools/skip-model.git", from: "0.8.0"),
+        .package(url: "https://source.skip.tools/skip.git", from: "0.10.8"),
+        .package(url: "https://source.skip.tools/skip-foundation.git", from: "0.7.1"),
+        .package(url: "https://source.skip.tools/skip-model.git", from: "0.8.1"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "10.28.1")
     ],
     targets: [

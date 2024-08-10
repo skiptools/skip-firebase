@@ -1,3 +1,10 @@
+## 0.2.3
+
+Released 2024-08-09
+
+  - Merge pull request #4 from boctor/main
+  - Add batch writes, collection groups, hasPendingWrites and non async getDocument: * Add WriteBatch, used to perform multiple writes as a single atomic unit * Add Collection Group queries * Add hasPendingWrites on SnapshotMetadata * Add non-async version of getDocument on DocumentReference with a completion block
+
 ## 0.2.1
 
 Released 2024-07-11
