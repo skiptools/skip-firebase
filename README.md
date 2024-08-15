@@ -32,11 +32,11 @@ let package = Package(
         .library(name: "FireSideModel", targets: ["FireSideModel"]),
     ],
     dependencies: [
-        .package(url: "https://source.skip.tools/skip.git", from: "0.7.42"),
-        .package(url: "https://source.skip.tools/skip-ui.git", from: "0.0.0"),
-        .package(url: "https://source.skip.tools/skip-foundation.git", from: "0.0.0"),
-        .package(url: "https://source.skip.tools/skip-model.git", from: "0.0.0"),
-        .package(url: "https://source.skip.tools/skip-firebase.git", from: "0.0.0")
+        .package(url: "https://source.skip.tools/skip.git", from: "1.0.0"),
+        .package(url: "https://source.skip.tools/skip-ui.git", from: "1.0.0"),
+        .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.0.0"),
+        .package(url: "https://source.skip.tools/skip-model.git", from: "1.0.0"),
+        .package(url: "https://source.skip.tools/skip-firebase.git", "0.0.0"..<"2.0.0")
     ],
     targets: [
         .target(name: "FireSide", dependencies: [

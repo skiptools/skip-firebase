@@ -1,3 +1,10 @@
+## 0.3.0
+
+Released 2024-08-15
+
+  - Merge pull request #5 from boctor/main
+  - Add support for Firestore's FieldValue This is used for special values like server timestamp, incrementing a value and adding/removing from arrays
+
 ## 0.2.3
 
 Released 2024-08-09
