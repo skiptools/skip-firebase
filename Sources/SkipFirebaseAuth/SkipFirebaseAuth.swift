@@ -52,6 +52,7 @@ public final class Auth {
 	}
 
 	public func sendPasswordReset(withEmail email: String) async throws {
+		// SKIP NOWARN
 		try await platformValue.sendPasswordResetEmail(email).await()
 	}
 }
