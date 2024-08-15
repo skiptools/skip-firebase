@@ -868,6 +868,34 @@ public class WriteBatch {
     }
 }
 
+public class FieldValue {
+    public class func arrayRemove(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
+        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        return com.google.firebase.firestore.FieldValue.arrayRemove(*elementsArray)
+    }
+
+    public class func arrayUnion(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
+        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        return com.google.firebase.firestore.FieldValue.arrayUnion(*elementsArray)
+    }
+
+    public class func delete() -> com.google.firebase.firestore.FieldValue {
+        return com.google.firebase.firestore.FieldValue.delete()
+    }
+
+    public class func increment(_ d: Double) -> com.google.firebase.firestore.FieldValue {
+        return com.google.firebase.firestore.FieldValue.increment(d)
+    }
+
+    public class func increment(_ l: Int64) -> com.google.firebase.firestore.FieldValue {
+        return com.google.firebase.firestore.FieldValue.increment(l)
+    }
+
+    public class func serverTimestamp() -> com.google.firebase.firestore.FieldValue {
+        return com.google.firebase.firestore.FieldValue.serverTimestamp()
+    }
+}
+
 // MARK: Utilies for converting between Swift and Kotlin types
 
 fileprivate func deepSwift(value: Any) -> Any {
