@@ -1,3 +1,11 @@
+## 0.3.1
+
+Released 2024-08-26
+
+  - Merge pull request #7 from rlindsey2/add-anonymous-signin
+  - Add support for Firebase Auth anonymous sign-in
+  - Update README.md
+
 ## 0.3.0
 
 Released 2024-08-15
