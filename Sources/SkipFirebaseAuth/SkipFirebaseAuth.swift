@@ -55,6 +55,11 @@ public final class Auth {
 		// SKIP NOWARN
 		try await platformValue.sendPasswordResetEmail(email).await()
 	}
+
+	public func signInAnonymously() async throws -> AuthDataResult {
+		let result = try await platformValue.signInAnonymously().await()
+		return AuthDataResult(result)
+	}
 }
 
 public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResult> {
