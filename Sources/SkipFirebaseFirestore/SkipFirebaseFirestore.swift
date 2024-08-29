@@ -371,6 +371,10 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         Query(query: query.whereArrayContainsAny(field.fieldPath, arrayContainsAny.kotlin()))
     }
 
+    public func start(afterDocument: DocumentSnapshot) -> Query {
+        Query(query: query.startAfter(afterDocument.kotlin()))
+    }
+
     public func addSnapshotListener(_ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: query.addSnapshotListener { snapshot, error in
             let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
