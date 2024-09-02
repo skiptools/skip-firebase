@@ -4,6 +4,7 @@
 
 #if SKIP
 import Foundation
+import OSLog
 
 // https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp

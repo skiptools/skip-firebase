@@ -2,9 +2,9 @@
 // under the terms of the GNU Lesser General Public License 3.0
 // as published by the Free Software Foundation https://fsf.org
 
+#if SKIP
 import SkipFoundation
 import SkipFirebaseCore
-#if SKIP
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
 
@@ -36,28 +36,25 @@ public final class Auth {
 	}
 	
 	public func signIn(withEmail email: String, password: String) async throws -> AuthDataResult {
-		// SKIP NOWARN
-		let result = try await platformValue.signInWithEmailAndPassword(email, password).await()
+		let result = platformValue.signInWithEmailAndPassword(email, password).await()
 		return AuthDataResult(result)
 	}
 	
 	public func createUser(withEmail email: String, password: String) async throws -> AuthDataResult {
-		// SKIP NOWARN
-		let result = try await platformValue.createUserWithEmailAndPassword(email, password).await()
+		let result = platformValue.createUserWithEmailAndPassword(email, password).await()
 		return AuthDataResult(result)
 	}
 
 	public func signOut() throws {
-		try platformValue.signOut()
+		platformValue.signOut()
 	}
 
 	public func sendPasswordReset(withEmail email: String) async throws {
-		// SKIP NOWARN
-		try await platformValue.sendPasswordResetEmail(email).await()
+		platformValue.sendPasswordResetEmail(email).await()
 	}
 
 	public func signInAnonymously() async throws -> AuthDataResult {
-		let result = try await platformValue.signInAnonymously().await()
+		let result = platformValue.signInAnonymously().await()
 		return AuthDataResult(result)
 	}
 }
@@ -157,10 +154,8 @@ public class UserProfileChangeRequest/*: KotlinConverting<com.google.firebase.au
 		
 		let platformChangeRequest: com.google.firebase.auth.UserProfileChangeRequest = builder.build()
 		
-		// SKIP NOWARN
-		try await user.platformValue.updateProfile(platformChangeRequest).await()
+		user.platformValue.updateProfile(platformChangeRequest).await()
 	}
 }
-
 
 #endif

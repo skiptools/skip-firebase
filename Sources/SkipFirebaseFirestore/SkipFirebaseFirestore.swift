@@ -2,11 +2,9 @@
 // under the terms of the GNU Lesser General Public License 3.0
 // as published by the Free Software Foundation https://fsf.org
 
+#if SKIP
 import Foundation
 import SkipFirebaseCore
-#if SKIP
-// utility to convert from Play services tasks into Kotlin coroutines
-// https://developers.google.com/android/guides/tasks#kotlin_coroutine
 import kotlinx.coroutines.tasks.await
 
 public final class Firestore: KotlinConverting<com.google.firebase.firestore.FirebaseFirestore> {
@@ -67,7 +65,7 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
 
     public func getQuery(named name: String) async -> Query? {
         // SKIP NOWARN
-        guard let query = await store.getNamedQuery(name).await() else {
+        guard let query = store.getNamedQuery(name).await() else {
             return nil
         }
         return Query(query: query)
@@ -116,7 +114,6 @@ public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestor
         FieldPath(fieldPath: com.google.firebase.firestore.FieldPath.documentId())
     }
 }
-
 
 public class LoadBundleTaskProgress: KotlinConverting<com.google.firebase.firestore.LoadBundleTaskProgress> {
     public let progress: com.google.firebase.firestore.LoadBundleTaskProgress
@@ -194,8 +191,7 @@ public class AggregateQuery: KotlinConverting<com.google.firebase.firestore.Aggr
     public func getAggregation(source: AggregateSource) async throws -> AggregateQuerySnapshot {
         switch source {
         case .server:
-            // SKIP NOWARN
-            return try await AggregateQuerySnapshot(snap: query.get(com.google.firebase.firestore.AggregateSource.SERVER).await())
+            return AggregateQuerySnapshot(snap: query.get(com.google.firebase.firestore.AggregateSource.SERVER).await())
         }
     }
 }
@@ -215,7 +211,6 @@ public class Filter: KotlinConverting<com.google.firebase.firestore.Filter> {
         lhs.filter == rhs.filter
     }
 }
-
 
 public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.SnapshotMetadata> {
     public let meta: com.google.firebase.firestore.SnapshotMetadata
@@ -261,13 +256,11 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
     }
 
     public func getDocuments() async throws -> QuerySnapshot {
-        // SKIP NOWARN
-        QuerySnapshot(snap: try await query.get().await())
+        QuerySnapshot(snap: query.get().await())
     }
 
     public func getDocuments(source: FirestoreSource) async throws -> QuerySnapshot {
-        // SKIP NOWARN
-        QuerySnapshot(snap: try await query.get(source.source).await())
+        QuerySnapshot(snap: query.get(source.source).await())
     }
 
     public var count: AggregateQuery {
@@ -428,11 +421,9 @@ public class CollectionReference : Query {
     }
 
     public func addDocument(data: [String: Any]) async throws -> DocumentReference {
-        // SKIP NOWARN
-        try await DocumentReference(ref: try await ref.add(data.kotlin()).await())
+        DocumentReference(ref: ref.add(data.kotlin()).await())
     }
 }
-
 
 public class ListenerRegistration: KotlinConverting<com.google.firebase.firestore.ListenerRegistration> {
     public let reg: com.google.firebase.firestore.ListenerRegistration
@@ -740,8 +731,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 
     public func getDocument() async throws -> DocumentSnapshot {
-        // SKIP NOWARN
-        DocumentSnapshot(doc: try await ref.get().await())
+        DocumentSnapshot(doc: ref.get().await())
     }
 
     public func getDocument(completion: (_ snapshot: DocumentSnapshot?, _ error: (any Error)?) -> Void) {
@@ -766,28 +756,24 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 
     public func delete() async throws {
-        // SKIP NOWARN
-        try await ref.delete().await()
+        ref.delete().await()
     }
 
     public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
         if merge == true {
-            // SKIP NOWARN
-            try await ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge())
+            ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge())
         } else {
-            // SKIP NOWARN
-            try await ref.set(keyValues.kotlin())
+            ref.set(keyValues.kotlin())
         }
     }
 
     public func updateData(_ keyValues: [String: Any]) async throws {
-        // SKIP NOWARN
-        try await ref.update(keyValues.kotlin() as! Map<String, Any>)
+        ref.update(keyValues.kotlin() as! Map<String, Any>)
     }
 
     public func collection(_ collectionPath: String) -> CollectionReference {
         CollectionReference(ref: ref.collection(collectionPath))
-  }
+    }
 }
 
 public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
@@ -836,7 +822,6 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
     public var nanoseconds: Int32 {
         timestamp.nanoseconds
     }
-
 }
 
 public class WriteBatch {
@@ -847,8 +832,7 @@ public class WriteBatch {
     }
 
     public func commit() async throws {
-        // SKIP NOWARN
-        try await batch.commit().await()
+        batch.commit().await()
     }
 
     public func deleteDocument(_ document: DocumentReference) -> WriteBatch {
