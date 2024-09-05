@@ -90,7 +90,7 @@ plugins {
 }
 ```
 
-For concrete examples, see the [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project.
+For concrete examples, see the [FireSide Sample](https://github.com/skiptools/skipapp-fireside/) project.
 {: class="callout info"}
 
 Once Firebase has been added to your project, you need to configure the `FirebaseApp` on app startup. For iOS, this is typically done by setting an app delegate in your `Darwin/Sources/AppMain.swift` file. Here is a snippet from the FireSide sample app:
@@ -133,7 +133,7 @@ open class AndroidAppMain: Application {
 ```
 
 After configuring the `FirebaseApp`, you will be able to access the singleton type for each of the
-imported Firebase modules. For example, the following actor uses the Firestore singleton:
+imported Firebase modules. For example, the following actor uses the `Firestore` singleton:
 
 ```swift
 #if SKIP
@@ -230,7 +230,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     }
     ```
 
-1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform the necessary steps. This is taken from our FireSide sample app:
+1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform these actions. This is taken from our FireSide sample app:
 
     ```swift
     // Darwin/Sources/FireSideAppMain.swift
@@ -316,7 +316,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 
 1. See Firebase's [iOS instructions](https://firebase.google.com/docs/cloud-messaging/ios/client) and [Android instructions](https://firebase.google.com/docs/cloud-messaging/android/client) for additional details and options, including how to send test messages to your apps!
 
-The [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project is a great reference for seeing a complete, working app using Firebase notifications
+The [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project is a great reference for seeing a complete, working app using Firebase push notifications.
 {: class="callout info"}
 
 ## Testing
