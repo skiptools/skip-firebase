@@ -78,6 +78,10 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func batch() -> WriteBatch {
         return WriteBatch(batch: store.batch())
     }
+
+    public func useEmulator(withHost host: String, port: Int) {
+        store.useEmulator(host, port)
+    }
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
