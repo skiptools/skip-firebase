@@ -57,6 +57,10 @@ public final class Auth {
 		let result = platformValue.signInAnonymously().await()
 		return AuthDataResult(result)
 	}
+
+ 	public func useEmulator(withHost host: String, port: Int) {
+		platformValue.useEmulator(host, port)
+ 	}
 }
 
 public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResult> {
