@@ -192,8 +192,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     public func downloadURL() async throws -> URL {
-        // SKIP NOWARN
-        let uri: android.net.Uri = try await platformValue.downloadUrl.await()
+        let uri: android.net.Uri = platformValue.downloadUrl.await()
         return URL(string: uri.toString())!
     }
 
@@ -226,6 +225,20 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         }
     }
 
+    public func delete(completion: (((any Error)?) -> Void)?) {
+      Task {
+        do {
+          platformValue.delete().await()
+          completion?(nil)
+        } catch {
+          completion?(error)
+        }
+      }
+    }
+
+    public func delete() async throws {
+        platformValue.delete().await()
+    }
 }
 
 #endif

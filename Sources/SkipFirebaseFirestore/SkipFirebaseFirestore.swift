@@ -64,7 +64,6 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
 //    }
 
     public func getQuery(named name: String) async -> Query? {
-        // SKIP NOWARN
         guard let query = store.getNamedQuery(name).await() else {
             return nil
         }
