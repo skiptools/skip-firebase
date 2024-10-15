@@ -15,7 +15,6 @@ import SkipFirebaseCrashlytics
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseCrashlyticsTests", category: "Tests")
 
-// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 final class SkipFirebaseCrashlyticsTests: XCTestCase {
     func testSkipFirebaseCrashlyticsTests() async throws {
         if false {

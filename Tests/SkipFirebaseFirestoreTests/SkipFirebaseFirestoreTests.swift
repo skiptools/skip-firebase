@@ -18,7 +18,6 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseFirestoreTests", category: "
 
 var appName: String = "SkipFirebaseDemo"
 
-// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 // SKIP INSERT: @org.robolectric.annotation.LooperMode(org.robolectric.annotation.LooperMode.Mode.PAUSED)
 final class SkipFirebaseFirestoreTests: XCTestCase {
 
