@@ -1,3 +1,12 @@
+## 0.5.1
+
+Released 2024-10-15
+
+  - Merge pull request #12 from skiptools/firestore-getdata
+  - Add async StorageReference.getData() function
+  - Merge pull request #11 from boctor/main
+  - Add API to delete storage files
+
 ## 0.3.1
 
 Released 2024-08-26
