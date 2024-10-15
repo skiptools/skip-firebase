@@ -196,6 +196,11 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return URL(string: uri.toString())!
     }
 
+    public func getData(maxSize: Int64) async throws -> Data {
+        let data: kotlin.ByteArray = platformValue.getBytes(maxSize).await()
+        return Data(platformValue: data)
+    }
+
     public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void) {
       let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString());
 
