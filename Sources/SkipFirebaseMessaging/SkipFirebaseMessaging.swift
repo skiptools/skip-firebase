@@ -36,9 +36,20 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
     }
 
     public static func messaging() -> Messaging {
+        var isFirstAccess = false
         synchronized(sharedLock) {
             if shared == nil {
+                isFirstAccess = true
                 shared = Messaging(messaging: FirebaseMessaging.getInstance())
+            }
+        }
+        if isFirstAccess {
+            Task { @MainActor in
+                do {
+                    shared!.fcmToken = await shared!.token()
+                } catch {
+                    android.util.Log.e("SkipFirebaseMessaging", "await token() error", error as? Throwable)
+                }
             }
         }
         return shared!
@@ -46,14 +57,8 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
 
     public var delegate: (any MessagingDelegate)? {
         didSet {
-            if let delegate {
-                Task { @MainActor in
-                    do {
-                        delegate.messaging(self, didReceiveRegistrationToken: await token())
-                    } catch {
-                        android.util.Log.e("SkipFirebaseMessaging", "didReceiveRegistrationToken error", error as? Throwable)
-                    }
-                }
+            if let delegate, let token = fcmToken {
+                delegate.messaging(self, didReceiveRegistrationToken: token)
             }
         }
     }
@@ -104,7 +109,11 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         set { messaging.isAutoInitEnabled = newValue }
     }
 
-    public internal(set) var fcmToken: String?
+    public internal(set) var fcmToken: String? {
+        didSet {
+            delegate?.messaging(self, didReceiveRegistrationToken: fcmToken)
+        }
+    }
 
     public func token() async throws -> String {
         messaging.token.await()
@@ -202,7 +211,6 @@ public class MessagingService : FirebaseMessagingService {
         super.onNewToken(token)
         let messaging = Messaging.messaging()
         messaging.fcmToken = token
-        messaging.delegate?.messaging(messaging, didReceiveRegistrationToken: token)
     }
 
     public override func onSendError(msgId: String, exception: Exception) {
