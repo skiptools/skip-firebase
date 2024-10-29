@@ -196,15 +196,7 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
 
         let bos = citiesRef.document("BOS")
 
-        try await bos.setData([
-            "name": "Boston",
-            "state": "MA",
-            "country": "USA",
-            "capital": false,
-            "population": 555000,
-            "regions": ["east_coast", "new_england"],
-            "time": Timestamp(date: Date(timeIntervalSince1970: 1234))
-        ])
+        try await bos.setData(Self.bostonData)
 
         let bdoc = try await bos.getDocument()
         XCTAssertEqual("Boston", bdoc.get("name") as? String)
@@ -343,6 +335,46 @@ final class SkipFirebaseFirestoreTests: XCTestCase {
         // SKIP NOWARN
         await cacheApp.delete()
     }
+    
+    func test_exists_falseForNonExistentDocument() async throws {
+        XCTAssertEqual(appName, self.app.name)
+        let dbname = "(default)"
+        let db: Firestore = Firestore.firestore(app: self.app, database: dbname)
+        let citiesRef = db.collection("cities")
+        let bos = citiesRef.document("BOS")
+        try await bos.setData(Self.bostonData)
+        let ref = citiesRef.document("NON_EXISTENT_DOCUMENT")
+        do {
+            let snapshot = try await ref.getDocument()
+            XCTAssertFalse(snapshot.exists)
+        }
+    }
+    
+    func test_exists_trueForExistentDocument() async throws {
+        XCTAssertEqual(appName, self.app.name)
+        let dbname = "(default)"
+        let db: Firestore = Firestore.firestore(app: self.app, database: dbname)
+        let citiesRef = db.collection("cities")
+        let bos = citiesRef.document("BOS")
+        try await bos.setData(Self.bostonData)
+        let ref = citiesRef.document("BOS")
+        do {
+            let snapshot = try await ref.getDocument()
+            XCTAssertTrue(snapshot.exists)
+        }
+    }
+}
+
+extension SkipFirebaseFirestoreTests {
+    private static let bostonData: [String : Any] = [
+        "name": "Boston",
+        "state": "MA",
+        "country": "USA",
+        "capital": false,
+        "population": 555000,
+        "regions": ["east_coast", "new_england"],
+        "time": Timestamp(date: Date(timeIntervalSince1970: 1234))
+    ]
 }
 
 struct TestData : Codable, Hashable {
