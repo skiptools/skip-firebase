@@ -1,3 +1,10 @@
+## 0.5.3
+
+Released 2024-10-29
+
+  - Merge pull request #15 from Kevin-French/firestore-documentsnapshot-exists
+  - Add exists property to DocumentSnapshot in Firestore
+
 ## 0.5.1
 
 Released 2024-10-15
