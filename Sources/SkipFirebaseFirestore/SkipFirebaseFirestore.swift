@@ -679,6 +679,10 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     public var documentID: String {
         doc.getId()
     }
+    
+    public var exists: Bool {
+        doc.exists()
+    }
 
     public func data() -> [String: Any] {
         if let data = doc.getData() {
