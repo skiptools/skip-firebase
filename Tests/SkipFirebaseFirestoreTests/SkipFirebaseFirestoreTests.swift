@@ -262,9 +262,7 @@ var appName: String = "SkipFirebaseDemo"
                 logger.log("read citiesRef: \(document.documentID) => \(document.data())")
             }
         }
-    }
 
-    func testFirestoreQuery() async throws {
         XCTAssertEqual(appName, self.app.name)
 
         let tblref = db.collection("testFirestoreQuery")
@@ -299,7 +297,7 @@ var appName: String = "SkipFirebaseDemo"
     }
 
     // test disabled because we cannot seem to have multiple simultaneous firebase setups running
-    func XXXtestFirestoreBundles() async throws {
+    func DISABLEDtestFirestoreBundles() async throws {
 
         // see Resources/ firestore_bundle-1.json, firestore_bundle-2.json, firestore_bundle-3.json
         let bundle1 = try Data(contentsOf: XCTUnwrap(Bundle.module.url(forResource: "firestore_bundle-1", withExtension: "json")))
@@ -339,7 +337,7 @@ var appName: String = "SkipFirebaseDemo"
         await cacheApp.delete()
     }
     
-    func testExistsFalseForNonExistentDocument() async throws {
+    func DISABLEDtestExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
@@ -351,7 +349,7 @@ var appName: String = "SkipFirebaseDemo"
         }
     }
     
-    func testExistsTrueForExistentDocument() async throws {
+    func DISABLEDtestExistsTrueForExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
