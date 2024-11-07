@@ -15,7 +15,7 @@ import SkipFirebaseAnalytics
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "Tests")
 
-final class SkipFirebaseAnalyticsTests: XCTestCase {
+@MainActor final class SkipFirebaseAnalyticsTests: XCTestCase {
     func testSkipFirebaseAnalyticsTests() async throws {
         Analytics.logEvent("x", parameters: ["a": [1, 2, false]])
     }

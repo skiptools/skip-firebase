@@ -15,7 +15,7 @@ import SkipFirebaseCrashlytics
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseCrashlyticsTests", category: "Tests")
 
-final class SkipFirebaseCrashlyticsTests: XCTestCase {
+@MainActor final class SkipFirebaseCrashlyticsTests: XCTestCase {
     func testSkipFirebaseCrashlyticsTests() async throws {
         if false {
             let _: Crashlytics = Crashlytics.crashlytics()

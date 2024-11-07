@@ -13,7 +13,7 @@ import SkipFirebaseCore
 
 let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
 
-final class SkipFirebaseCoreTests: XCTestCase {
+@MainActor final class SkipFirebaseCoreTests: XCTestCase {
     func testSkipFirebase() {
     }
 }

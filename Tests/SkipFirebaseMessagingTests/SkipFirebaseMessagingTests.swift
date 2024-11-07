@@ -15,7 +15,7 @@ import SkipFirebaseMessaging
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseMessagingTests", category: "Tests")
 
-final class SkipFirebaseMessagingTests: XCTestCase {
+@MainActor final class SkipFirebaseMessagingTests: XCTestCase {
     func testSkipFirebaseMessagingTests() async throws {
         if false {
             let messaging: Messaging = Messaging.messaging()

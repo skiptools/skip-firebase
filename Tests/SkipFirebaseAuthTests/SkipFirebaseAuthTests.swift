@@ -15,7 +15,7 @@ import SkipFirebaseAuth
 
 let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
 
-final class SkipFirebaseAuthTests: XCTestCase {
+@MainActor final class SkipFirebaseAuthTests: XCTestCase {
     func testSkipFirebaseAuthTests() async throws {
         if false {
             let _: Auth = Auth.auth()

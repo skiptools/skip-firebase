@@ -16,7 +16,7 @@ import SkipFirebaseStorage
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseStorageTests", category: "Tests")
 
-final class SkipFirebaseStorageTests: XCTestCase {
+@MainActor final class SkipFirebaseStorageTests: XCTestCase {
     func testSkipFirebaseStorageTests() async throws {
         if false {
             let _: Storage = Storage.storage()

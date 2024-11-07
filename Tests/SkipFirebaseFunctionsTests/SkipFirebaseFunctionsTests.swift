@@ -15,7 +15,7 @@ import SkipFirebaseFunctions
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseFunctionsTests", category: "Tests")
 
-final class SkipFirebaseFunctionsTests: XCTestCase {
+@MainActor final class SkipFirebaseFunctionsTests: XCTestCase {
     func testSkipFirebaseFunctionsTests() async throws {
         if false {
             let _: Functions = Functions.functions()

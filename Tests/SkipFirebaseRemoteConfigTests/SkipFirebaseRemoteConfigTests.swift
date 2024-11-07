@@ -15,7 +15,7 @@ import SkipFirebaseRemoteConfig
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseRemoteConfigTests", category: "Tests")
 
-final class SkipFirebaseRemoteConfigTests: XCTestCase {
+@MainActor final class SkipFirebaseRemoteConfigTests: XCTestCase {
     func testSkipFirebaseRemoteConfigTests() async throws {
         if false {
             let _: RemoteConfig = RemoteConfig.remoteConfig()
