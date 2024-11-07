@@ -27,12 +27,20 @@ var appName: String = "SkipFirebaseDemo"
 @MainActor final class SkipFirebaseFirestoreTests: XCTestCase {
 
     /// App needs to be initialized in setUp and cleaned up in tearDown
-    fileprivate var app: FirebaseApp!
+    fileprivate static var app: FirebaseApp?
+    fileprivate static var db: Firestore?
 
     // runtestFirestoreBundles$SkipFirebaseFirestore_debugUnitTest kotlinx.coroutines.test.UncompletedCoroutinesError: After waiting for 10s, the test coroutine is not completing, there were active child jobs: [DispatchedCoroutine{Active}@3816ef2f]
     // Suppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call
 
+    var app: FirebaseApp { Self.app! }
+    var db: Firestore { Self.db! }
+
     override func setUp() {
+        if Self.app != nil {
+            return
+        }
+
         // this is generally loaded from the system's GoogleService-Info.plist / google-services.json using the default constructor, but for the sake of the test case we manually set it up here
         let options = FirebaseOptions(googleAppID: "1:599015466373:ios:918f07f9e07f56b03890ec", gcmSenderID: "599015466373")
 
@@ -65,7 +73,8 @@ var appName: String = "SkipFirebaseDemo"
         // the app is registered statically, so check to see if it has been registered
         if let app = FirebaseApp.app(name: appName) {
             app.isDataCollectionDefaultEnabled = false
-            self.app = app
+            Self.app = app
+            Self.db = Firestore.firestore(app: app, database: "(default)")
         } else {
             fatalError("unable to load FirebaseApp.app(name: \"\(appName)\")")
         }
@@ -73,20 +82,20 @@ var appName: String = "SkipFirebaseDemo"
 
     #if SKIP
     override func tearDown() throws {
-        FirebaseApp.app(name: appName)?.delete()
+        //FirebaseApp.app(name: appName)?.delete()
 
         // needed or else: Suppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call.
-        org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
+        //org.robolectric.Shadows.shadowOf(android.os.Looper.getMainLooper()).idle()
     }
     #else
     override func tearDown() async throws {
-        await FirebaseApp.app(name: appName)?.delete()
+        //await FirebaseApp.app(name: appName)?.delete()
     }
     #endif
 
     /// This is never invoked, it is just to validate API parity
     private func validateFirebaseWrapperAPI() async throws {
-        let db: Firestore = Firestore.firestore(app: self.app)
+        //let db: Firestore = Firestore.firestore(app: self.app)
 
         let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
@@ -182,9 +191,6 @@ var appName: String = "SkipFirebaseDemo"
     func testFirestore() async throws {
         XCTAssertEqual(appName, self.app.name)
 
-        let dbname = "(default)"
-        let db: Firestore = Firestore.firestore(app: self.app, database: dbname)
-
         let citiesRef = db.collection("cities")
 
         do {
@@ -256,16 +262,10 @@ var appName: String = "SkipFirebaseDemo"
                 logger.log("read citiesRef: \(document.documentID) => \(document.data())")
             }
         }
-
-        // follow-on test since running multiple separate firestore tests in a single case seems to fail (possibly due to re-configuration of the FirebaseApp app)
-        try await followon_testFirestoreQuery()
-        //try await followon_testFirestoreBundles()
     }
 
-    func followon_testFirestoreQuery() async throws {
+    func testFirestoreQuery() async throws {
         XCTAssertEqual(appName, self.app.name)
-
-        let db = Firestore.firestore(app: self.app)
 
         let tblref = db.collection("testFirestoreQuery")
         let doc = try await tblref.addDocument(data: [
@@ -296,17 +296,15 @@ var appName: String = "SkipFirebaseDemo"
 
         let doc2 = try await doc2Ref.getDocument()
         XCTAssertEqual(when, doc2.get("when") as? Double)
-
-        //try await XXXtestFirestoreBundles()
     }
 
-    func followon_testFirestoreBundles() async throws {
+    // test disabled because we cannot seem to have multiple simultaneous firebase setups running
+    func XXXtestFirestoreBundles() async throws {
 
         // see Resources/ firestore_bundle-1.json, firestore_bundle-2.json, firestore_bundle-3.json
         let bundle1 = try Data(contentsOf: XCTUnwrap(Bundle.module.url(forResource: "firestore_bundle-1", withExtension: "json")))
 
         let data = bundle1
-
 
         // the name of the app must match the bundle to be loaded, or else:
         // 10.19.1 - [FirebaseFirestore][I-FST000001] Failed to GetNextElement() from bundle with error Resource name is not valid for current instance: projects/react-native-firebase-testing/databases/(default)/documents
@@ -341,10 +339,8 @@ var appName: String = "SkipFirebaseDemo"
         await cacheApp.delete()
     }
     
-    func test_exists_falseForNonExistentDocument() async throws {
+    func testExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
-        let dbname = "(default)"
-        let db: Firestore = Firestore.firestore(app: self.app, database: dbname)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
         try await bos.setData(Self.bostonData)
@@ -355,10 +351,8 @@ var appName: String = "SkipFirebaseDemo"
         }
     }
     
-    func test_exists_trueForExistentDocument() async throws {
+    func testExistsTrueForExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
-        let dbname = "(default)"
-        let db: Firestore = Firestore.firestore(app: self.app, database: dbname)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
         try await bos.setData(Self.bostonData)
