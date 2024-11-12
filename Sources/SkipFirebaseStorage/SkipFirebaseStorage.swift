@@ -35,23 +35,28 @@ public final class Storage {
     }
 
     public func reference(for url: URL) throws -> StorageReference {
-        let storageReference = try platformValue.getReferenceFromUrl(url.absoluteString)
-        return StorageReference(storageReference)
+        try reference(forURL: url.absoluteString)
+    }
+
+    public func reference(forURL urlString: String) throws -> StorageReference {
+        StorageReference(try platformValue.getReferenceFromUrl(urlString))
     }
 
     public func reference(withPath path: String) -> StorageReference {
-      let storageReference = platformValue.getReference(path)
-      return StorageReference(storageReference)
+        StorageReference(platformValue.getReference(path))
     }
 
     public func useEmulator(withHost host: String, port: Int) {
-      platformValue.useEmulator(host, port)
-   	}
+        platformValue.useEmulator(host, port)
+    }
 }
 
 public class StorageMetadata: KotlinConverting<com.google.firebase.storage.StorageMetadata> {
+    public var platformValue: com.google.firebase.storage.StorageMetadata
 
-    public let platformValue: com.google.firebase.storage.StorageMetadata
+    public init() {
+        self.platformValue = com.google.firebase.storage.StorageMetadata()
+    }
 
     public init(platformValue: com.google.firebase.storage.StorageMetadata) {
         self.platformValue = platformValue
@@ -69,28 +74,39 @@ public class StorageMetadata: KotlinConverting<com.google.firebase.storage.Stora
         lhs.platformValue == rhs.platformValue
     }
 
+    /// A builder for mutating the current underlying metadata
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/storage/StorageMetadata.Builder
+    private var builder: com.google.firebase.storage.StorageMetadata.Builder {
+        com.google.firebase.storage.StorageMetadata.Builder(self.platformValue)
+    }
+
     public var bucket: String {
         return platformValue.getBucket()!
     }
 
     public var cacheControl: String? {
-        return platformValue.getCacheControl()
+        get { platformValue.getCacheControl() }
+        set { platformValue = builder.setCacheControl(newValue).build() }
     }
 
     public var contentDisposition: String? {
-        return platformValue.getContentDisposition()
+        get { platformValue.getContentDisposition() }
+        set { platformValue = builder.setContentDisposition(newValue).build() }
     }
 
     public var contentEncoding: String? {
-        return platformValue.getContentEncoding()
+        get { platformValue.getContentEncoding() }
+        set { platformValue = builder.setContentEncoding(newValue).build() }
     }
 
     public var contentLanguage: String? {
-        return platformValue.getContentLanguage()
+        get { platformValue.getContentLanguage() }
+        set { platformValue = builder.setContentLanguage(newValue).build() }
     }
 
     public var contentType: String? {
-        return platformValue.getContentType()
+        get { platformValue.getContentType() }
+        set { platformValue = builder.setContentType(newValue).build() }
     }
 
     public var md5Hash: String? {
@@ -102,17 +118,30 @@ public class StorageMetadata: KotlinConverting<com.google.firebase.storage.Stora
     }
 
     public var customMetadata: [String : String]? {
-        let metadataKeys = platformValue.getCustomMetadataKeys()
-        guard !metadataKeys.isEmpty() else {
-            return nil
-        }
-        var metadata: [String : String] = [:]
-        for key in metadataKeys {
-            if let metadataValue = platformValue.getCustomMetadata(key) {
-                metadata[key] = metadataValue
+        get {
+            let metadataKeys = platformValue.getCustomMetadataKeys()
+            guard !metadataKeys.isEmpty() else {
+                return nil
             }
+            var metadata: [String : String] = [:]
+            for key in metadataKeys {
+                if let metadataValue = platformValue.getCustomMetadata(key) {
+                    metadata[key] = metadataValue
+                }
+            }
+            return metadata
         }
-        return metadata
+
+        set {
+            // FIXME: this differs from the iOS API in that it will not clean any unused existing custom metadata key/values from the previous metadata; we would need to create and populate a fresh StorageMetadata.Builder rather than basing it on the existing metadata to do that
+            let b = self.builder
+            if let newValue {
+                for (key, value) in newValue {
+                    b.setCustomMetadata(key, value)
+                }
+            }
+            self.platformValue = b.build()
+        }
     }
 
     public var metageneration: Int64 {
@@ -196,53 +225,198 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return URL(string: uri.toString())!
     }
 
-    public func getData(maxSize: Int64) async throws -> Data {
-        let data: kotlin.ByteArray = platformValue.getBytes(maxSize).await()
-        return Data(platformValue: data)
+    public func getMetadata() async throws -> StorageMetadata {
+        let metadata = platformValue.getMetadata().await()
+        return StorageMetadata(platformValue: metadata)
     }
 
-    public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void) {
-      let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString());
+    public func updateMetadata(_ metadata: StorageMetadata) async throws -> StorageMetadata {
+        let metadata = platformValue.updateMetadata(metadata.platformValue).await()
+        return StorageMetadata(platformValue: metadata)
+    }
 
-      let uploadTask = platformValue.putFile(fileURI, metadata?.platformValue, nil)
+    public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void = { _, _ in }) -> StorageUploadTask {
+        let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
+
+        let uploadTask = platformValue.putFile(fileURI, metadata?.platformValue, nil)
         uploadTask.addOnFailureListener { exception in
             completion(nil, ErrorException(exception))
         }.addOnSuccessListener { taskSnapshot in
-          if let metadata = taskSnapshot.metadata {
-            completion(StorageMetadata(platformValue: metadata), nil)
-          } else {
-            completion(nil, nil)
-          }
+            if let metadata = taskSnapshot.metadata {
+                completion(StorageMetadata(platformValue: metadata), nil)
+            } else {
+                completion(nil, nil)
+            }
         }
+
+        return StorageUploadTask(platformValue: uploadTask)
     }
 
     // TODO: Support onProgress once SKIP has support for Progress
     public func putFileAsync(from url: URL, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
         return try await withCheckedThrowingContinuation { continuation in
-          putFile(from: url, metadata: metadata) { metadata, error in
-            if let error {
-              continuation.resume(throwing: error)
-              return
+            putFile(from: url, metadata: metadata) { metadata, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: metadata!)
+                }
             }
-        
-            continuation.resume(returning: metadata!)
-          }
         }
     }
 
-    public func delete(completion: (((any Error)?) -> Void)?) {
-      Task {
-        do {
-          platformValue.delete().await()
-          completion?(nil)
-        } catch {
-          completion?(error)
+    public func putData(_ uploadData: Data, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void) -> StorageUploadTask {
+        // putBytes(bytes, metadata) is @NonNull, so we need to use different methods for null vs. non-null metadata parameter
+        let uploadTask = metadata == nil ? platformValue.putBytes(uploadData.platformValue) : platformValue.putBytes(uploadData.platformValue, metadata!.platformValue)
+
+        uploadTask.addOnFailureListener { exception in
+            completion(nil, ErrorException(exception))
+        }.addOnSuccessListener { taskSnapshot in
+            if let metadata = taskSnapshot.metadata {
+                completion(StorageMetadata(platformValue: metadata), nil)
+            } else {
+                completion(nil, nil)
+            }
         }
-      }
+
+        return StorageUploadTask(platformValue: uploadTask)
+    }
+
+    // TODO: Support onProgress once SKIP has support for Progress
+    public func putDataAsync(_ uploadData: Data, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
+        return try await withCheckedThrowingContinuation { continuation in
+            putData(uploadData, metadata: metadata) { metadata, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: metadata!)
+                }
+            }
+        }
+    }
+
+    public func write(toFile fileURL: URL, completion: ((_: URL?, _: Error?) -> Void)? = nil) -> StorageDownloadTask {
+        let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
+        let downloadTask = platformValue.getFile(fileURI)
+
+        downloadTask.addOnFailureListener { exception in
+            completion?(nil, ErrorException(exception))
+        }.addOnSuccessListener { (taskSnapshot: com.google.firebase.storage.FileDownloadTask.TaskSnapshot) in
+            completion?(fileURL, nil)
+        }
+
+        return StorageFileDownloadTask(platformValue: downloadTask)
+    }
+
+    /// Async version of getData(), but note that the iOS Firestore does not have an equivalent for some reason
+    public func getDataAsync(maxSize: Int64) async throws -> Data {
+        let data: kotlin.ByteArray = platformValue.getBytes(maxSize).await()
+        return Data(platformValue: data)
+    }
+
+    public func getData(maxSize: Int64, completion: (_: Data?, _: Error?) -> Void) -> StorageDownloadTask {
+
+        let downloadTask = platformValue.getBytes(maxSize)
+        Task {
+            do {
+                let data: kotlin.ByteArray = downloadTask.await()
+                completion(Data(platformValue: data), nil)
+            } catch {
+                completion(nil, error)
+            }
+        }
+        return StoragBytesDownloadTask(platformValue: downloadTask)
+    }
+
+    public func delete(completion: (((any Error)?) -> Void)?) {
+        Task {
+            do {
+                platformValue.delete().await()
+                completion?(nil)
+            } catch {
+                completion?(error)
+            }
+        }
     }
 
     public func delete() async throws {
         platformValue.delete().await()
+    }
+}
+
+public class StorageTask {
+    init() {
+    }
+}
+
+public protocol StorageTaskManagement {
+    func pause() -> Void
+    func cancel() -> Void
+    func resume() -> Void
+}
+
+public class StorageObservableTask : StorageTask {
+    override init() {
+        super.init()
+    }
+}
+
+public final class StorageUploadTask : StorageTaskManagement {
+    public let platformValue: com.google.firebase.storage.UploadTask
+
+    init(platformValue: com.google.firebase.storage.UploadTask) {
+        super.init()
+        self.platformValue = platformValue
+    }
+
+    public func cancel() {
+        platformValue.cancel()
+        return
+    }
+
+    public func pause() {
+        platformValue.pause()
+        return
+    }
+
+    public func resume() {
+        platformValue.resume()
+        return
+    }
+}
+
+public class StorageDownloadTask {
+}
+
+public final class StoragBytesDownloadTask : StorageDownloadTask {
+    public let platformValue: com.google.android.gms.tasks.Task<kotlin.ByteArray!>
+
+    init(platformValue: com.google.android.gms.tasks.Task<kotlin.ByteArray!>) {
+        self.platformValue = platformValue
+    }
+}
+
+public final class StorageFileDownloadTask : StorageDownloadTask, StorageTaskManagement {
+    public let platformValue: com.google.firebase.storage.FileDownloadTask
+
+    init(platformValue: com.google.firebase.storage.FileDownloadTask) {
+        super.init()
+        self.platformValue = platformValue
+    }
+
+    public func cancel() {
+        platformValue.cancel()
+        return
+    }
+
+    public func pause() {
+        platformValue.pause()
+        return
+    }
+
+    public func resume() {
+        platformValue.resume()
+        return
     }
 }
 
