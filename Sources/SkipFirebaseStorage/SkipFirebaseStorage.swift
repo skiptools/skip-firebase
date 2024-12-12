@@ -26,6 +26,14 @@ public final class Storage {
         Storage(com.google.firebase.storage.FirebaseStorage.getInstance(app.app))
     }
 
+    public static func storage(url: String) -> Storage {
+        Storage(com.google.firebase.storage.FirebaseStorage.getInstance(url))
+    }
+
+    public static func storage(app: FirebaseApp, url: String) -> Storage {
+        Storage(com.google.firebase.storage.FirebaseStorage.getInstance(app.app, url))
+    }
+
     public var app: FirebaseApp {
         FirebaseApp(app: platformValue.getApp())
     }
