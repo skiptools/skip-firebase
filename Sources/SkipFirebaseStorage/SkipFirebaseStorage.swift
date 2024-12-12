@@ -246,7 +246,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void = { _, _ in }) -> StorageUploadTask {
         let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
 
-        let uploadTask = platformValue.putFile(fileURI, metadata?.platformValue, nil)
+        let uploadTask = metadata == nil ? platformValue.putFile(fileURI) : platformValue.putFile(fileURI, metadata!.platformValue, nil)
         uploadTask.addOnFailureListener { exception in
             completion(nil, ErrorException(exception))
         }.addOnSuccessListener { taskSnapshot in
