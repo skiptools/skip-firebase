@@ -35,6 +35,8 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseStorageTests", category: "Te
             let fileURL = URL(fileURLWithPath: "/dev/null")
 
             // we don't actually connect to the storage here, so we are just checking the API signatures for get/put data
+            let storageCustomURL = Storage.storage(url: "gs://")
+
             let storage = Storage.storage()
             let ref: StorageReference = storage.reference()
             let _: StorageReference = storage.reference(withPath: "test")
