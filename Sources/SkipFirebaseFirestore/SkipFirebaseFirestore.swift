@@ -781,6 +781,22 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     public func collection(_ collectionPath: String) -> CollectionReference {
         CollectionReference(ref: ref.collection(collectionPath))
     }
+
+    public func addSnapshotListener(_ listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
+        ListenerRegistration(reg: ref.addSnapshotListener { snapshot, error in
+            let ds: DocumentSnapshot? = snapshot == nil ? nil : DocumentSnapshot(doc: snapshot!)
+            let err: Error? = error?.aserror()
+            listener(ds, err)
+        })
+    }
+
+    public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
+        ListenerRegistration(reg: ref.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
+            let ds: DocumentSnapshot? = snapshot == nil ? nil : DocumentSnapshot(doc: snapshot!)
+            let err: Error? = error?.aserror()
+            listener(ds, err)
+        })
+    }
 }
 
 public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
