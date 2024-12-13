@@ -1,3 +1,11 @@
+## 0.6.1
+
+Released 2024-12-12
+
+  - Merge pull request #19 from ky-is/fix-storage-metadata
+  - Fix optional metadata uploading with putFile
+  - Add storage instance with custom URL string
+
 ## 0.5.3
 
 Released 2024-10-29
