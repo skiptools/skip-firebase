@@ -1,3 +1,10 @@
+## 0.6.2
+
+Released 2024-12-13
+
+  - Merge pull request #20 from skiptools/doc-snapshot-listener
+  - Add DocumentReference.addSnapshotListener API
+
 ## 0.6.1
 
 Released 2024-12-12
