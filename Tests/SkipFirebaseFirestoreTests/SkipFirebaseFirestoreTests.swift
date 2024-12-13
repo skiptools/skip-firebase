@@ -23,7 +23,6 @@ var appName: String = "SkipFirebaseDemo"
 // Test Suite 'Selected tests' started at 2024-11-07 12:54:30.612.Test Suite 'skip-firebasePackageTests.xctest' started at 2024-11-07 12:54:30.614.Test Suite 'SkipFirebaseFirestoreTests' started at 2024-11-07 12:54:30.614.Test Case '-[SkipFirebaseFirestoreTests.SkipFirebaseFirestoreTests test_exists_trueForExistentDocument]' started.2024-11-07 12:54:30.823 xctest[15414:52946] *** Assertion failure in void firebase::firestore::core::FirestoreClient::Initialize(const User &, const Settings &)(), /var/folders/4b/7k50gk0j4f5bjk3799wdt8nw0000gn/T/ZipRelease/2024-10-14T13-23-42/project-macos/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.cc:2172024-11-07 12:54:30.900 xctest[15414:52946] *** Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'FIRESTORE INTERNAL ASSERTION FAILED: Failed to open DB: Internal: Failed to open LevelDB database at /Users/runner/Library/Application Support/firestore/SkipFirebaseDemo/skip-firebase-demo/main: LevelDB error: IO error: lock /Users/runner/Library/Application Support/firestore/SkipFirebaseDemo/skip-firebase-demo/main/LOCK: Resource temporarily unavailable (expected created.ok())'
 
 
-// SKIP INSERT: @org.robolectric.annotation.LooperMode(org.robolectric.annotation.LooperMode.Mode.PAUSED)
 @MainActor final class SkipFirebaseFirestoreTests: XCTestCase {
 
     /// App needs to be initialized in setUp and cleaned up in tearDown
@@ -205,11 +204,21 @@ var appName: String = "SkipFirebaseDemo"
         XCTAssertEqual(100_000_000, ts.nanoseconds)
         XCTAssertEqual(12345.1, ts.dateValue().timeIntervalSince1970, accuracy: 0.001)
 
-        let bos = citiesRef.document("BOS")
+        let bos: DocumentReference = citiesRef.document("BOS")
 
+        var listenerChanges = 0
+        let docListener: ListenerRegistration = bos.addSnapshotListener(includeMetadataChanges: true) { snapshot, error in
+            listenerChanges += 1
+        }
+        defer { docListener.remove() }
+
+        XCTAssertEqual(0, listenerChanges)
         try await bos.setData(Self.bostonData)
+        if !isJava { // doesn't fire immediately on Android
+            XCTAssertEqual(3, listenerChanges)
+        }
 
-        let bdoc = try await bos.getDocument()
+        let bdoc: DocumentSnapshot = try await bos.getDocument()
         XCTAssertEqual("Boston", bdoc.get("name") as? String)
 
         XCTAssertNotNil(bdoc.get("regions"))
@@ -257,7 +266,7 @@ var appName: String = "SkipFirebaseDemo"
         ])
 
         do {
-            let snapshot = try await citiesRef.getDocuments()
+            let snapshot: QuerySnapshot = try await citiesRef.getDocuments()
             for document in snapshot.documents {
                 logger.log("read citiesRef: \(document.documentID) => \(document.data())")
             }
@@ -290,7 +299,9 @@ var appName: String = "SkipFirebaseDemo"
         let doc2Ref = try await tblref.addDocument(data: [
             "when": when
         ])
-        //XCTAssertEqual(2, changes)
+        if !isJava { // doesn't fire immediately on Android
+            XCTAssertEqual(2, changes)
+        }
 
         let doc2 = try await doc2Ref.getDocument()
         XCTAssertEqual(when, doc2.get("when") as? Double)
