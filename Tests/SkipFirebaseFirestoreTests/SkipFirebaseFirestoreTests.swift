@@ -306,6 +306,10 @@ var appName: String = "SkipFirebaseDemo"
 
         let doc2 = try await doc2Ref.getDocument()
         XCTAssertEqual(when, doc2.get("when") as? Double)
+
+        try await assertExistsFalseForNonExistentDocument()
+
+        try await assertExistsTrueForExistentDocument()
     }
 
     // test disabled because we cannot seem to have multiple simultaneous firebase setups running
@@ -349,7 +353,7 @@ var appName: String = "SkipFirebaseDemo"
         await cacheApp.delete()
     }
 
-    func testExistsFalseForNonExistentDocument() async throws {
+    func assertExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
@@ -361,7 +365,6 @@ var appName: String = "SkipFirebaseDemo"
             XCTAssertNil(snapshot.data())
         }
         do {
-            let data = ["name": "NON_EXISTENT"]
             try await ref.updateData(Self.bostonData)
             XCTFail("updateData should throw on non-existent document")
         } catch {
@@ -369,7 +372,7 @@ var appName: String = "SkipFirebaseDemo"
         }
     }
 
-    func testExistsTrueForExistentDocument() async throws {
+    func assertExistsTrueForExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
