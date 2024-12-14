@@ -229,7 +229,8 @@ var appName: String = "SkipFirebaseDemo"
         XCTAssertEqual(Timestamp(date: Date(timeIntervalSince1970: 1234)), bdoc.get("time") as? Timestamp)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
-        try await bos.updateData(["population": 675000])
+        let bosData: [String: Any] = ["population": 675000]
+        try await bos.updateData(bosData)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
         let bdoc2 = try await bos.getDocument()
@@ -347,8 +348,8 @@ var appName: String = "SkipFirebaseDemo"
         // SKIP NOWARN
         await cacheApp.delete()
     }
-    
-    func DISABLEDtestExistsFalseForNonExistentDocument() async throws {
+
+    func testExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
@@ -359,9 +360,16 @@ var appName: String = "SkipFirebaseDemo"
             XCTAssertFalse(snapshot.exists)
             XCTAssertNil(snapshot.data())
         }
+        do {
+            let data = ["name": "NON_EXISTENT"]
+            try await ref.updateData(Self.bostonData)
+            XCTFail("updateData should throw on non-existent document")
+        } catch {
+            XCTAssert(true)
+        }
     }
-    
-    func DISABLEDtestExistsTrueForExistentDocument() async throws {
+
+    func testExistsTrueForExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
