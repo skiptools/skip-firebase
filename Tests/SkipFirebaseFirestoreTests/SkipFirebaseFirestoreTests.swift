@@ -229,7 +229,8 @@ var appName: String = "SkipFirebaseDemo"
         XCTAssertEqual(Timestamp(date: Date(timeIntervalSince1970: 1234)), bdoc.get("time") as? Timestamp)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
-        try await bos.updateData(["population": 675000])
+        let bosData: [String: Any] = ["population": 675000]
+        try await bos.updateData(bosData)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
         let bdoc2 = try await bos.getDocument()
@@ -305,6 +306,10 @@ var appName: String = "SkipFirebaseDemo"
 
         let doc2 = try await doc2Ref.getDocument()
         XCTAssertEqual(when, doc2.get("when") as? Double)
+
+        try await assertExistsFalseForNonExistentDocument()
+
+        try await assertExistsTrueForExistentDocument()
     }
 
     // test disabled because we cannot seem to have multiple simultaneous firebase setups running
@@ -347,8 +352,8 @@ var appName: String = "SkipFirebaseDemo"
         // SKIP NOWARN
         await cacheApp.delete()
     }
-    
-    func DISABLEDtestExistsFalseForNonExistentDocument() async throws {
+
+    func assertExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
@@ -357,10 +362,17 @@ var appName: String = "SkipFirebaseDemo"
         do {
             let snapshot = try await ref.getDocument()
             XCTAssertFalse(snapshot.exists)
+            XCTAssertNil(snapshot.data())
+        }
+        do {
+            try await ref.updateData(Self.bostonData)
+            XCTFail("updateData should throw on non-existent document")
+        } catch {
+            XCTAssert(true)
         }
     }
-    
-    func DISABLEDtestExistsTrueForExistentDocument() async throws {
+
+    func assertExistsTrueForExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
         let bos = citiesRef.document("BOS")
