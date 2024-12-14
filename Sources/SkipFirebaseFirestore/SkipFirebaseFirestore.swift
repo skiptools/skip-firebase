@@ -657,7 +657,7 @@ public enum DocumentChangeType {
     case removed
 }
 
-public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.DocumentSnapshot> {
+public class BaseDocumentSnapshot: KotlinConverting<com.google.firebase.firestore.DocumentSnapshot> {
     public let doc: com.google.firebase.firestore.DocumentSnapshot
 
     public init(doc: com.google.firebase.firestore.DocumentSnapshot) {
@@ -684,14 +684,6 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
         doc.exists()
     }
 
-    public func data() -> [String: Any] {
-        if let data = doc.getData() {
-            return deepSwift(map: data)
-        } else {
-            return [:]
-        }
-    }
-
     public func get(_ fieldName: String) -> Any? {
         guard let value = doc.get(fieldName) else {
             return nil
@@ -700,7 +692,17 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     }
 }
 
-public class QueryDocumentSnapshot : DocumentSnapshot {
+public class DocumentSnapshot: BaseDocumentSnapshot {
+    public func data() -> [String: Any]? {
+        if let data = doc.getData() {
+            return deepSwift(map: data)
+        } else {
+            return nil
+        }
+    }
+}
+
+public class QueryDocumentSnapshot: BaseDocumentSnapshot {
     public var snapshot: com.google.firebase.firestore.QueryDocumentSnapshot {
         doc as! com.google.firebase.firestore.QueryDocumentSnapshot
     }
@@ -711,6 +713,14 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
 
     public var reference: DocumentReference {
         DocumentReference(ref: snapshot.reference)
+    }
+
+    public func data() -> [String: Any] {
+        if let data = doc.getData() {
+            return deepSwift(map: data)
+        } else {
+            return [:]
+        }
     }
 }
 
