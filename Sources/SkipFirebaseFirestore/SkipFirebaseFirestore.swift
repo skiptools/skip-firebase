@@ -778,14 +778,14 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
 
     public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
         if merge == true {
-            ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge())
+            ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge()).await()
         } else {
-            ref.set(keyValues.kotlin())
+            ref.set(keyValues.kotlin()).await()
         }
     }
 
     public func updateData(_ keyValues: [String: Any]) async throws {
-        ref.update(keyValues.kotlin() as! Map<String, Any>)
+        ref.update(keyValues.kotlin() as! Map<String, Any>).await()
     }
 
     public func collection(_ collectionPath: String) -> CollectionReference {
