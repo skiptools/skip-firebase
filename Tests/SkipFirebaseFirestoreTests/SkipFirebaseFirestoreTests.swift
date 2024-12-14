@@ -357,6 +357,7 @@ var appName: String = "SkipFirebaseDemo"
         do {
             let snapshot = try await ref.getDocument()
             XCTAssertFalse(snapshot.exists)
+            XCTAssertNil(snapshot.data())
         }
     }
     
