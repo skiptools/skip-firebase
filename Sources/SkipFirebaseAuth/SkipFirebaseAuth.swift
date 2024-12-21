@@ -61,6 +61,19 @@ public final class Auth {
  	public func useEmulator(withHost host: String, port: Int) {
 		platformValue.useEmulator(host, port)
  	}
+
+	public func addStateDidChangeListener(_ listener: @escaping (Auth, User?) -> Void) -> AuthStateListener {
+		let stateListener = com.google.firebase.auth.FirebaseAuth.AuthStateListener { auth in
+			let user = auth.currentUser != nil ? User(auth.currentUser!) : nil
+			listener(Auth(platformValue: auth), user)
+		}
+		platformValue.addAuthStateListener(stateListener)
+		return AuthStateListener(platformValue: stateListener)
+	}
+
+	public func removeStateDidChangeListener(_ listenerHandle: NSObjectProtocol) {
+		platformValue.removeAuthStateListener((listenerHandle as AuthStateListener).platformValue)
+	}
 }
 
 public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResult> {
@@ -84,6 +97,14 @@ public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResul
 	
 	public var user: User {
 		User(platformValue.user!)
+	}
+}
+
+public class AuthStateListener: NSObjectProtocol {
+	public let platformValue: com.google.firebase.auth.FirebaseAuth.AuthStateListener
+
+	public init(platformValue: com.google.firebase.auth.FirebaseAuth.AuthStateListener) {
+		self.platformValue = platformValue
 	}
 }
 
