@@ -1,3 +1,10 @@
+## 0.6.4
+
+Released 2024-12-22
+
+  - Merge pull request #24 from ky-is/add-auth-state-listener
+  - Add auth addStateDidChangeListener/removeStateDidChangeListener
+
 ## 0.6.2
 
 Released 2024-12-13
