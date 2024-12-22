@@ -18,8 +18,10 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
 @MainActor final class SkipFirebaseAuthTests: XCTestCase {
     func testSkipFirebaseAuthTests() async throws {
         if false {
-            let _: Auth = Auth.auth()
+            let auth: Auth = Auth.auth()
             let _: Auth = Auth.auth(app: FirebaseApp.app()!)
+            let listener = auth.addStateDidChangeListener({ _, _ in })
+            auth.removeStateDidChangeListener(listener)
         }
     }
 }
