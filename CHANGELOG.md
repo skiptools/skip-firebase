@@ -1,3 +1,10 @@
+## 0.6.5
+
+Released 2024-12-22
+
+  - Merge pull request #23 from boctor/add-http-callable-functions-support
+  - Add support for calling HTTP callable functions
+
 ## 0.6.4
 
 Released 2024-12-22
