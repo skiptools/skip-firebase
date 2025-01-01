@@ -391,9 +391,10 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         Query(query: query.whereIn(field, array.kotlin()))
     }
 
-//    public func whereField(_ field: String, notIn: [Any]) -> Query {
-//        Query(query: query.whereNotIn(field, notIn.kotlin()))
-//    }
+    // SKIP DECLARE: fun whereField(field: String, notIn: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null): Query
+    public func whereField(_ field: String, notIn: [Any]) -> Query {
+        Query(query: query.whereNotIn(field, notIn.kotlin()))
+    }
 
     public func whereField(_ field: String, isEqualTo: Any) -> Query {
         Query(query: query.whereEqualTo(field, isEqualTo.kotlin()))
@@ -423,18 +424,19 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         Query(query: query.whereArrayContains(field, arrayContains.kotlin()))
     }
 
-    public func whereField(_ field: String, arrayContainsAny: [Any]) -> Query {
-        Query(query: query.whereArrayContainsAny(field, arrayContainsAny.kotlin()))
-    }
-
-
     public func whereField(_ field: FieldPath, in array: [Any]) -> Query {
         Query(query: query.whereIn(field.fieldPath, array.kotlin()))
     }
 
-//    public func whereField(_ field: FieldPath, notIn: [Any]) -> Query {
-//        Query(query: query.whereNotIn(field.fieldPath, notIn.kotlin()))
-//    }
+    // SKIP DECLARE: fun whereField(field: String, arrayContainsAny: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_1: Nothing? = null): Query
+    public func whereField(_ field: String, arrayContainsAny: [Any]) -> Query {
+        Query(query: query.whereArrayContainsAny(field, arrayContainsAny.kotlin()))
+    }
+
+    // SKIP DECLARE: fun whereField(field: FieldPath, notIn: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_1: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_2: Nothing? = null): Query
+    public func whereField(_ field: FieldPath, notIn: [Any]) -> Query {
+        Query(query: query.whereNotIn(field.fieldPath, notIn.kotlin()))
+    }
 
     public func whereField(_ field: FieldPath, isEqualTo: Any) -> Query {
         Query(query: query.whereEqualTo(field.fieldPath, isEqualTo.kotlin()))
