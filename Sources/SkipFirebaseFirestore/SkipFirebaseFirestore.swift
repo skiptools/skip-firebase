@@ -213,6 +213,107 @@ public class Filter: KotlinConverting<com.google.firebase.firestore.Filter> {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.filter == rhs.filter
     }
+
+    // Kotlin does not support overloading functions only by parameter name. Use the Kotlin Firestore API signature from https://firebase.google.com/docs/reference/kotlin/com/google/firebase/firestore/Filter in `#if SKIP` blocks.
+    public static func whereField(_ field: String, isEqualTo value: Any) -> Filter {
+        equalTo(field, value)
+    }
+
+    public static func equalTo(field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.equalTo(field, value.kotlin()))
+    }
+
+    public static func notEqualTo(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notEqualTo(field, value.kotlin()))
+    }
+
+    public static func greaterThan(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThan(field, value.kotlin()))
+    }
+
+    public static func greaterThanOrEqualTo(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThanOrEqualTo(field, value.kotlin()))
+    }
+
+    public static func lessThan(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThan(field, value.kotlin()))
+    }
+
+    public static func lessThanOrEqualTo(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThanOrEqualTo(field, value.kotlin()))
+    }
+
+    public static func arrayContains(_ field: String, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContains(field, value.kotlin()))
+    }
+
+    public static func arrayContainsAny(_ field: String, _ values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContainsAny(field, values.kotlin()))
+    }
+
+    public static func inArray(_ field: String, values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.inArray(field, values.kotlin()))
+    }
+
+    public static func notInArray(_ field: String, values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notInArray(field, values.kotlin()))
+    }
+
+    // Kotlin does not support overloading functions only by parameter name. Use the Kotlin Firestore API signature from https://firebase.google.com/docs/reference/kotlin/com/google/firebase/firestore/Filter in `#if SKIP` blocks.
+    public static func whereField(_ fieldPath: FieldPath, isEqualTo value: Any) -> Filter {
+        equalTo(fieldPath, value)
+    }
+
+    public static func equalTo(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.equalTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func notEqualTo(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func greaterThan(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThan(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func greaterThanOrEqualTo(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThanOrEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func lessThan(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThan(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func lessThanOrEqualTo(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThanOrEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func arrayContains(_ fieldPath: FieldPath, _ value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContains(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func arrayContainsAny(_ fieldPath: FieldPath, _ values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContainsAny(fieldPath.fieldPath, values.kotlin()))
+    }
+
+    public static func inArray(_ fieldPath: FieldPath, _ values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.inArray(fieldPath.fieldPath, values.kotlin()))
+    }
+
+    public static func notInArray(_ fieldPath: FieldPath, _ values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notInArray(fieldPath.fieldPath, values.kotlin()))
+    }
+
+
+    public static func orFilter(_ filters: [Filter]) -> Filter {
+        let platformFilters = filters.map(\.filter).toList().toTypedArray()
+        return Filter(filter: com.google.firebase.firestore.Filter.or(*platformFilters))
+    }
+
+    public static func andFilter(_ filters: [Filter]) -> Filter {
+        let platformFilters = filters.map(\.filter).toList().toTypedArray()
+        return Filter(filter: com.google.firebase.firestore.Filter.and(*platformFilters))
+    }
 }
 
 public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.SnapshotMetadata> {
