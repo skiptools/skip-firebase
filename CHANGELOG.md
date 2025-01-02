@@ -1,3 +1,12 @@
+## 0.6.6
+
+Released 2025-01-02
+
+  - Merge pull request #25 from ky-is/firestore-filters
+  - Update Filter to match Swift API
+  - Add Query notIn and arrayContainsAny
+  - Add Filter factory methods
+
 ## 0.6.5
 
 Released 2024-12-22
