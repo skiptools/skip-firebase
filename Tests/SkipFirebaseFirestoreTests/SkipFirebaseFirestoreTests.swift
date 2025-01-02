@@ -127,6 +127,10 @@ var appName: String = "SkipFirebaseDemo"
         let _: Query = colRef.order(by: "x", descending: true)
 
         let _: Query = colRef.whereFilter(Filter())
+        let _: Query = colRef.whereFilter(Filter.orFilter([
+            Filter.whereField("foo", isEqualTo: "bar"),
+            Filter.whereField("foo", isNotEqualTo: "bar")
+        ]))
 
         let _: Query = colRef.whereField("x", in: ["x"])
         //let _: Query = colRef.whereField("x", notIn: ["x"])

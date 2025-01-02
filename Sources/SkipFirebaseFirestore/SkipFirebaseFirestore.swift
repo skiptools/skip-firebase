@@ -213,6 +213,96 @@ public class Filter: KotlinConverting<com.google.firebase.firestore.Filter> {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.filter == rhs.filter
     }
+
+    public static func whereField(_ field: String, isEqualTo value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.equalTo(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, isNotEqualTo value: Any, unusedp_0: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notEqualTo(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, isGreaterThan value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThan(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, isGreaterThanOrEqualTo value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThanOrEqualTo(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, isLessThan value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThan(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, isLessThanOrEqualTo value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil, unusedp_4: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThanOrEqualTo(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, arrayContains value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil, unusedp_4: Nothing? = nil, unusedp_5: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContains(field, value.kotlin()))
+    }
+
+    public static func whereField(_ field: String, arrayContainsAny values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContainsAny(field, values.kotlin()))
+    }
+
+    public static func whereField(_ field: String, in values: [Any], unusedp_0: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.inArray(field, values.kotlin()))
+    }
+
+    public static func whereField(_ field: String, notIn values: [Any], unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notInArray(field, values.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isEqualTo value: Any) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.equalTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isNotEqualTo value: Any, unusedp_0: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isGreaterThan value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThan(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isGreaterThanOrEqualTo value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.greaterThanOrEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isLessThan value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThan(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, isLessThanOrEqualTo value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil, unusedp_4: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.lessThanOrEqualTo(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, arrayContains value: Any, unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil, unusedp_2: Nothing? = nil, unusedp_3: Nothing? = nil, unusedp_4: Nothing? = nil, unusedp_5: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContains(fieldPath.fieldPath, value.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, arrayContainsAny values: [Any]) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.arrayContainsAny(fieldPath.fieldPath, values.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, in values: [Any], unusedp_0: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.inArray(fieldPath.fieldPath, values.kotlin()))
+    }
+
+    public static func whereField(_ fieldPath: FieldPath, notIn values: [Any], unusedp_0: Nothing? = nil, unusedp_1: Nothing? = nil) -> Filter {
+        Filter(filter: com.google.firebase.firestore.Filter.notInArray(fieldPath.fieldPath, values.kotlin()))
+    }
+
+    public static func orFilter(_ filters: [Filter]) -> Filter {
+        let platformFilters = filters.map(\.filter).toList().toTypedArray()
+        return Filter(filter: com.google.firebase.firestore.Filter.or(*platformFilters))
+    }
+
+    public static func andFilter(_ filters: [Filter]) -> Filter {
+        let platformFilters = filters.map(\.filter).toList().toTypedArray()
+        return Filter(filter: com.google.firebase.firestore.Filter.and(*platformFilters))
+    }
 }
 
 public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.SnapshotMetadata> {
@@ -290,9 +380,10 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         Query(query: query.whereIn(field, array.kotlin()))
     }
 
-//    public func whereField(_ field: String, notIn: [Any]) -> Query {
-//        Query(query: query.whereNotIn(field, notIn.kotlin()))
-//    }
+    // SKIP DECLARE: fun whereField(field: String, notIn: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null): Query
+    public func whereField(_ field: String, notIn: [Any]) -> Query {
+        Query(query: query.whereNotIn(field, notIn.kotlin()))
+    }
 
     public func whereField(_ field: String, isEqualTo: Any) -> Query {
         Query(query: query.whereEqualTo(field, isEqualTo.kotlin()))
@@ -322,18 +413,19 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         Query(query: query.whereArrayContains(field, arrayContains.kotlin()))
     }
 
-    public func whereField(_ field: String, arrayContainsAny: [Any]) -> Query {
-        Query(query: query.whereArrayContainsAny(field, arrayContainsAny.kotlin()))
-    }
-
-
     public func whereField(_ field: FieldPath, in array: [Any]) -> Query {
         Query(query: query.whereIn(field.fieldPath, array.kotlin()))
     }
 
-//    public func whereField(_ field: FieldPath, notIn: [Any]) -> Query {
-//        Query(query: query.whereNotIn(field.fieldPath, notIn.kotlin()))
-//    }
+    // SKIP DECLARE: fun whereField(field: String, arrayContainsAny: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_1: Nothing? = null): Query
+    public func whereField(_ field: String, arrayContainsAny: [Any]) -> Query {
+        Query(query: query.whereArrayContainsAny(field, arrayContainsAny.kotlin()))
+    }
+
+    // SKIP DECLARE: fun whereField(field: FieldPath, notIn: Array<Any>, @Suppress("UNUSED_PARAMETER") unusedp_0: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_1: Nothing? = null, @Suppress("UNUSED_PARAMETER") unusedp_2: Nothing? = null): Query
+    public func whereField(_ field: FieldPath, notIn: [Any]) -> Query {
+        Query(query: query.whereNotIn(field.fieldPath, notIn.kotlin()))
+    }
 
     public func whereField(_ field: FieldPath, isEqualTo: Any) -> Query {
         Query(query: query.whereEqualTo(field.fieldPath, isEqualTo.kotlin()))
