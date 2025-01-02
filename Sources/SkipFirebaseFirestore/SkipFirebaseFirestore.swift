@@ -1007,6 +1007,28 @@ public class FieldValue {
     }
 }
 
+// MARK: Errors
+
+public enum FirestoreErrorCode: Int {
+    case OK = 0
+    case cancelled = 1
+    case unknown = 2
+    case invalidArgument = 3
+    case deadlineExceeded = 4
+    case notFound = 5
+    case alreadyExists = 6
+    case permissionDenied = 7
+    case resourceExhausted = 8
+    case failedPrecondition = 9
+    case aborted = 10
+    case outOfRange = 11
+    case unimplemented = 12
+    case `internal` = 13
+    case unavailable = 14
+    case dataLoss = 15
+    case unauthenticated = 16
+}
+
 // MARK: Utilies for converting between Swift and Kotlin types
 
 fileprivate func deepSwift(value: Any) -> Any {

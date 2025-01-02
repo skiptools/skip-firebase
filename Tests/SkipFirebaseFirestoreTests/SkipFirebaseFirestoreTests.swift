@@ -372,7 +372,15 @@ var appName: String = "SkipFirebaseDemo"
             try await ref.updateData(Self.bostonData)
             XCTFail("updateData should throw on non-existent document")
         } catch {
-            XCTAssert(true)
+            #if !SKIP
+            let error = error as NSError
+            XCTAssertEqual(error.domain, FirestoreErrorDomain)
+            let errorCode = error.code
+            #else
+            let exception = (error as Exception).cause as? com.google.firebase.firestore.FirebaseFirestoreException
+            let errorCode = exception?.code.value()
+            #endif
+            XCTAssertEqual(errorCode, FirestoreErrorCode.notFound.rawValue)
         }
     }
 
