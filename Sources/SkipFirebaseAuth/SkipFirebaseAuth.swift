@@ -159,6 +159,10 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
 	public func createProfileChangeRequest() -> UserProfileChangeRequest {
 		return UserProfileChangeRequest(self)
 	}
+
+    public func delete() async throws {
+        platformValue.delete().await()
+    }
 }
 
 public class UserProfileChangeRequest/*: KotlinConverting<com.google.firebase.auth.UserProfileChangeRequest>*/ {
