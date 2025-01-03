@@ -81,6 +81,10 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func useEmulator(withHost host: String, port: Int) {
         store.useEmulator(host, port)
     }
+
+    public func document(_ path: String) -> DocumentReference {
+        DocumentReference(ref: store.document(path))
+    }
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).

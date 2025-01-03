@@ -96,6 +96,9 @@ var appName: String = "SkipFirebaseDemo"
     private func validateFirebaseWrapperAPI() async throws {
         //let db: Firestore = Firestore.firestore(app: self.app)
 
+        let cityDocumentFromRoot = db.document("cities/nyc")
+        XCTAssertEqual(cityDocumentFromRoot.documentID, "nyc")
+
         let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
         let _: String = colRef.collectionID
