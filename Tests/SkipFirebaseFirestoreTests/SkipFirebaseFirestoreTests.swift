@@ -96,6 +96,9 @@ var appName: String = "SkipFirebaseDemo"
     private func validateFirebaseWrapperAPI() async throws {
         //let db: Firestore = Firestore.firestore(app: self.app)
 
+        let cityDocumentFromRoot = db.document("cities/nyc")
+        XCTAssertEqual(cityDocumentFromRoot.documentID, "nyc")
+
         let colRef: CollectionReference = db.collection("")
         let _: Firestore = colRef.firestore
         let _: String = colRef.collectionID
@@ -227,6 +230,7 @@ var appName: String = "SkipFirebaseDemo"
 
         XCTAssertNotNil(bdoc.get("regions"))
 
+        // SKIP NOWARN
         XCTAssertEqual(["east_coast", "new_england"], bdoc.get("regions") as? [String])
 
         XCTAssertNotNil(bdoc.get("time"))
@@ -372,7 +376,15 @@ var appName: String = "SkipFirebaseDemo"
             try await ref.updateData(Self.bostonData)
             XCTFail("updateData should throw on non-existent document")
         } catch {
-            XCTAssert(true)
+            #if !SKIP
+            let error = error as NSError
+            XCTAssertEqual(error.domain, FirestoreErrorDomain)
+            let errorCode = error.code
+            #else
+            let exception = (error as Exception).cause as? com.google.firebase.firestore.FirebaseFirestoreException
+            let errorCode = exception?.code.value()
+            #endif
+            XCTAssertEqual(errorCode, FirestoreErrorCode.notFound.rawValue)
         }
     }
 
