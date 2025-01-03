@@ -71,7 +71,7 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     }
 
     public func collectionGroup(collectionId: String) -> Query {
-        return Query(query: store.collectionGroup(collectionId)) 
+        return Query(query: store.collectionGroup(collectionId))
     }
 
     public func batch() -> WriteBatch {
@@ -96,7 +96,7 @@ public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestor
     }
 
     public init(_ fieldNames: [String]) {
-        let fnames: kotlin.Array<String> = fieldNames.toList().toTypedArray()
+        let fnames = fieldNames.toList().toTypedArray()
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
@@ -775,7 +775,7 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     public var documentID: String {
         doc.getId()
     }
-    
+
     public var exists: Bool {
         doc.exists()
     }
@@ -971,7 +971,7 @@ public class WriteBatch {
         let newBatch = batch.set(document.ref, data.kotlin())
         return WriteBatch(batch: newBatch)
     }
-    
+
     public func setData(_ data: [String : Any], forDocument document: DocumentReference, mergeFields: [String]) -> WriteBatch {
         let newBatch = batch.set(document.ref, data.kotlin(), com.google.firebase.firestore.SetOptions.mergeFields(mergeFields.toList()))
         return WriteBatch(batch: newBatch)
@@ -985,12 +985,12 @@ public class WriteBatch {
 
 public class FieldValue {
     public class func arrayRemove(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        let elementsArray = elements.toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayRemove(*elementsArray)
     }
 
     public class func arrayUnion(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        let elementsArray = elements.toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayUnion(*elementsArray)
     }
 

@@ -230,6 +230,7 @@ var appName: String = "SkipFirebaseDemo"
 
         XCTAssertNotNil(bdoc.get("regions"))
 
+        // SKIP NOWARN
         XCTAssertEqual(["east_coast", "new_england"], bdoc.get("regions") as? [String])
 
         XCTAssertNotNil(bdoc.get("time"))
