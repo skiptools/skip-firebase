@@ -35,32 +35,39 @@ public final class Auth {
         return User(user)
     }
 
+    /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthInvalidCredentialsException`/`FirebaseAuthInvalidCredentialsException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#signInWithEmailAndPassword(java.lang.String,java.lang.String)
     public func signIn(withEmail email: String, password: String) async throws -> AuthDataResult {
         let result = platformValue.signInWithEmailAndPassword(email, password).await()
         return AuthDataResult(result)
     }
 
+    /// Throws `FirebaseAuthWeakPasswordException`/`FirebaseAuthInvalidCredentialsException`/`FirebaseAuthUserCollisionException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#createUserWithEmailAndPassword(java.lang.String,java.lang.String)
     public func createUser(withEmail email: String, password: String) async throws -> AuthDataResult {
         let result = platformValue.createUserWithEmailAndPassword(email, password).await()
         return AuthDataResult(result)
     }
 
+    /// Does not throw from Kotlin
     public func signOut() throws {
         platformValue.signOut()
     }
 
+    /// Throws `FirebaseAuthInvalidUserException`
     public func sendPasswordReset(withEmail email: String) async throws {
         platformValue.sendPasswordResetEmail(email).await()
     }
 
+    /// Throws `Exception`
     public func signInAnonymously() async throws -> AuthDataResult {
         let result = platformValue.signInAnonymously().await()
         return AuthDataResult(result)
     }
 
-     public func useEmulator(withHost host: String, port: Int) {
+    public func useEmulator(withHost host: String, port: Int) {
         platformValue.useEmulator(host, port)
-     }
+    }
 
     public func addStateDidChangeListener(_ listener: @escaping (Auth, User?) -> Void) -> AuthStateListener {
         let stateListener = com.google.firebase.auth.FirebaseAuth.AuthStateListener { auth in
@@ -160,6 +167,8 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
         return UserProfileChangeRequest(self)
     }
 
+    /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#delete()
     public func delete() async throws {
         platformValue.delete().await()
     }
@@ -174,6 +183,8 @@ public class UserProfileChangeRequest/*: KotlinConverting<com.google.firebase.au
 
     public var displayName: String?
 
+    /// Throws `FirebaseAuthInvalidUserException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#updateProfile(com.google.firebase.auth.UserProfileChangeRequest)
     public func commitChanges() async throws {
         let builder = com.google.firebase.auth.UserProfileChangeRequest.Builder()
 

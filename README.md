@@ -320,6 +320,47 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 The [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project is a great reference for seeing a complete, working app using Firebase push notifications.
 {: class="callout info"}
 
+## Error handling
+
+### Firestore
+
+The Firestore API converts `com.google.firebase.firestore.FirebaseFirestoreException` to NSError so you can handle errors the same way on both platforms:
+
+```swift
+do {
+    try await Firestore.firestore().collection("foo").document("bar").updateData(...)
+} catch let error as NSError {
+    if error.domain == FirestoreErrorDomain && error.code == FirestoreErrorCode.notFound.rawValue {
+        ...
+    }
+}
+```
+
+### Catching other errors
+
+Other parts of this library have not been updated to this unified error handling. Instead, you can access the underlying Kotlin exceptions in SKIP blocks according to the documentation:
+
+- FirebaseAuth: https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth
+- FirebaseMessaging.MessagingService.onSendError: https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/SendException
+- FirebaseStorage: https://firebase.google.com/docs/reference/android/com/google/firebase/storage/StorageException
+
+```swift
+do {
+    try await Storage.storage().reference().child("nonexistent").delete()
+} catch {
+    #if !SKIP
+    let error = error as NSError
+    let errorCode = error.domain == StorageError.errorDomain ? error.code : nil
+    #else
+    let exception = (error as Exception).cause as? com.google.firebase.storage.StorageException
+    let errorCode = exception?.code.value()
+    #endif
+    if errorCode == -13010 { 
+        // Object not found
+    }
+}
+```
+
 ## Testing
 
 For unit testing, where there isn't a standard place to store the
