@@ -1,3 +1,10 @@
+## 0.6.8
+
+Released 2025-01-09
+
+  - Add Firestore error codes (#26)
+  - Change frequency of CI run
+
 ## 0.6.6
 
 Released 2025-01-02
