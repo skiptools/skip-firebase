@@ -115,10 +115,12 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         }
     }
 
+    /// Does not throw from Kotlin
     public func token() async throws -> String {
         messaging.token.await()
     }
 
+    /// Does not throw from Kotlin
     public func deleteToken() async throws {
         messaging.deleteToken().await()
     }
@@ -132,10 +134,12 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
     public func deleteFCMToken(forSenderID senderID: String) async throws {
     }
 
+    /// Does not throw, retries until successful
     public func subscribe(toTopic topic: String) async throws {
         messaging.subscribeToTopic(topic).await()
     }
 
+    /// Does not throw, retries until successful
     public func unsubscribe(fromTopic topic: String) async throws {
         messaging.unsubscribeFromTopic(topic).await()
     }
@@ -144,6 +148,7 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         return MessagingMessageInfo(status: .unknown)
     }
 
+    /// Does not throw from Kotlin
     public func deleteData() async throws {
         await deleteToken()
     }
@@ -213,6 +218,7 @@ public class MessagingService : FirebaseMessagingService {
         messaging.fcmToken = token
     }
 
+    /// Error is `SendException` https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/SendException
     public override func onSendError(msgId: String, exception: Exception) {
         super.onSendError(msgId, exception)
         android.util.Log.e("SkipFirebaseMessaging", "onSendError: \(msgId)", exception)

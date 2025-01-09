@@ -71,7 +71,7 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     }
 
     public func collectionGroup(collectionId: String) -> Query {
-        return Query(query: store.collectionGroup(collectionId)) 
+        return Query(query: store.collectionGroup(collectionId))
     }
 
     public func batch() -> WriteBatch {
@@ -80,6 +80,10 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
 
     public func useEmulator(withHost host: String, port: Int) {
         store.useEmulator(host, port)
+    }
+
+    public func document(_ path: String) -> DocumentReference {
+        DocumentReference(ref: store.document(path))
     }
 }
 
@@ -92,7 +96,7 @@ public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestor
     }
 
     public init(_ fieldNames: [String]) {
-        let fnames: kotlin.Array<String> = fieldNames.toList().toTypedArray()
+        let fnames = fieldNames.toList().toTypedArray()
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
@@ -192,9 +196,14 @@ public class AggregateQuery: KotlinConverting<com.google.firebase.firestore.Aggr
     }
 
     public func getAggregation(source: AggregateSource) async throws -> AggregateQuerySnapshot {
-        switch source {
-        case .server:
-            return AggregateQuerySnapshot(snap: query.get(com.google.firebase.firestore.AggregateSource.SERVER).await())
+        do {
+            switch source {
+            case .server:
+                let snapshot = try query.get(com.google.firebase.firestore.AggregateSource.SERVER).await()
+                return AggregateQuerySnapshot(snap: snapshot)
+            }
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
         }
     }
 }
@@ -349,11 +358,21 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
     }
 
     public func getDocuments() async throws -> QuerySnapshot {
-        QuerySnapshot(snap: query.get().await())
+        do {
+            let snapshot = try query.get().await()
+            return QuerySnapshot(snap: snapshot)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public func getDocuments(source: FirestoreSource) async throws -> QuerySnapshot {
-        QuerySnapshot(snap: query.get(source.source).await())
+        do {
+            let snapshot = try query.get(source.source).await()
+            return QuerySnapshot(snap: snapshot)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public var count: AggregateQuery {
@@ -466,7 +485,7 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
     public func addSnapshotListener(_ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: query.addSnapshotListener { snapshot, error in
             let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
-            let err: Error? = error?.aserror()
+            let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
             listener(qs, err)
         })
     }
@@ -474,7 +493,7 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
     public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: query.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
             let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
-            let err: Error? = error?.aserror()
+            let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
             listener(qs, err)
         })
     }
@@ -516,7 +535,12 @@ public class CollectionReference : Query {
     }
 
     public func addDocument(data: [String: Any]) async throws -> DocumentReference {
-        DocumentReference(ref: ref.add(data.kotlin()).await())
+        do {
+            let ref = try ref.add(data.kotlin()).await()
+            return DocumentReference(ref: ref)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 }
 
@@ -771,7 +795,7 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     public var documentID: String {
         doc.getId()
     }
-    
+
     public var exists: Bool {
         doc.exists()
     }
@@ -838,7 +862,12 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 
     public func getDocument() async throws -> DocumentSnapshot {
-        DocumentSnapshot(doc: ref.get().await())
+        do {
+            let snapshot = try ref.get().await()
+            return DocumentSnapshot(doc: snapshot)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public func getDocument(completion: (_ snapshot: DocumentSnapshot?, _ error: (any Error)?) -> Void) {
@@ -863,19 +892,31 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     }
 
     public func delete() async throws {
-        ref.delete().await()
+        do {
+            try ref.delete().await()
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public func setData(_ keyValues: [String: Any], merge: Bool = false) async throws {
-        if merge == true {
-            ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge()).await()
-        } else {
-            ref.set(keyValues.kotlin()).await()
+        do {
+            if merge == true {
+                try ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.merge()).await()
+            } else {
+                try ref.set(keyValues.kotlin()).await()
+            }
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
         }
     }
 
     public func updateData(_ keyValues: [String: Any]) async throws {
-        ref.update(keyValues.kotlin() as! Map<String, Any>).await()
+        do {
+            try ref.update(keyValues.kotlin() as! Map<String, Any>).await()
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public func collection(_ collectionPath: String) -> CollectionReference {
@@ -885,7 +926,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     public func addSnapshotListener(_ listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: ref.addSnapshotListener { snapshot, error in
             let ds: DocumentSnapshot? = snapshot == nil ? nil : DocumentSnapshot(doc: snapshot!)
-            let err: Error? = error?.aserror()
+            let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
             listener(ds, err)
         })
     }
@@ -893,7 +934,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: ref.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
             let ds: DocumentSnapshot? = snapshot == nil ? nil : DocumentSnapshot(doc: snapshot!)
-            let err: Error? = error?.aserror()
+            let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
             listener(ds, err)
         })
     }
@@ -955,7 +996,11 @@ public class WriteBatch {
     }
 
     public func commit() async throws {
-        batch.commit().await()
+        do {
+            try batch.commit().await()
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
     }
 
     public func deleteDocument(_ document: DocumentReference) -> WriteBatch {
@@ -967,7 +1012,7 @@ public class WriteBatch {
         let newBatch = batch.set(document.ref, data.kotlin())
         return WriteBatch(batch: newBatch)
     }
-    
+
     public func setData(_ data: [String : Any], forDocument document: DocumentReference, mergeFields: [String]) -> WriteBatch {
         let newBatch = batch.set(document.ref, data.kotlin(), com.google.firebase.firestore.SetOptions.mergeFields(mergeFields.toList()))
         return WriteBatch(batch: newBatch)
@@ -981,12 +1026,12 @@ public class WriteBatch {
 
 public class FieldValue {
     public class func arrayRemove(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        let elementsArray = elements.toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayRemove(*elementsArray)
     }
 
     public class func arrayUnion(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray: kotlin.Array<Any> = elements.toList().toTypedArray()
+        let elementsArray = elements.toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayUnion(*elementsArray)
     }
 
@@ -1005,6 +1050,38 @@ public class FieldValue {
     public class func serverTimestamp() -> com.google.firebase.firestore.FieldValue {
         return com.google.firebase.firestore.FieldValue.serverTimestamp()
     }
+}
+
+// MARK: Errors
+
+public enum FirestoreErrorCode: Int {
+    case OK = 0
+    case cancelled = 1
+    case unknown = 2
+    case invalidArgument = 3
+    case deadlineExceeded = 4
+    case notFound = 5
+    case alreadyExists = 6
+    case permissionDenied = 7
+    case resourceExhausted = 8
+    case failedPrecondition = 9
+    case aborted = 10
+    case outOfRange = 11
+    case unimplemented = 12
+    case `internal` = 13
+    case unavailable = 14
+    case dataLoss = 15
+    case unauthenticated = 16
+}
+
+public let FirestoreErrorDomain = "FIRFirestoreErrorDomain"
+
+fileprivate func asNSError(firestoreException: com.google.firebase.firestore.FirebaseFirestoreException) -> Error {
+    let userInfo: [String: Any] = [:]
+    if let detailMessage = firestoreException.message {
+        userInfo[NSLocalizedFailureReasonErrorKey] = detailMessage
+    }
+    return NSError(domain: FirestoreErrorDomain, code: firestoreException.code.value(), userInfo: userInfo)
 }
 
 // MARK: Utilies for converting between Swift and Kotlin types

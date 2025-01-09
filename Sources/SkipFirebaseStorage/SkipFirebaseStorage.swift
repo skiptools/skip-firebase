@@ -42,10 +42,12 @@ public final class Storage {
         return StorageReference(platformValue.reference)
     }
 
+    /// Throws `StorageException`
     public func reference(for url: URL) throws -> StorageReference {
         try reference(forURL: url.absoluteString)
     }
 
+    /// Throws `StorageException`
     public func reference(forURL urlString: String) throws -> StorageReference {
         StorageReference(try platformValue.getReferenceFromUrl(urlString))
     }
@@ -228,21 +230,25 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return StorageReference(platformValue.child(path))
     }
 
+    /// Throws `StorageException`
     public func downloadURL() async throws -> URL {
         let uri: android.net.Uri = platformValue.downloadUrl.await()
         return URL(string: uri.toString())!
     }
 
+    /// Throws `StorageException`
     public func getMetadata() async throws -> StorageMetadata {
         let metadata = platformValue.getMetadata().await()
         return StorageMetadata(platformValue: metadata)
     }
 
+    /// Throws `StorageException`
     public func updateMetadata(_ metadata: StorageMetadata) async throws -> StorageMetadata {
         let metadata = platformValue.updateMetadata(metadata.platformValue).await()
         return StorageMetadata(platformValue: metadata)
     }
 
+    /// Error is `StorageException`
     public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void = { _, _ in }) -> StorageUploadTask {
         let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
 
@@ -261,6 +267,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     // TODO: Support onProgress once SKIP has support for Progress
+    /// Error is `StorageException`
     public func putFileAsync(from url: URL, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
         return try await withCheckedThrowingContinuation { continuation in
             putFile(from: url, metadata: metadata) { metadata, error in
@@ -273,6 +280,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         }
     }
 
+    /// Error is `StorageException`
     public func putData(_ uploadData: Data, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void) -> StorageUploadTask {
         // putBytes(bytes, metadata) is @NonNull, so we need to use different methods for null vs. non-null metadata parameter
         let uploadTask = metadata == nil ? platformValue.putBytes(uploadData.platformValue) : platformValue.putBytes(uploadData.platformValue, metadata!.platformValue)
@@ -291,6 +299,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     // TODO: Support onProgress once SKIP has support for Progress
+    /// Throws `StorageException`
     public func putDataAsync(_ uploadData: Data, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
         return try await withCheckedThrowingContinuation { continuation in
             putData(uploadData, metadata: metadata) { metadata, error in
@@ -303,6 +312,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         }
     }
 
+    /// Error is `StorageException`
     public func write(toFile fileURL: URL, completion: ((_: URL?, _: Error?) -> Void)? = nil) -> StorageDownloadTask {
         let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
         let downloadTask = platformValue.getFile(fileURI)
@@ -317,11 +327,13 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     /// Async version of getData(), but note that the iOS Firestore does not have an equivalent for some reason
+    /// Throws `StorageException`/`IndexOutOfBoundsException`
     public func getDataAsync(maxSize: Int64) async throws -> Data {
         let data: kotlin.ByteArray = platformValue.getBytes(maxSize).await()
         return Data(platformValue: data)
     }
 
+    /// Error is `StorageException`/`IndexOutOfBoundsException`
     public func getData(maxSize: Int64, completion: (_: Data?, _: Error?) -> Void) -> StorageDownloadTask {
 
         let downloadTask = platformValue.getBytes(maxSize)
@@ -336,6 +348,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return StoragBytesDownloadTask(platformValue: downloadTask)
     }
 
+    /// Error is `StorageException`
     public func delete(completion: (((any Error)?) -> Void)?) {
         Task {
             do {
