@@ -147,3 +147,12 @@ let package = Package(
         ], resources: [.process("Resources")], plugins: skipstone),
     ]
 )
+
+if ProcessInfo.processInfo.environment["SKIP_BRIDGE"] ?? "0" != "0" {
+    package.dependencies += [.package(url: "https://source.skip.tools/skip-bridge.git", "0.0.0"..<"2.0.0")]
+    for target in package.targets {
+        if target.name == "SkipFirebaseCore" || target.name == "SkipFirebaseFirestore" {
+            target.dependencies += [.product(name: "SkipBridge", package: "skip-bridge")]
+        }
+    }
+}

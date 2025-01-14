@@ -2,6 +2,7 @@
 // under the terms of the GNU Lesser General Public License 3.0
 // as published by the Free Software Foundation https://fsf.org
 
+#if !SKIP_BRIDGE
 #if SKIP
 import Foundation
 import OSLog
@@ -10,12 +11,15 @@ import OSLog
 // https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp
 
 public final class FirebaseApp: KotlinConverting<com.google.firebase.FirebaseApp> {
+    // SKIP @nobridge
     public let app: com.google.firebase.FirebaseApp
 
+    // SKIP @nobridge
     public init(app: com.google.firebase.FirebaseApp) {
         self.app = app
     }
 
+    // SKIP @nobridge
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.FirebaseApp {
         app
     }
@@ -97,7 +101,7 @@ public final class FirebaseApp: KotlinConverting<com.google.firebase.FirebaseApp
 
 public final class FirebaseOptions {
     public var googleAppID: String
-    public var gcmSenderID: String!
+    public var gcmSenderID: String
     public var projectID: String?
     public var storageBucket: String?
     public var apiKey: String?
@@ -108,6 +112,7 @@ public final class FirebaseOptions {
         self.gcmSenderID = gcmSenderID
     }
 
+    // SKIP @nobridge
     public init(options: com.google.firebase.FirebaseOptions) {
         self.googleAppID = options.applicationId
         self.gcmSenderID = options.gcmSenderId ?? ""
@@ -141,4 +146,5 @@ public final class FirebaseOptions {
     }
 }
 
+#endif
 #endif
