@@ -163,6 +163,10 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
         platformValue.phoneNumber
     }
 
+    public var metadata: UserMetadata {
+        UserMetadata(platformValue.metadata)
+    }
+
     public func createProfileChangeRequest() -> UserProfileChangeRequest {
         return UserProfileChangeRequest(self)
     }
@@ -171,6 +175,25 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#delete()
     public func delete() async throws {
         platformValue.delete().await()
+    }
+}
+
+public class UserMetadata {
+    // On iOS, UserMetadata is never nil but its properties can be. On Android, it's the opposite.
+    public let userMetadata: com.google.firebase.auth.FirebaseUserMetadata?
+
+    public init(_ userMetadata: com.google.firebase.auth.FirebaseUserMetadata?) {
+        self.userMetadata = userMetadata
+    }
+
+    public var creationDate: Date? {
+        guard let milliseconds = userMetadata?.getCreationTimestamp() else { return nil }
+        return Date(timeIntervalSince1970: Double(milliseconds) / 1000)
+    }
+
+    public var lastSignInDate: Date? {
+        guard let milliseconds = userMetadata?.getLastSignInTimestamp() else { return nil }
+        return Date(timeIntervalSince1970: Double(milliseconds) / 1000)
     }
 }
 

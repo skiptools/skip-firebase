@@ -21,6 +21,12 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
             let auth: Auth = Auth.auth()
             let _: Auth = Auth.auth(app: FirebaseApp.app()!)
             let listener = auth.addStateDidChangeListener({ _, _ in })
+            do {
+                let signIn = try await auth.signInAnonymously()
+                XCTAssertNotNil(signIn.user.metadata.creationDate)
+                XCTAssertNotNil(signIn.user.metadata.lastSignInDate)
+            } catch {
+            }
             auth.removeStateDidChangeListener(listener)
         }
     }
