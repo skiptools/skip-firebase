@@ -1,3 +1,9 @@
+## 0.6.9
+
+Released 2025-01-25
+
+  - Add auth user metadata (#28)
+
 ## 0.6.8
 
 Released 2025-01-09
