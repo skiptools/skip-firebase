@@ -137,6 +137,10 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     public var isAnonymous: Bool {
         platformValue.isAnonymous
     }
+    
+    public var isEmailVerified: Bool {
+        platformValue.isEmailVerified
+    }
 
     public var providerID: String? {
         platformValue.providerId
