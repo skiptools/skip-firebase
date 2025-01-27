@@ -1,3 +1,9 @@
+## 0.6.10
+
+Released 2025-01-27
+
+  - Update SkipFirebaseAuth.swift (#29)
+
 ## 0.6.9
 
 Released 2025-01-25
