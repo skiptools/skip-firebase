@@ -1026,12 +1026,12 @@ public class WriteBatch {
 
 public class FieldValue {
     public class func arrayRemove(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray = elements.toList().toTypedArray()
+        let elementsArray = elements.map({ $0.kotlin() }).toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayRemove(*elementsArray)
     }
 
     public class func arrayUnion(_ elements: [Any]) -> com.google.firebase.firestore.FieldValue {
-        let elementsArray = elements.toList().toTypedArray()
+        let elementsArray = elements.map({ $0.kotlin() }).toList().toTypedArray()
         return com.google.firebase.firestore.FieldValue.arrayUnion(*elementsArray)
     }
 

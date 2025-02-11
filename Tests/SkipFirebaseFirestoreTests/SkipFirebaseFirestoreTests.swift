@@ -237,12 +237,16 @@ var appName: String = "SkipFirebaseDemo"
         XCTAssertEqual(Timestamp(date: Date(timeIntervalSince1970: 1234)), bdoc.get("time") as? Timestamp)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
-        let bosData: [String: Any] = ["population": 675000]
+        let bosData: [String: Any] = ["population": 675000, "regions": FieldValue.arrayUnion(["new_england", "north_east"]), "newarray": FieldValue.arrayUnion([["foo": "bar"]])]
         try await bos.updateData(bosData)
 
         XCTAssertEqual(555000, bdoc.get("population") as? Int64)
         let bdoc2 = try await bos.getDocument()
         XCTAssertEqual(675000, bdoc2.get("population") as? Int64)
+        // SKIP NOWARN
+        XCTAssertEqual(3, (bdoc2.get("regions") as? [String] ?? []).count)
+        // SKIP NOWARN
+        XCTAssertEqual("bar", (bdoc2.get("newarray") as? [[String: String]] ?? []).first?["foo"])
 
         try await citiesRef.document("LA").setData([
             "name": "Los Angeles",
