@@ -39,7 +39,7 @@ let package = Package(
             .product(name: "SkipModel", package: "skip-model"),
             // we would like to use "FirebaseCore", but it is not exposed as a product;
             // "FirebaseInstallations" is the next best thing, since it has few depencencies
-            .product(name: "FirebaseInstallations", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseInstallations", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseCoreTests", dependencies: [
             "SkipFirebaseCore",
@@ -48,7 +48,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseFirestore", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseFirestore", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseFirestoreTests", dependencies: [
             "SkipFirebaseFirestore",
@@ -57,7 +57,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseAuth", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseAuth", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseAuth", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseAuthTests", dependencies: [
             "SkipFirebaseAuth",
@@ -66,7 +66,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseAppCheck", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseAppCheck", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseAppCheck", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseAppCheckTests", dependencies: [
             "SkipFirebaseAppCheck",
@@ -76,7 +76,7 @@ let package = Package(
         .target(name: "SkipFirebaseMessaging", dependencies: [
             "SkipFirebaseCore",
             .product(name: "SkipUI", package: "skip-ui"),
-            .product(name: "FirebaseMessaging", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseMessaging", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseMessagingTests", dependencies: [
             "SkipFirebaseMessaging",
@@ -85,7 +85,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseCrashlytics", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseCrashlytics", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseCrashlytics", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseCrashlyticsTests", dependencies: [
             "SkipFirebaseCrashlytics",
@@ -94,7 +94,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseAnalytics", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseAnalytics", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseAnalyticsTests", dependencies: [
             "SkipFirebaseAnalytics",
@@ -103,7 +103,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseRemoteConfig", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseRemoteConfig", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseRemoteConfigTests", dependencies: [
             "SkipFirebaseRemoteConfig",
@@ -112,7 +112,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseDatabase", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseDatabase", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseDatabase", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseDatabaseTests", dependencies: [
             "SkipFirebaseDatabase",
@@ -121,7 +121,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseFunctions", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseFunctions", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseFunctions", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseFunctionsTests", dependencies: [
             "SkipFirebaseFunctions",
@@ -130,7 +130,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseInstallations", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseInstallations", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseInstallations", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseInstallationsTests", dependencies: [
             "SkipFirebaseInstallations",
@@ -139,7 +139,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseStorage", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "FirebaseStorage", package: "firebase-ios-sdk"),
+            .product(name: "FirebaseStorage", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseStorageTests", dependencies: [
             "SkipFirebaseStorage",
@@ -147,3 +147,11 @@ let package = Package(
         ], resources: [.process("Resources")], plugins: skipstone),
     ]
 )
+
+if ProcessInfo.processInfo.environment["SKIP_BRIDGE"] ?? "0" != "0" {
+    package.dependencies += [.package(url: "https://source.skip.tools/skip-bridge.git", "0.0.0"..<"2.0.0")]
+    package.targets.forEach({ target in
+        target.dependencies += [.product(name: "SkipBridge", package: "skip-bridge")]
+    })
+}
+
