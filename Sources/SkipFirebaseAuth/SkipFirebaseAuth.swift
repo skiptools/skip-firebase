@@ -174,6 +174,12 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     }
 
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reauthenticate(com.google.firebase.auth.AuthCredential)
+    public func reauthenticate(with credential: AuthCredential) async throws {
+        platformValue.reauthenticate(credential.platformValue).await()
+    }
+
+    /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#delete()
     public func delete() async throws {
         platformValue.delete().await()
@@ -220,6 +226,25 @@ public class UserProfileChangeRequest/*: KotlinConverting<com.google.firebase.au
         let platformChangeRequest: com.google.firebase.auth.UserProfileChangeRequest = builder.build()
 
         user.platformValue.updateProfile(platformChangeRequest).await()
+    }
+}
+
+public class AuthCredential: KotlinConverting<com.google.firebase.auth.AuthCredential> {
+    public let platformValue: com.google.firebase.auth.AuthCredential
+    
+    public init(_ platformValue: com.google.firebase.auth.AuthCredential) {
+        self.platformValue = platformValue
+    }
+    
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.AuthCredential {
+        platformValue
+    }
+}
+
+public class EmailAuthProvider {
+    public static func credential(withEmail email: String, password: String) -> AuthCredential {
+        let credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
+        return AuthCredential(credential)
     }
 }
 
