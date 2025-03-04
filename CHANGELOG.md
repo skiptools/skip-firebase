@@ -1,3 +1,14 @@
+## 0.7.2
+
+Released 2025-03-04
+
+  - Merge pull request #33 from jacobtober/add-reauthenticate-method
+  - Add reauthenticate method to User class for Firebase Authentication
+  - Update CI
+  - Update copyright and license headers
+  - Merge pull request #32 from skiptools/skip-bridge
+  - Add support for SkipBridge
+
 ## 0.6.10
 
 Released 2025-01-27
