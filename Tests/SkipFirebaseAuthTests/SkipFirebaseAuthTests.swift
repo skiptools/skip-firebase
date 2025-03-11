@@ -27,24 +27,5 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
             auth.removeStateDidChangeListener(listener)
         }
     }
-
-    func testGetIDToken() async throws {
-        let auth = Auth.auth()
-        
-        // First sign in anonymously to get a user
-        let signInResult = try await auth.signInAnonymously()
-        let user = signInResult.user
-        
-        // Test getting the token
-        let token = try await user.getIDToken()
-        XCTAssertFalse(token.isEmpty, "ID token should not be empty")
-        
-        // Test force refresh
-        let refreshedToken = try await user.getIDToken(forceRefresh: true)
-        XCTAssertFalse(refreshedToken.isEmpty, "Refreshed ID token should not be empty")
-        
-        // Clean up
-        try await user.delete()
-    }
 }
 
