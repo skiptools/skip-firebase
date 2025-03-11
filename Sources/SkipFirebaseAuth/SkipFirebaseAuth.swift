@@ -184,6 +184,11 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     public func delete() async throws {
         platformValue.delete().await()
     }
+
+    public func getIDToken(forceRefresh: Bool = false) async throws -> String {
+        let result = try platformValue.getIdToken(forceRefresh).await()
+        return result.token
+    }
 }
 
 public class UserMetadata {
