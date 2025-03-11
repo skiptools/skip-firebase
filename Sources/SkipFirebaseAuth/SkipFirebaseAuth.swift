@@ -184,6 +184,16 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     public func delete() async throws {
         platformValue.delete().await()
     }
+
+    public func getIDToken(forcingRefresh: Bool = false) async throws -> String {
+        let result = try platformValue.getIdToken(forcingRefresh).await()
+        guard let token = result.token else {
+            throw NSError(domain: "FirebaseAuthError", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Failed to get ID token"
+            ])
+        }
+        return token
+    }
 }
 
 public class UserMetadata {
