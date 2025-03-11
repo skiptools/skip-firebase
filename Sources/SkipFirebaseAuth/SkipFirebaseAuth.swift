@@ -187,7 +187,12 @@ public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
 
     public func getIDToken(forceRefresh: Bool = false) async throws -> String {
         let result = try platformValue.getIdToken(forceRefresh).await()
-        return result.token
+        guard let token = result.token else {
+            throw NSError(domain: "FirebaseAuthError", code: -1, userInfo: [
+                NSLocalizedDescriptionKey: "Failed to get ID token"
+            ])
+        }
+        return token
     }
 }
 
