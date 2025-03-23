@@ -84,32 +84,6 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         DocumentReference(ref: store.document(path))
     }
     
-    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) throws -> T?, completion: @escaping (T?, Error?) -> Void) {
-        store.runTransaction({ androidTransaction -> Any? in
-            // Create a Swift Transaction wrapper around the Android transaction
-            let swiftTransaction = Transaction(transaction: androidTransaction)
-            
-            do {
-                // Execute the updateBlock
-                let result = try updateBlock(swiftTransaction)
-                // Convert Swift result to Kotlin type if needed
-                return result?.kotlin()
-            } catch {
-                // Propagate any errors from the updateBlock
-                throw error
-            }
-        }).addOnSuccessListener({ kotlinResult -> Void in
-            // Convert Kotlin result back to Swift type if needed
-            let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult) as? T
-            completion(swiftResult, nil)
-        }).addOnFailureListener({ exception -> Void in
-            // Convert Firebase exception to Swift error
-            let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
-            let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
-            completion(nil, swiftError)
-        })
-    }
-    
     // Async/await version
     public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
         do {
