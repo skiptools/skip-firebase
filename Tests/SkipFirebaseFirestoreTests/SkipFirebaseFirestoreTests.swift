@@ -362,6 +362,66 @@ var appName: String = "SkipFirebaseDemo"
         await cacheApp.delete()
     }
 
+    func testTransactions() async throws {
+        let citiesRef = db.collection("cities")
+        let sfDoc = citiesRef.document("SF")
+        let laDoc = citiesRef.document("LA")
+        
+        // Set up initial data
+        try await sfDoc.setData([
+            "name": "San Francisco",
+            "population": 860000
+        ])
+        try await laDoc.setData([
+            "name": "Los Angeles",
+            "population": 3900000
+        ])
+        
+        let expectation = XCTestExpectation(description: "Transaction completed")
+        
+        db.runTransaction({ (transaction, errorPointer) -> Any? in
+            let sfSnapshot: DocumentSnapshot
+            do {
+                try sfSnapshot = transaction.getDocument(sfDoc)
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+            
+            guard let currentPopulation = sfSnapshot.get("population") as? Int else {
+                let error = NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.invalidArgument.rawValue, userInfo: [
+                    NSLocalizedDescriptionKey: "Unable to retrieve population from SF document"
+                ])
+                errorPointer?.pointee = error
+                return nil
+            }
+            
+            transaction.updateData([
+                "population": currentPopulation + 1
+            ], forDocument: sfDoc)
+            
+            return currentPopulation + 1
+        }) { (object, error) in
+            if let error = error {
+                XCTFail("Transaction failed: \(error)")
+            }
+            expectation.fulfill()
+        }
+        
+        await fulfillment(of: [expectation], timeout: 5.0)
+        
+        // Verify the transaction worked
+        let finalDoc = try await sfDoc.getDocument()
+        XCTAssertEqual(finalDoc.get("population") as? Int, 860001)
+    }
+    
+    func assertExistsTrueForExistentDocument() async throws {
+        let docRef = db.document("test/exists")
+        try await docRef.setData(["foo": "bar"])
+        let doc = try await docRef.getDocument()
+        XCTAssertTrue(doc.exists)
+    }
+    
     func assertExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
@@ -382,18 +442,7 @@ var appName: String = "SkipFirebaseDemo"
             XCTAssertEqual(nsError.code, FirestoreErrorCode.notFound.rawValue)
         }
     }
-
-    func assertExistsTrueForExistentDocument() async throws {
-        XCTAssertEqual(appName, self.app.name)
-        let citiesRef = db.collection("cities")
-        let bos = citiesRef.document("BOS")
-        try await bos.setData(Self.bostonData)
-        let ref = citiesRef.document("BOS")
-        do {
-            let snapshot = try await ref.getDocument()
-            XCTAssertTrue(snapshot.exists)
-        }
-    }
+    
 }
 
 extension SkipFirebaseFirestoreTests {

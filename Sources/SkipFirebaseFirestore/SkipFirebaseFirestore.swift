@@ -85,25 +85,31 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     }
 
     public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
-        do {
-            let result = try store.runTransaction { transaction in 
-                // Create a Swift Transaction wrapper around the Android transaction
-                let swiftTransaction = Transaction(transaction: transaction)
-                
-                // Run the async block synchronously since Android API expects sync
-                let taskResult = try kotlinx.coroutines.runBlocking {
-                    try await updateBlock(swiftTransaction)
-                }
-                
-                return taskResult?.kotlin()
-            }.await()
+    do {
+        let result = try store.runTransaction { androidTransaction in 
+            // Create a Swift Transaction wrapper around the Android transaction
+            let swiftTransaction = Transaction(transaction: androidTransaction)
             
-            // Convert the result back to Swift type if needed
-            return result == nil ? nil as! T : deepSwift(value: result) as! T
-        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
-            throw asNSError(firestoreException: error)
+            // Even though we're using Android APIs, we maintain Swift syntax
+            // kotlinx.coroutines.runBlocking is available since we're in #if SKIP
+            let taskResult = kotlinx.coroutines.runBlocking {
+                try await updateBlock(swiftTransaction)
+            }
+            
+            // Convert Swift result to Kotlin type
+            taskResult?.kotlin()
+        }.await()
+        
+        // Convert Kotlin result back to Swift type
+        return result == nil ? nil as! T : deepSwift(value: result) as! T
+    } catch {
+        // In #if SKIP, we can directly work with Android exceptions
+        if error is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error as! com.google.firebase.firestore.FirebaseFirestoreException)
         }
+        throw error
     }
+}
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
