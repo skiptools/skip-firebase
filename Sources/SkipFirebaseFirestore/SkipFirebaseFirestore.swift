@@ -84,27 +84,23 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         DocumentReference(ref: store.document(path))
     }
 
-    public func runTransaction(_ updateBlock: @escaping (Transaction) throws -> Any?, completion: @escaping (Any?, Error?) -> Void) {
-    store.runTransaction({ androidTransaction -> Any? in
-        // Create a Swift Transaction wrapper around the Android transaction
+public func runTransaction(_ updateBlock: @escaping (Transaction) throws -> Any?, completion: @escaping (Any?, Error?) -> Void) {
+    let task = store.runTransaction({ (androidTransaction: com.google.firebase.firestore.Transaction) -> Any? in
         let swiftTransaction = Transaction(transaction: androidTransaction)
-        
-        do {
-            // Execute the updateBlock and return its result
-            return try updateBlock(swiftTransaction)?.kotlin()
-        } catch {
-            // Propagate any errors from the updateBlock
-            throw error
-        }
-    }).addOnSuccessListener({ kotlinResult -> Void in
-        // Convert Kotlin result back to Swift type and call completion
-        let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult)
+        return try updateBlock(swiftTransaction)?.kotlin()
+    })
+    
+    task.addOnSuccessListener({ (result: Any?) in
+        let swiftResult = result == nil ? nil : deepSwift(value: result)
         completion(swiftResult, nil)
-    }).addOnFailureListener({ exception -> Void in
-        // Convert Firebase exception to Swift error and call completion
-        let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
-        let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
-        completion(nil, swiftError)
+    })
+    
+    task.addOnFailureListener({ (exception: java.lang.Exception) in
+        if let firestoreError = exception as? com.google.firebase.firestore.FirebaseFirestoreException {
+            completion(nil, asNSError(firestoreException: firestoreError))
+        } else {
+            completion(nil, ErrorException(exception))
+        }
     })
 }
 }
