@@ -83,35 +83,31 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: store.document(path))
     }
-    
-    // Async/await version
-    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
+
+    public func runTransaction(_ updateBlock: @escaping (Transaction) throws -> Any?, completion: @escaping (Any?, Error?) -> Void) {
+    store.runTransaction({ androidTransaction -> Any? in
+        // Create a Swift Transaction wrapper around the Android transaction
+        let swiftTransaction = Transaction(transaction: androidTransaction)
+        
         do {
-            let result = try store.runTransaction { androidTransaction in
-                // Create a Swift Transaction wrapper around the Android transaction
-                let swiftTransaction = Transaction(transaction: androidTransaction)
-                
-                // Run the block synchronously since Android API expects sync
-                let taskResult = kotlinx.coroutines.runBlocking {
-                    try await updateBlock(swiftTransaction)
-                }
-                
-                // Convert Swift result to Kotlin type
-                taskResult?.kotlin()
-            }.await()
-            
-            // Convert Kotlin result back to Swift type
-            return result == nil ? nil as! T : deepSwift(value: result) as! T
+            // Execute the updateBlock and return its result
+            return try updateBlock(swiftTransaction)?.kotlin()
         } catch {
-            if error is com.google.firebase.firestore.FirebaseFirestoreException {
-                throw asNSError(firestoreException: error as! com.google.firebase.firestore.FirebaseFirestoreException)
-            }
+            // Propagate any errors from the updateBlock
             throw error
         }
-    }
-
+    }).addOnSuccessListener({ kotlinResult -> Void in
+        // Convert Kotlin result back to Swift type and call completion
+        let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult)
+        completion(swiftResult, nil)
+    }).addOnFailureListener({ exception -> Void in
+        // Convert Firebase exception to Swift error and call completion
+        let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
+        let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
+        completion(nil, swiftError)
+    })
 }
-
+}
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
 public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestore.FieldPath> {
     public let fieldPath: com.google.firebase.firestore.FieldPath
