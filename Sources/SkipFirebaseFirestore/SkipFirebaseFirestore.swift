@@ -84,26 +84,19 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         DocumentReference(ref: store.document(path))
     }
 
-    public func runTransaction<T>(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<Error?>?) -> T?) async throws -> T {
-        do {
-            let result = try store.runTransaction { androidTransaction in
-                // Create a Swift Transaction wrapper around the Android transaction
-                let swiftTransaction = Transaction(transaction: androidTransaction)
-
-                // Create an error pointer
-                var error: Error?
-                let errorPtr = UnsafeMutablePointer<Error?>(&error)
+    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
+    do {
+        let result = try store.runTransaction { androidTransaction in 
+            // Create a Swift Transaction wrapper around the Android transaction
+            let swiftTransaction = Transaction(transaction: androidTransaction)
             
-                // Run the block with the transaction and error pointer
-                let taskResult = updateBlock(swiftTransaction, errorPtr)
+            // Run the block synchronously since Android API expects sync
+            let taskResult = kotlinx.coroutines.runBlocking {
+                try await updateBlock(swiftTransaction)
+            }
             
-                // Check if an error was set
-                if let error = error {
-                    throw error as NSError
-                }
-            
-                // Convert Swift result to Kotlin type
-                return taskResult?.kotlin()
+            // Convert Swift result to Kotlin type
+            taskResult?.kotlin()
         }.await()
         
         // Convert Kotlin result back to Swift type
