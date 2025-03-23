@@ -83,64 +83,58 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: store.document(path))
     }
-    // ... existing code ...
-
-public func runTransaction<T>(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<NSError?>?) -> T?, completion: @escaping (T?, Error?) -> Void) {
-    store.runTransaction { androidTransaction in
-        // Create a Swift Transaction wrapper around the Android transaction
-        let swiftTransaction = Transaction(transaction: androidTransaction)
-        
-        // Create an error pointer for the updateBlock
-        var errorPtr: NSError?
-        let errorPointer = withUnsafeMutablePointer(to: &errorPtr) { $0 }
-        
-        // Execute the updateBlock with transaction and error pointer
-        let result = updateBlock(swiftTransaction, errorPointer)
-        
-        // If error was set, throw it to trigger failure path
-        if let error = errorPtr {
-            throw error
-        }
-        
-        // Convert Swift result to Kotlin type if needed
-        result?.kotlin()
-    }.addOnSuccessListener { kotlinResult in
-        // Convert Kotlin result back to Swift type if needed
-        let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult) as? T
-        completion(swiftResult, nil)
-    }.addOnFailureListener { exception in
-        // Convert Firebase exception to Swift error
-        let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
-        let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
-        completion(nil, swiftError)
-    }
-}
-
-// Async/await version
-public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
-    do {
-        let result = try store.runTransaction { androidTransaction in 
+    
+        public func runTransaction<T>(_ updateBlock: @escaping (Transaction) throws -> T?, completion: @escaping (T?, Error?) -> Void) {
+        store.runTransaction { androidTransaction in
             // Create a Swift Transaction wrapper around the Android transaction
             let swiftTransaction = Transaction(transaction: androidTransaction)
             
-            // Run the block synchronously since Android API expects sync
-            let taskResult = kotlinx.coroutines.runBlocking {
-                try await updateBlock(swiftTransaction)
+            do {
+                // Execute the updateBlock
+                let result = try updateBlock(swiftTransaction)
+                // Convert Swift result to Kotlin type if needed
+                return result?.kotlin()
+            } catch {
+                // Propagate any errors from the updateBlock
+                throw error
             }
-            
-            // Convert Swift result to Kotlin type
-            taskResult?.kotlin()
-        }.await()
-        
-        // Convert Kotlin result back to Swift type
-        return result == nil ? nil as! T : deepSwift(value: result) as! T
-    } catch {
-        if error is com.google.firebase.firestore.FirebaseFirestoreException {
-            throw asNSError(firestoreException: error as! com.google.firebase.firestore.FirebaseFirestoreException)
+        }.addOnSuccessListener { kotlinResult in
+            // Convert Kotlin result back to Swift type if needed
+            let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult) as? T
+            completion(swiftResult, nil)
+        }.addOnFailureListener { exception in
+            // Convert Firebase exception to Swift error
+            let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
+            let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
+            completion(nil, swiftError)
         }
-        throw error
     }
-}
+    
+    // Async/await version
+    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
+        do {
+            let result = try store.runTransaction { androidTransaction in
+                // Create a Swift Transaction wrapper around the Android transaction
+                let swiftTransaction = Transaction(transaction: androidTransaction)
+                
+                // Run the block synchronously since Android API expects sync
+                let taskResult = kotlinx.coroutines.runBlocking {
+                    try await updateBlock(swiftTransaction)
+                }
+                
+                // Convert Swift result to Kotlin type
+                taskResult?.kotlin()
+            }.await()
+            
+            // Convert Kotlin result back to Swift type
+            return result == nil ? nil as! T : deepSwift(value: result) as! T
+        } catch {
+            if error is com.google.firebase.firestore.FirebaseFirestoreException {
+                throw asNSError(firestoreException: error as! com.google.firebase.firestore.FirebaseFirestoreException)
+            }
+            throw error
+        }
+    }
 
 }
 
