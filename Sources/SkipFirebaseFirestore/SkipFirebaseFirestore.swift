@@ -84,29 +84,22 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         DocumentReference(ref: store.document(path))
     }
 
-    public func runTransaction(_ updateBlock: @escaping (Transaction, NSErrorPointer) -> Any?) async throws -> Any? {
+    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
         do {
             let result = try store.runTransaction { transaction in 
                 // Create a Swift Transaction wrapper around the Android transaction
                 let swiftTransaction = Transaction(transaction: transaction)
                 
-                // Create an NSErrorPointer for the callback
-                var error: NSError?
-                let errorPointer: NSErrorPointer = &error
-                
-                // Call the user's update block
-                let blockResult = updateBlock(swiftTransaction, errorPointer)
-                
-                // If an error was set, throw it to be caught in the outer catch block
-                if let error = error {
-                    throw error
+                // Run the async block synchronously since Android API expects sync
+                let taskResult = try kotlinx.coroutines.runBlocking {
+                    try await updateBlock(swiftTransaction)
                 }
                 
-                return blockResult?.kotlin()
+                return taskResult?.kotlin()
             }.await()
             
             // Convert the result back to Swift type if needed
-            return result == nil ? nil : deepSwift(value: result)
+            return result == nil ? nil as! T : deepSwift(value: result) as! T
         } catch is com.google.firebase.firestore.FirebaseFirestoreException {
             throw asNSError(firestoreException: error)
         }
@@ -611,6 +604,34 @@ public class Transaction: KotlinConverting<com.google.firebase.firestore.Transac
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.transaction == rhs.transaction
+    }
+
+    public func getDocument(_ document: DocumentReference) throws -> DocumentSnapshot {
+        DocumentSnapshot(doc: transaction.get(document.ref))
+    }
+    
+    public func setData(_ data: [String: Any], forDocument document: DocumentReference) -> Transaction {
+        transaction.set(document.ref, data.kotlin())
+        return self
+    }
+    
+    public func setData(_ data: [String: Any], forDocument document: DocumentReference, merge: Bool) -> Transaction {
+        if merge {
+            transaction.set(document.ref, data.kotlin(), com.google.firebase.firestore.SetOptions.merge())
+        } else {
+            transaction.set(document.ref, data.kotlin())
+        }
+        return self
+    }
+    
+    public func updateData(_ fields: [AnyHashable: Any], forDocument document: DocumentReference) -> Transaction {
+        transaction.update(document.ref, fields.kotlin() as! Map<String, Any>)
+        return self
+    }
+    
+    public func deleteDocument(_ document: DocumentReference) -> Transaction {
+        transaction.delete(document.ref)
+        return self
     }
 }
 
