@@ -83,8 +83,41 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: store.document(path))
     }
+    // ... existing code ...
 
-    public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
+public func runTransaction<T>(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<NSError?>?) -> T?, completion: @escaping (T?, Error?) -> Void) {
+    store.runTransaction { androidTransaction in
+        // Create a Swift Transaction wrapper around the Android transaction
+        let swiftTransaction = Transaction(transaction: androidTransaction)
+        
+        // Create an error pointer for the updateBlock
+        var errorPtr: NSError?
+        let errorPointer = withUnsafeMutablePointer(to: &errorPtr) { $0 }
+        
+        // Execute the updateBlock with transaction and error pointer
+        let result = updateBlock(swiftTransaction, errorPointer)
+        
+        // If error was set, throw it to trigger failure path
+        if let error = errorPtr {
+            throw error
+        }
+        
+        // Convert Swift result to Kotlin type if needed
+        result?.kotlin()
+    }.addOnSuccessListener { kotlinResult in
+        // Convert Kotlin result back to Swift type if needed
+        let swiftResult = kotlinResult == nil ? nil : deepSwift(value: kotlinResult) as? T
+        completion(swiftResult, nil)
+    }.addOnFailureListener { exception in
+        // Convert Firebase exception to Swift error
+        let error = exception as? com.google.firebase.firestore.FirebaseFirestoreException
+        let swiftError = error.map { asNSError(firestoreException: $0) } ?? exception as Error
+        completion(nil, swiftError)
+    }
+}
+
+// Async/await version
+public func runTransaction<T>(_ updateBlock: @escaping (Transaction) async throws -> T) async throws -> T {
     do {
         let result = try store.runTransaction { androidTransaction in 
             // Create a Swift Transaction wrapper around the Android transaction
