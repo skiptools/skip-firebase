@@ -84,31 +84,31 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         DocumentReference(ref: store.document(path))
     }
 
-public func runTransaction(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<NSError>?) -> Any?, completion: @escaping (Any?, Error?) -> Void) {
-    let task = store.runTransaction({ (androidTransaction: com.google.firebase.firestore.Transaction) -> Any? in
-        let swiftTransaction = Transaction(transaction: androidTransaction)
-        var error: NSError?
+// public func runTransaction(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<NSError>?) -> Any?, completion: @escaping (Any?, Error?) -> Void) {
+//     let task = store.runTransaction({ (androidTransaction: com.google.firebase.firestore.Transaction) -> Any? in
+//         let swiftTransaction = Transaction(transaction: androidTransaction)
+//         var error: NSError?
         
-        let result = updateBlock(swiftTransaction, &error)
-        if let error = error {
-            throw error
-        }
-        return result?.kotlin()
-    })
+//         let result = updateBlock(swiftTransaction, &error)
+//         if let error = error {
+//             throw error
+//         }
+//         return result?.kotlin()
+//     })
     
-    task.addOnSuccessListener({ (result: Any?) -> Void in
-        let swiftResult = result == nil ? nil : deepSwift(value: result)
-        completion(swiftResult, nil)
-    })
+//     task.addOnSuccessListener({ (result: Any?) -> Void in
+//         let swiftResult = result == nil ? nil : deepSwift(value: result)
+//         completion(swiftResult, nil)
+//     })
     
-    task.addOnFailureListener({ (exception: java.lang.Exception) -> Void in
-        if let firestoreError = exception as? com.google.firebase.firestore.FirebaseFirestoreException {
-            completion(nil, asNSError(firestoreException: firestoreError))
-        } else {
-            completion(nil, ErrorException(exception))
-        }
-    })
-}
+//     task.addOnFailureListener({ (exception: java.lang.Exception) -> Void in
+//         if let firestoreError = exception as? com.google.firebase.firestore.FirebaseFirestoreException {
+//             completion(nil, asNSError(firestoreException: firestoreError))
+//         } else {
+//             completion(nil, ErrorException(exception))
+//         }
+//     })
+// }
 }
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
 public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestore.FieldPath> {
