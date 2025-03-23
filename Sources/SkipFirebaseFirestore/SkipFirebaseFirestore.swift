@@ -83,6 +83,34 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: store.document(path))
     }
+
+    public func runTransaction(_ updateBlock: @escaping (Transaction, NSErrorPointer) -> Any?) async throws -> Any? {
+        do {
+            let result = try store.runTransaction { transaction in 
+                // Create a Swift Transaction wrapper around the Android transaction
+                let swiftTransaction = Transaction(transaction: transaction)
+                
+                // Create an NSErrorPointer for the callback
+                var error: NSError?
+                let errorPointer: NSErrorPointer = &error
+                
+                // Call the user's update block
+                let blockResult = updateBlock(swiftTransaction, errorPointer)
+                
+                // If an error was set, throw it to be caught in the outer catch block
+                if let error = error {
+                    throw error
+                }
+                
+                return blockResult?.kotlin()
+            }.await()
+            
+            // Convert the result back to Swift type if needed
+            return result == nil ? nil : deepSwift(value: result)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
+    }
 }
 
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
