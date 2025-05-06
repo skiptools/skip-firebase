@@ -192,7 +192,37 @@ public class MessagingService : FirebaseMessagingService {
         } else {
             attachments = []
         }
-        let content = UNNotificationContent(title: notification.title ?? "", body: notification.body ?? "", userInfo: userInfo, attachments: attachments)
+        var title = notification.title
+        if title == nil, let titleKey = notification.getTitleLocalizationKey() {
+            let localized = Bundle.main.localizedString(forKey: titleKey, value: nil, table: nil)
+            if let args = notification.getTitleLocalizationArgs() {
+                do {
+                    title = String(format: localized, arguments: skip.lib.Array(args.toList()))
+                } catch {
+                    android.util.Log.e("SkipFirebaseMessaging", "onMessageReceived, notification title (\(localized) format error", error as? Throwable )
+                    title = localized
+                }
+            } else {
+                title = localized
+            }
+        }
+        
+        var body = notification.body
+        if body == nil, let bodyKey = notification.getBodyLocalizationKey() {
+            let localized = Bundle.main.localizedString(forKey: bodyKey, value: nil, table: nil)
+            if let args = notification.getBodyLocalizationArgs() {
+                do {
+                    body = String(format: localized, arguments: skip.lib.Array(args.toList()))
+                } catch {
+                    android.util.Log.e("SkipFirebaseMessaging", "onMessageReceived, notification body (\(localized) format error", error as? Throwable )
+                    body = localized
+                }
+            } else {
+                body = localized
+            }
+        }
+        
+        let content = UNNotificationContent(title: title, body: body, userInfo: userInfo, attachments: attachments)
         let request = UNNotificationRequest(identifier: messageID, content: content, trigger: UNPushNotificationTrigger(repeats: false))
         let date = Date(timeIntervalSince1970: Double(message.sentTime) / 1000.0)
         let notification = UNNotification(request: request, date: date)
