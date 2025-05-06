@@ -205,8 +205,6 @@ public class MessagingService : FirebaseMessagingService {
             } else {
                 title = localized
             }
-        } else {
-            title = ""
         }
         
         var body = notification.body
@@ -222,8 +220,6 @@ public class MessagingService : FirebaseMessagingService {
             } else {
                 body = localized
             }
-        } else {
-            body = ""
         }
         
         let content = UNNotificationContent(title: title, body: body, userInfo: userInfo, attachments: attachments)
