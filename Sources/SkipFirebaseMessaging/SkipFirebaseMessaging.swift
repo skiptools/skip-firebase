@@ -222,7 +222,7 @@ public class MessagingService : FirebaseMessagingService {
             }
         }
         
-        let content = UNNotificationContent(title: title, body: body, userInfo: userInfo, attachments: attachments)
+        let content = UNNotificationContent(title: title ?? "", body: body ?? "", userInfo: userInfo, attachments: attachments)
         let request = UNNotificationRequest(identifier: messageID, content: content, trigger: UNPushNotificationTrigger(repeats: false))
         let date = Date(timeIntervalSince1970: Double(message.sentTime) / 1000.0)
         let notification = UNNotification(request: request, date: date)
