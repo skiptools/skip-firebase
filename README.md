@@ -1,6 +1,6 @@
 # SkipFirebase
 
-This package provides Firebase support for Skip app/framework projects.
+This package provides Firebase support for [Skip Lite](https://skip.tools) transpiled Swift.
 The Swift side uses the official Firebase iOS SDK directly,
 with the various `SkipFirebase*` modules passing the transpiled calls
 through to the Firebase Android SDK.
