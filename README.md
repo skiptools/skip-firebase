@@ -230,7 +230,7 @@ final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, S
 
 // Your Firebase MessageDelegate must bridge because we use the Firebase Kotlin API on Android.
 /* SKIP @bridge */final class MessageDelegate : NSObject, MessagingDelegate, Sendable {
-    public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
+    /* SKIP @bridge */public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
         logger.info("didReceiveRegistrationToken: \(token ?? "nil")")
     }
 }
