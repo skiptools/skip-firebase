@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
-import SkipFoundation
+import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
@@ -76,18 +76,21 @@ public final class Auth {
         return AuthStateListener(platformValue: stateListener)
     }
 
-    public func removeStateDidChangeListener(_ listenerHandle: NSObjectProtocol) {
-        platformValue.removeAuthStateListener((listenerHandle as AuthStateListener).platformValue)
+    public func removeStateDidChangeListener(_ listenerHandle: Any) {
+        if let handle = listenerHandle as? AuthStateListener {
+            platformValue.removeAuthStateListener(handle.platformValue)
+        }
     }
 }
 
-public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResult> {
+public class AuthDataResult: Equatable, KotlinConverting<com.google.firebase.auth.AuthResult> {
     public let platformValue: com.google.firebase.auth.AuthResult
 
     public init(_ platformValue: com.google.firebase.auth.AuthResult) {
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.AuthResult {
         platformValue
     }
@@ -105,7 +108,7 @@ public class AuthDataResult: KotlinConverting<com.google.firebase.auth.AuthResul
     }
 }
 
-public class AuthStateListener: NSObjectProtocol {
+public class AuthStateListener {
     public let platformValue: com.google.firebase.auth.FirebaseAuth.AuthStateListener
 
     public init(platformValue: com.google.firebase.auth.FirebaseAuth.AuthStateListener) {
@@ -113,13 +116,15 @@ public class AuthStateListener: NSObjectProtocol {
     }
 }
 
-public class User: KotlinConverting<com.google.firebase.auth.FirebaseUser> {
+public class User: Equatable, KotlinConverting<com.google.firebase.auth.FirebaseUser> {
     public let platformValue: com.google.firebase.auth.FirebaseUser
 
     public init(_ platformValue: com.google.firebase.auth.FirebaseUser) {
         self.platformValue = platformValue
     }
 
+    // Bridging this function creates a Swift function that "overrides" nothing
+    // SKIP @nobridge
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.FirebaseUser {
         platformValue
     }
@@ -245,7 +250,9 @@ public class AuthCredential: KotlinConverting<com.google.firebase.auth.AuthCrede
     public init(_ platformValue: com.google.firebase.auth.AuthCredential) {
         self.platformValue = platformValue
     }
-    
+
+    // Bridging this function creates a Swift function that "overrides" nothing
+    // SKIP @nobridge
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.AuthCredential {
         platformValue
     }

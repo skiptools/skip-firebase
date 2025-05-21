@@ -16,6 +16,7 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
         store.toString()
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FirebaseFirestore {
         store
     }
@@ -98,6 +99,7 @@ public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestor
         self.fieldPath = com.google.firebase.firestore.FieldPath.of(*fnames)
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FieldPath {
         fieldPath
     }
@@ -120,13 +122,14 @@ public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestor
     }
 }
 
-public class LoadBundleTaskProgress: KotlinConverting<com.google.firebase.firestore.LoadBundleTaskProgress> {
+public class LoadBundleTaskProgress: Equatable, KotlinConverting<com.google.firebase.firestore.LoadBundleTaskProgress> {
     public let progress: com.google.firebase.firestore.LoadBundleTaskProgress
 
     public init(progress: com.google.firebase.firestore.LoadBundleTaskProgress) {
         self.progress = progress
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.LoadBundleTaskProgress {
         progress
     }
@@ -174,13 +177,14 @@ public enum LoadBundleTaskState {
 }
 
 /// A query that calculates aggregations over an underlying query.
-public class AggregateQuery: KotlinConverting<com.google.firebase.firestore.AggregateQuery> {
+public class AggregateQuery: Equatable, KotlinConverting<com.google.firebase.firestore.AggregateQuery> {
     public let query: com.google.firebase.firestore.AggregateQuery
 
     public init(query: com.google.firebase.firestore.AggregateQuery) {
         self.query = query
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuery {
         query
     }
@@ -206,13 +210,18 @@ public class AggregateQuery: KotlinConverting<com.google.firebase.firestore.Aggr
     }
 }
 
-public class Filter: KotlinConverting<com.google.firebase.firestore.Filter> {
+public class Filter: Equatable, KotlinConverting<com.google.firebase.firestore.Filter> {
     public let filter: com.google.firebase.firestore.Filter
 
-    public init(filter: com.google.firebase.firestore.Filter = com.google.firebase.firestore.Filter()) {
+    public init() {
+        self.filter = com.google.firebase.firestore.Filter()
+    }
+    
+    public init(filter: com.google.firebase.firestore.Filter) {
         self.filter = filter
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Filter {
         filter
     }
@@ -319,6 +328,7 @@ public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.Sn
         self.meta = meta
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.SnapshotMetadata {
         meta
     }
@@ -343,6 +353,7 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         self.query = query
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Query {
         query
     }
@@ -488,7 +499,7 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
         })
     }
 
-    public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
+    public func addSnapshotListener(includeMetadataChanges: Bool, listener: @escaping (QuerySnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: query.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
             let qs: QuerySnapshot? = snapshot == nil ? nil : QuerySnapshot(snap: snapshot!)
             let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
@@ -549,6 +560,7 @@ public class ListenerRegistration: KotlinConverting<com.google.firebase.firestor
         self.reg = reg
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.ListenerRegistration {
         reg
     }
@@ -573,6 +585,7 @@ public class Transaction: KotlinConverting<com.google.firebase.firestore.Transac
         self.transaction = transaction
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.Transaction {
         transaction
     }
@@ -593,6 +606,7 @@ public class QuerySnapshot: KotlinConverting<com.google.firebase.firestore.Query
         self.snap = snap
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.QuerySnapshot {
         snap
     }
@@ -662,6 +676,7 @@ public struct AggregateField: KotlinConverting<com.google.firebase.firestore.Agg
         self.agg = agg
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateField {
         agg
     }
@@ -702,6 +717,7 @@ public class AggregateQuerySnapshot: KotlinConverting<com.google.firebase.firest
         self.snap = snap
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.AggregateQuerySnapshot {
         snap
     }
@@ -737,6 +753,7 @@ public class DocumentChange: KotlinConverting<com.google.firebase.firestore.Docu
         self.change = change
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentChange {
         change
     }
@@ -778,6 +795,7 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
         self.doc = doc
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentSnapshot {
         doc
     }
@@ -843,6 +861,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         self.ref = ref
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.DocumentReference {
         ref
     }
@@ -868,7 +887,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         }
     }
 
-    public func getDocument(completion: (_ snapshot: DocumentSnapshot?, _ error: (any Error)?) -> Void) {
+    public func getDocument(completion: @escaping (_ snapshot: DocumentSnapshot?, _ error: (any Error)?) -> Void) {
         ref.get().addOnSuccessListener { documentSnapshot in
             completion(DocumentSnapshot(doc: documentSnapshot), nil)
         }
@@ -929,7 +948,7 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         })
     }
 
-    public func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
+    public func addSnapshotListener(includeMetadataChanges: Bool, listener: @escaping (DocumentSnapshot?, Error?) -> ()) -> ListenerRegistration {
         ListenerRegistration(reg: ref.addSnapshotListener(includeMetadataChanges ? com.google.firebase.firestore.MetadataChanges.INCLUDE : com.google.firebase.firestore.MetadataChanges.EXCLUDE) { snapshot, error in
             let ds: DocumentSnapshot? = snapshot == nil ? nil : DocumentSnapshot(doc: snapshot!)
             let err: Error? = error == nil ? nil : asNSError(firestoreException: error!)
@@ -953,6 +972,7 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
         self.timestamp = com.google.firebase.Timestamp(seconds, nanoseconds)
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.Timestamp {
         timestamp
     }

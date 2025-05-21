@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
-import SkipFoundation
+import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 import android.net.Uri

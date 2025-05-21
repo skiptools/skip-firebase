@@ -7,13 +7,14 @@ import OSLog
 // https://firebase.google.com/docs/reference/swift/firebasecore/api/reference/Classes/FirebaseApp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/FirebaseApp
 
-public final class FirebaseApp: KotlinConverting<com.google.firebase.FirebaseApp> {
+public final class FirebaseApp: Hashable, KotlinConverting<com.google.firebase.FirebaseApp> {
     public let app: com.google.firebase.FirebaseApp
 
     public init(app: com.google.firebase.FirebaseApp) {
         self.app = app
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.FirebaseApp {
         app
     }
@@ -95,7 +96,7 @@ public final class FirebaseApp: KotlinConverting<com.google.firebase.FirebaseApp
 
 public final class FirebaseOptions {
     public var googleAppID: String
-    public var gcmSenderID: String!
+    public var gcmSenderID: String
     public var projectID: String?
     public var storageBucket: String?
     public var apiKey: String?
