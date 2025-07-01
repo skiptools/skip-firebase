@@ -39,6 +39,7 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.functions.HttpsCallableReference {
         platformValue
     }
@@ -71,6 +72,7 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.functions.HttpsCallableResult {
         platformValue
     }
