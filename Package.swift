@@ -28,7 +28,7 @@ let package = Package(
         .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.3.1"),
         .package(url: "https://source.skip.tools/skip-model.git", from: "1.4.2"),
         .package(url: "https://source.skip.tools/skip-ui.git", from: "1.26.4"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.12.0")
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.1.0")
     ],
     targets: [
         .target(name: "SkipFirebaseCore", dependencies: [
