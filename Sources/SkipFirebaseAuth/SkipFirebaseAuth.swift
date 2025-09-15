@@ -44,6 +44,8 @@ public final class Auth {
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#createUserWithEmailAndPassword(java.lang.String,java.lang.String)
     public func createUser(withEmail email: String, password: String) async throws -> AuthDataResult {
         let result = platformValue.createUserWithEmailAndPassword(email, password).await()
+        // Send verification email
+        try await result.user?.sendEmailVerification()?.await()
         return AuthDataResult(result)
     }
 
