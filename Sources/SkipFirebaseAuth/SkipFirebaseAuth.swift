@@ -185,13 +185,6 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         try await platformValue.sendEmailVerification().await()
     }
     
-    /// Overload with ActionCodeSettings (optional)
-    /// Throws `FirebaseAuthInvalidUserException`
-    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#sendemailverification(com.google.firebase.auth.actioncodesettings)
-    public func sendEmailVerification(with settings: ActionCodeSettings) async throws {
-        try await platformValue.sendEmailVerification(settings.platformValue).await()
-    }
-    
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reauthenticate(com.google.firebase.auth.AuthCredential)
     public func reauthenticate(with credential: AuthCredential) async throws {
