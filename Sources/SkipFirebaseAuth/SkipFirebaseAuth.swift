@@ -178,6 +178,13 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         return UserProfileChangeRequest(self)
     }
 
+    
+    /// Throws `FirebaseAuthInvalidUserException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#sendemailverification
+    public func sendEmailVerification() async throws {
+        try await platformValue.sendEmailVerification().await()
+    }
+    
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reauthenticate(com.google.firebase.auth.AuthCredential)
     public func reauthenticate(with credential: AuthCredential) async throws {
