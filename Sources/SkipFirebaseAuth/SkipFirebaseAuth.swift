@@ -99,6 +99,12 @@ public final class Auth {
         return AuthDataResult(result)
     }
 
+    /// Whether the specific URL is handled by Auth.
+    /// On Android, map this to email-link detection.
+    public func canHandle(_ url: URL) -> Bool {
+        platformValue.isSignInWithEmailLink(url.absoluteString)
+    }
+
     /// iOS-style completion API for interactive provider sign-in
     public func signIn(with provider: OAuthProvider, completion: @escaping (AuthDataResult?, Error?) -> Void) {
         guard let activity: Activity = UIApplication.shared.androidActivity else {
