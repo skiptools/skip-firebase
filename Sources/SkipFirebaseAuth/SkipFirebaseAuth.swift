@@ -76,6 +76,18 @@ public final class Auth {
         return AuthDataResult(result)
     }
 
+    /// iOS-style completion API for sign-in with credential
+    public func signIn(with credential: AuthCredential, completion: @escaping (AuthDataResult?, Error?) -> Void) {
+        platformValue
+            .signInWithCredential(credential.platformValue)
+            .addOnSuccessListener { result in
+                completion(AuthDataResult(result), nil)
+            }
+            .addOnFailureListener { exception in
+                completion(nil, mapAuthNSError(exception))
+            }
+    }
+
     /// Interactive sign-in using an `OAuthProvider` (OIDC/SAML). Requires current Activity.
     /// Throws if there is no foreground Activity.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#startActivityForSignInWithProvider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
@@ -85,6 +97,42 @@ public final class Auth {
         }
         let result = try platformValue.startActivityForSignInWithProvider(activity, provider.buildPlatformProvider()).await()
         return AuthDataResult(result)
+    }
+
+    /// iOS-style completion API for interactive provider sign-in
+    public func signIn(with provider: OAuthProvider, completion: @escaping (AuthDataResult?, Error?) -> Void) {
+        guard let activity: Activity = UIApplication.shared.androidActivity else {
+            completion(nil, NSError(domain: "SkipFirebaseAuth", code: -10, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth sign-in"]))
+            return
+        }
+        platformValue
+            .startActivityForSignInWithProvider(activity, provider.buildPlatformProvider())
+            .addOnSuccessListener { result in
+                completion(AuthDataResult(result), nil)
+            }
+            .addOnFailureListener { exception in
+                completion(nil, mapAuthNSError(exception))
+            }
+    }
+
+    /// iOS-compatible API to fetch sign-in methods for an email
+    public func fetchSignInMethods(forEmail email: String, completion: @escaping ([String]?, Error?) -> Void) {
+        platformValue
+            .fetchSignInMethodsForEmail(email)
+            .addOnSuccessListener { result in
+                guard let methods = result.getSignInMethods() else { completion([], nil); return }
+                var swift: [String] = []
+                let iterator = methods.iterator()
+                while iterator.hasNext() {
+                    if let v = iterator.next() {
+                        swift.append(String(describing: v))
+                    }
+                }
+                completion(swift, nil)
+            }
+            .addOnFailureListener { exception in
+                completion(nil, mapAuthNSError(exception))
+            }
     }
 
     public func addStateDidChangeListener(_ listener: @escaping (Auth, User?) -> Void) -> AuthStateListener {
@@ -125,6 +173,11 @@ public class AuthDataResult: Equatable, KotlinConverting<com.google.firebase.aut
 
     public var user: User {
         User(platformValue.user!)
+    }
+
+    public var additionalUserInfo: AdditionalUserInfo? {
+        guard let info = platformValue.additionalUserInfo else { return nil }
+        return AdditionalUserInfo(info)
     }
 }
 
@@ -218,6 +271,18 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         return AuthDataResult(result)
     }
 
+    /// iOS-style completion API for link with credential
+    public func link(with credential: AuthCredential, completion: @escaping (AuthDataResult?, Error?) -> Void) {
+        platformValue
+            .linkWithCredential(credential.platformValue)
+            .addOnSuccessListener { result in
+                completion(AuthDataResult(result), nil)
+            }
+            .addOnFailureListener { exception in
+                completion(nil, mapAuthNSError(exception))
+            }
+    }
+
     /// Interactive link with provider using current Activity
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#startactivityforlinkwithprovider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
     public func link(with provider: OAuthProvider) async throws -> AuthDataResult {
@@ -253,6 +318,69 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         }
         return token
     }
+}
+
+/// Additional user information associated with an auth result
+public final class AdditionalUserInfo: KotlinConverting<com.google.firebase.auth.AdditionalUserInfo> {
+    public let platformValue: com.google.firebase.auth.AdditionalUserInfo
+
+    public init(_ platformValue: com.google.firebase.auth.AdditionalUserInfo) {
+        self.platformValue = platformValue
+    }
+
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.AdditionalUserInfo {
+        platformValue
+    }
+
+    public var isNewUser: Bool { platformValue.isNewUser }
+    public var providerID: String? { platformValue.getProviderId() }
+    public var username: String? { platformValue.getUsername() }
+
+    /// Best-effort conversion of profile map to Swift dictionary
+    public var profile: [AnyHashable: Any]? {
+        guard let map = platformValue.getProfile() else { return nil }
+        var dict: [AnyHashable: Any] = [:]
+        let entries = map.entrySet()
+        let iterator = entries.iterator()
+        while iterator.hasNext() {
+            if let entry = iterator.next() {
+                dict[String(describing: entry.getKey())] = entry.getValue()
+            }
+        }
+        return dict
+    }
+}
+
+// MARK: - iOS-compatible Auth error surface
+
+public let AuthErrorDomain = "FIRAuthErrorDomain"
+public let AuthErrorUserInfoEmailKey = "FIRAuthErrorUserInfoEmailKey"
+
+public enum AuthErrorCode: Int {
+    case accountExistsWithDifferentCredential = 17012
+}
+
+/// Map Android auth exceptions to iOS-style NSError when feasible
+fileprivate func mapAuthNSError(_ exception: Exception) -> Error {
+    if let collision = exception as? com.google.firebase.auth.FirebaseAuthUserCollisionException {
+        var userInfo: [String: Any] = [:]
+        // Try to extract email if available
+        if let emailProvider = (collision as? com.google.firebase.auth.FirebaseAuthException) {
+            // Some exceptions expose the email via getMessage or provider data; best effort only
+            let message = String(describing: emailProvider.message ?? "")
+            if let range = message.range(of: "@") { // naive check for email-like token
+                userInfo[AuthErrorUserInfoEmailKey] = message
+            }
+        }
+        return NSError(domain: AuthErrorDomain, code: AuthErrorCode.accountExistsWithDifferentCredential.rawValue, userInfo: userInfo)
+    }
+    return ErrorException(exception)
+}
+
+// Provide a FirebaseAuth namespace so app code can reference `FirebaseAuth.User` on Android
+public enum FirebaseAuth {
+    public typealias User = SkipFirebaseAuth.User
 }
 
 public class UserMetadata {
