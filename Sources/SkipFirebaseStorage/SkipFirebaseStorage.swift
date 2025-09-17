@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
-import SkipFoundation
+import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
@@ -70,6 +70,7 @@ public class StorageMetadata: KotlinConverting<com.google.firebase.storage.Stora
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.storage.StorageMetadata {
         platformValue
     }
@@ -187,6 +188,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.storage.StorageReference {
         platformValue
     }
@@ -247,7 +249,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     /// Error is `StorageException`
-    public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void = { _, _ in }) -> StorageUploadTask {
+    public func putFile(from fileURL: URL, metadata: StorageMetadata? = nil, completion: @escaping (_: StorageMetadata?, _: Error?) -> Void = { _, _ in }) -> StorageUploadTask {
         let fileURI: android.net.Uri = android.net.Uri.parse(fileURL.kotlin().toString())
 
         let uploadTask = metadata == nil ? platformValue.putFile(fileURI) : platformValue.putFile(fileURI, metadata!.platformValue, nil)
@@ -279,7 +281,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     /// Error is `StorageException`
-    public func putData(_ uploadData: Data, metadata: StorageMetadata? = nil, completion: (_: StorageMetadata?, _: Error?) -> Void) -> StorageUploadTask {
+    public func putData(_ uploadData: Data, metadata: StorageMetadata? = nil, completion: @escaping (_: StorageMetadata?, _: Error?) -> Void) -> StorageUploadTask {
         // putBytes(bytes, metadata) is @NonNull, so we need to use different methods for null vs. non-null metadata parameter
         let uploadTask = metadata == nil ? platformValue.putBytes(uploadData.platformValue) : platformValue.putBytes(uploadData.platformValue, metadata!.platformValue)
 
@@ -332,7 +334,7 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     }
 
     /// Error is `StorageException`/`IndexOutOfBoundsException`
-    public func getData(maxSize: Int64, completion: (_: Data?, _: Error?) -> Void) -> StorageDownloadTask {
+    public func getData(maxSize: Int64, completion: @escaping (_: Data?, _: Error?) -> Void) -> StorageDownloadTask {
 
         let downloadTask = platformValue.getBytes(maxSize)
         Task {

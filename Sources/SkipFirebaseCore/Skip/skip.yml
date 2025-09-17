@@ -1,5 +1,9 @@
 # Configuration file for https://skip.tools project
 #
+skip:
+  mode: 'transpiled'
+  bridging: true
+
 # Kotlin dependencies and Gradle build options for this module can be configured here
 settings:
   contents:
@@ -9,7 +13,7 @@ settings:
           contents:
             - block: 'create("libs")'
               contents:
-                - 'version("firebase", "33.8.0")'
+                - 'version("firebase", "34.1.0")'
                 - 'library("firebase-bom", "com.google.firebase", "firebase-bom").versionRef("firebase")'
 
 build:

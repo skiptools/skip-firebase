@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
-import SkipFoundation
+import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
@@ -39,6 +39,7 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.functions.HttpsCallableReference {
         platformValue
     }
@@ -71,6 +72,7 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
         self.platformValue = platformValue
     }
 
+    // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.functions.HttpsCallableResult {
         platformValue
     }

@@ -1,12 +1,12 @@
 # SkipFirebase
 
-This package provides Firebase support for Skip app/framework projects.
+This package provides Firebase support for [Skip](https://skip.tools) Swift projects.
 The Swift side uses the official Firebase iOS SDK directly,
 with the various `SkipFirebase*` modules passing the transpiled calls
 through to the Firebase Android SDK.
 
-For an example of using Firebase in a Skip app, see the
-[Fireside Sample](https://github.com/skiptools/skipapp-fireside/).
+For an example of using Firebase in a [Skip Fuse](https://skip.tools/docs/status/#skip_fuse) app, see the
+[FiresideFuse Sample](https://github.com/skiptools/skipapp-fireside-fuse/). For a [Skip Lite](https://skip.tools/docs/status/#skip_fuse) app, see the [Fireside Sample](https://github.com/skiptools/skipapp-fireside/).
 
 ## Package
 
@@ -14,7 +14,11 @@ The modules in the SkipFirebase framework project mirror the division of the Swi
 modules in the Firebase iOS SDK (at [https://github.com/firebase/firebase-ios-sdk.git](https://github.com/firebase/firebase-ios-sdk.git)),
 which is also mirrored in the division of the Firebase Kotlin Android gradle modules (at [https://github.com/firebase/firebase-android-sdk.git](https://github.com/firebase/firebase-android-sdk.git)).
 
-An example of a Skip app projects using the `Firestore` API at the model layer and the `Messaging` API at the app layer can be seen from the command:
+See the `Package.swift` files in the
+[FiresideFuse](https://github.com/skiptools/skipapp-fireside-fuse/) and [Fireside](https://github.com/skiptools/skipapp-fireside/) apps for examples of integrating Firebase dependencies.
+
+<!--
+An example of a Skip Lite app projects using the `Firestore` API at the model layer and the `Messaging` API at the app layer can be seen from the command:
 
 ```console
 skip init --show-tree --icon-color='1abc9c' --no-zero --appid=skip.fireside.App --version 0.0.1 skipapp-fireside FireSide:skip-ui/SkipUI:skip-firebase/SkipFirebaseMessaging FireSideModel:skip-foundation/SkipFoundation:skip-model/SkipModel:skip-firebase/SkipFirebaseFirestore:skip-firebase/SkipFirebaseAuth
@@ -65,6 +69,7 @@ let package = Package(
     ]
 )
 ```
+-->
 
 ## Setup
 
@@ -90,45 +95,33 @@ plugins {
 }
 ```
 
-For concrete examples, see the [FireSide Sample](https://github.com/skiptools/skipapp-fireside/) project.
+For concrete examples, see the [FireSideFuse Sample](https://github.com/skiptools/skipapp-fireside-fuse/) project.
 {: class="callout info"}
 
-Once Firebase has been added to your project, you need to configure the `FirebaseApp` on app startup. For iOS, this is typically done by setting an app delegate in your `Darwin/Sources/AppMain.swift` file. Here is a snippet from the FireSide sample app:
+Once Firebase has been added to your project, you need to configure the `FirebaseApp` on app startup. This is typically done in the `onInit()` callback of the `*AppDelegate` in your `*App.swift` file. Here is a snippet from the FireSideFuse sample app:
 
 ```swift
+#if os(Android)
+import SkipFirebaseCore
+#else
 import FirebaseCore
+#endif
+
 ...
 
-@main struct AppMain: App, FireSideApp {
-    @UIApplicationDelegateAdaptor(FireSideAppDelegate.self) var appDelegate
-}
+/* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
+    /* SKIP @bridge */public static let shared = FireSideFuseAppDelegate()
 
-class FireSideAppDelegate : NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        FirebaseApp.configure()
-        ...
-        return true
-    }
-}
-```
+    ...
 
-And for Android, configure `FirebaseApp` in your `Application.onCreate` function in `Android/app/src/main/kotlin/.../Main.kt`:
-
-```kotlin
-import skip.firebase.core.FirebaseApp
-...
-
-open class AndroidAppMain: Application {
-    constructor() {
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        ProcessInfo.launch(applicationContext)
+    /* SKIP @bridge */public func onInit() {
+        logger.debug("onInit")
 
         FirebaseApp.configure()
         ...
     }
+
+    ...
 }
 ```
 
@@ -136,11 +129,14 @@ After configuring the `FirebaseApp`, you will be able to access the singleton ty
 imported Firebase modules. For example, the following actor uses the `Firestore` singleton:
 
 ```swift
-#if SKIP
+// Sources/FireSideFuse/FireSideFuseApp.swift
+
+#if os(Android)
 import SkipFirebaseFirestore
 #else
 import FirebaseFirestore
 #endif
+
 ...
 
 public actor Model {
@@ -155,9 +151,9 @@ public actor Model {
     
     public func queryData() async throws -> [DataModel] { ... }
     public func saveData(model: DataModel) async throws { ... }
+
     ...
 }
-
 ```
 
 ## Messaging
@@ -186,138 +182,147 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     ```
 
 1. Consider increasing the `minSdk` version of your Android app. Prior to SDK 33, Android does not provide any control over asking the user for push notification permissions. Rather, the system will prompt the user for permission only after receiving a notification and opening the app. Increasing your `minSdk` will allow you to decide when to request notification permissions. To do so, edit your `Android/app/build.gradle.kts` file and change the `minSdk` value to 33.
-1. Define a delegate to receive notification callbacks. In keeping with Skip's philosophy of *transparent adoption*, both the iOS and Android sides of your app will receive callbacks via iOS's standard `UNUserNotificationCenterDelegate` API, as well as the Firebase iOS SDK's `MessagingDelegate`. Here is an example delegate implementation that works across both platforms:
+1. Define a delegate to receive notification callbacks. In keeping with Skip's philosophy of *transparent adoption*, both the iOS and Android sides of your app will receive callbacks via iOS's standard `UNUserNotificationCenterDelegate` API, as well as the Firebase iOS SDK's `MessagingDelegate`. Here are example [Skip Fuse](https://skip.tools/docs/status/#skip_fuse) delegate implementations that works across both platforms:
 
-    ```swift
-    import SwiftUI
-    #if SKIP
-    import SkipFirebaseMessaging
-    #else
-    import FirebaseMessaging
-    #endif
+```swift
+import SwiftFuseUI
+#if os(Android)
+import SkipFirebaseMessaging
+#else
+import FirebaseMessaging
+#endif
 
-    public class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
-        public func requestPermission() {
-            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, Sendable {
+    public func requestPermission() {
+        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+        Task { @MainActor in
+            do {
+                if try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions) {
+                    logger.info("notification permission granted")
+                } else {
+                    logger.info("notification permission denied")
+                }
+            } catch {
+                logger.error("notification permission error: \(error)")
+            }
+        }
+    }
+
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        let content = notification.request.content
+        logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
+        return [.banner, .sound]
+    }
+
+    public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        let content = response.notification.request.content
+        logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
+        #if os(Android) || !os(macOS)
+        // Example of using a deep_link key passed in the notification to route to the app's `onOpenURL` handler
+        if let deepLink = response.notification.request.content.userInfo["deep_link"] as? String, let url = URL(string: deepLink) {
             Task { @MainActor in
-                do {
-                    if try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions) {
-                        logger.info("notification permission granted")
-                    } else {
-                        logger.info("notification permission denied")
-                    }
-                } catch {
-                    logger.error("notification permission error: \(error)")
-                }
+                await UIApplication.shared.open(url)
             }
         }
-
-        @MainActor
-        public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-            let content = notification.request.content
-            logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
-            return [.banner, .sound]
-        }
-
-        @MainActor
-        public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-            let content = response.notification.request.content
-            logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
-        }
-
-        public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
-            logger.info("didReceiveRegistrationToken: \(token ?? "nil")")
-        }
+        #endif
     }
-    ```
+}
 
-1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform these actions. This is taken from our FireSide sample app:
+// Your Firebase MessageDelegate must bridge because we use the Firebase Kotlin API on Android.
+/* SKIP @bridge */final class MessageDelegate : NSObject, MessagingDelegate, Sendable {
+    /* SKIP @bridge */public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
+        logger.info("didReceiveRegistrationToken: \(token ?? "nil")")
+    }
+}
+```
 
-    ```swift
-    // Darwin/Sources/FireSideAppMain.swift
+1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform these actions. This is taken from our FireSideFuse sample app:
 
-    import FirebaseCore
-    import FirebaseMessaging
-    import FireSide
+```swift
+// Sources/FireSideFuse/FireSideFuseApp.swift
+
+#if os(Android)
+import SkipFirebaseCore
+#else
+import FirebaseCore
+#endif
+
+...
+
+/* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
+    /* SKIP @bridge */public static let shared = FireSideFuseAppDelegate()
+
+    private let notificationDelegate = NotificationDelegate()
+    private let messageDelegate = MessageDelegate()
+
+    private init() {
+    }
+
+    /* SKIP @bridge */public func onInit() {
+        logger.debug("onInit")
+
+        // Configure Firebase and notifications
+        FirebaseApp.configure()
+        Messaging.messaging().delegate = messageDelegate
+        UNUserNotificationCenter.current().delegate = notificationDelegate
+    }
+
+    /* SKIP @bridge */public func onLaunch() {
+        logger.debug("onLaunch")
+        // Ask for permissions at a time appropriate for your app
+        notificationDelegate.requestPermission()
+    }
+
+    ...
+}
+```
+
+```swift
+// Darwin/Sources/Main.swift
+
+...
+
+class AppMainDelegate: NSObject, AppMainDelegateBase {
     ...
 
-    @main struct AppMain: App, FireSideApp {
-        @UIApplicationDelegateAdaptor(FireSideAppDelegate.self) var appDelegate
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        AppDelegate.shared.onLaunch()
+        application.registerForRemoteNotifications() // <-- Insert
+        return true
     }
 
-    class FireSideAppDelegate : NSObject, UIApplicationDelegate {
-        let notificationsDelegate = NotificationDelegate() // Defined in FireSideApp.swift
+    ...
+}
+```
 
-        func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-            FirebaseApp.configure()
+```kotlin
+// Android/app/src/main/kotlin/.../Main.kt
 
-            UNUserNotificationCenter.current().delegate = notificationsDelegate
-            Messaging.messaging().delegate = notificationsDelegate
+...
 
-            // Ask for permissions at a time appropriate for your app
-            notificationsDelegate.requestPermission()
-
-            application.registerForRemoteNotifications()
-            return true
-        }
-    }
-    ```
-
-    ```kotlin
-    // Android/app/src/main/kotlin/.../Main.kt
-
-    import skip.firebase.core.FirebaseApp
-    import skip.firebase.messaging.Messaging
+open class MainActivity: AppCompatActivity {
     ...
 
-    internal val notificationsDelegate = NotificationDelegate() // Defined in FireSideApp.swift
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        ...
 
-    open class AndroidAppMain: Application {
-        constructor() {
-        }
-
-        override fun onCreate() {
-            super.onCreate()
-            ProcessInfo.launch(applicationContext)
-
-            FirebaseApp.configure()
-            UNUserNotificationCenter.current().delegate = notificationsDelegate
-            Messaging.messaging().delegate = notificationsDelegate
-        }
-    }
-
-    open class MainActivity: AppCompatActivity {
-        constructor() {
-        }
-
-        override fun onCreate(savedInstanceState: android.os.Bundle?) {
-            super.onCreate(savedInstanceState)
-            UIApplication.launch(this) // <-- Add this too if not present
-            enableEdgeToEdge()
-
-            setContent {
-                val saveableStateHolder = rememberSaveableStateHolder()
-                saveableStateHolder.SaveableStateProvider(true) {
-                    PresentationRootView(ComposeContext())
-                }
-            }
-
-            Messaging.messaging().onActivityCreated(this)
-            // Ask for permissions at a time appropriate for your app
-            notificationsDelegate.requestPermission()
-
+        setContent {
             ...
         }
 
+        skip.firebase.messaging.Messaging.messaging().onActivityCreated(this) // <-- Insert
+        FireSideFuseAppDelegate.shared.onLaunch()
+
         ...
     }
-    ```
 
-    Note that the call to `UIApplication.launch` in `MainActivity.onCreate` may not be present if you have an older Skip project. Be sure to add it if it is not already there.
+    ...
+}
+```
 
 1. See Firebase's [iOS instructions](https://firebase.google.com/docs/cloud-messaging/ios/client) and [Android instructions](https://firebase.google.com/docs/cloud-messaging/android/client) for additional details and options, including how to send test messages to your apps!
 
-The [Fireside Sample](https://github.com/skiptools/skipapp-fireside/) project is a great reference for seeing a complete, working app using Firebase push notifications.
+The [FiresideFuse](https://github.com/skiptools/skipapp-fireside-fuse/) and [Fireside](https://github.com/skiptools/skipapp-fireside/) projects are great references for seeing complete, working Skip Fuse and Skip Lite apps using Firebase push notifications.
 {: class="callout info"}
 
 ## Error handling

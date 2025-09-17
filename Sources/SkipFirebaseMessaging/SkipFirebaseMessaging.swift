@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
+import Foundation
 import OSLog
 import SkipFirebaseCore
-import SwiftUI
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.Consumer
@@ -11,17 +11,18 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.tasks.await
+import skip.ui.__ // Don't import SkipUI directly because we don't need it in bridged API
 
 // https://firebase.google.com/docs/reference/swift/firebasemessaging/api/reference/Classes/Messaging
 // https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/FirebaseMessaging
 
-public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessaging> {
+public final class Messaging: Consumer<Intent>, KotlinConverting<com.google.firebase.messaging.FirebaseMessaging> {
     private static let sharedLock: Object = Object()
     private static var shared: Messaging?
 
-    public let messaging: FirebaseMessaging
+    public let messaging: com.google.firebase.messaging.FirebaseMessaging
 
-    public init(messaging: FirebaseMessaging) {
+    public init(messaging: com.google.firebase.messaging.FirebaseMessaging) {
         self.messaging = messaging
     }
 
@@ -29,7 +30,8 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         messaging.toString()
     }
 
-    public override func kotlin(nocopy: Bool = false) -> FirebaseMessaging {
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.messaging.FirebaseMessaging {
         messaging
     }
 
@@ -62,12 +64,14 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
     }
 
     /// Call this function after activity is created and initialized.
+    // SKIP @nobridge
     public func onActivityCreated(activity: AppCompatActivity) {
         activity.addOnNewIntentListener(self)
         onIntent(activity.intent)
     }
 
     /// Called automatically from `onActivityCreated` and its `onNewActivity` callback.
+    // SKIP @nobridge
     public func onIntent(intent: Intent?) {
         guard let extras = intent?.extras, let identifier = extras.getString("google.message_id") else {
             return
@@ -88,6 +92,7 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         let notification = UNNotification(request: request, date: date)
         let response = UNNotificationResponse(notification: notification)
         Task { @MainActor in
+            // SKIP NOWARN
             await delegate.userNotificationCenter(notificationCenter, didReceive: response)
         }
     }
@@ -151,12 +156,14 @@ public final class Messaging: Consumer<Intent>, KotlinConverting<FirebaseMessagi
         await deleteToken()
     }
 
-    // Called on Activity.onNewIntent
+    /// Called on `Activity.onNewIntent`.
+    // SKIP @nobridge
     public override func accept(intent: Intent) {
         onIntent(intent: intent)
     }
 }
 
+// SKIP @nobridge
 public class MessagingService : FirebaseMessagingService {
     public init() {
         super.init()
@@ -192,13 +199,44 @@ public class MessagingService : FirebaseMessagingService {
         } else {
             attachments = []
         }
-        let content = UNNotificationContent(title: notification.title ?? "", body: notification.body ?? "", userInfo: userInfo, attachments: attachments)
+        var title = notification.title
+        if title == nil, let titleKey = notification.getTitleLocalizationKey() {
+            let localized = Bundle.main.localizedString(forKey: titleKey, value: nil, table: nil)
+            if let args = notification.getTitleLocalizationArgs() {
+                do {
+                    title = String(format: localized, arguments: skip.lib.Array(args.toList()))
+                } catch {
+                    android.util.Log.e("SkipFirebaseMessaging", "onMessageReceived, notification title (\(localized) format error", error as? Throwable )
+                    title = localized
+                }
+            } else {
+                title = localized
+            }
+        }
+        
+        var body = notification.body
+        if body == nil, let bodyKey = notification.getBodyLocalizationKey() {
+            let localized = Bundle.main.localizedString(forKey: bodyKey, value: nil, table: nil)
+            if let args = notification.getBodyLocalizationArgs() {
+                do {
+                    body = String(format: localized, arguments: skip.lib.Array(args.toList()))
+                } catch {
+                    android.util.Log.e("SkipFirebaseMessaging", "onMessageReceived, notification body (\(localized) format error", error as? Throwable )
+                    body = localized
+                }
+            } else {
+                body = localized
+            }
+        }
+        
+        let content = UNNotificationContent(title: title ?? "", body: body ?? "", userInfo: userInfo, attachments: attachments)
         let request = UNNotificationRequest(identifier: messageID, content: content, trigger: UNPushNotificationTrigger(repeats: false))
         let date = Date(timeIntervalSince1970: Double(message.sentTime) / 1000.0)
         let notification = UNNotification(request: request, date: date)
 
         Task { @MainActor in
             do {
+                // SKIP NOWARN
                 try await notificationCenter.add(request)
             } catch {
                 android.util.Log.e("SkipFirebaseMessaging", "onMessageReceived error", error as? Throwable)

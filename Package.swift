@@ -28,7 +28,7 @@ let package = Package(
         .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.3.1"),
         .package(url: "https://source.skip.tools/skip-model.git", from: "1.4.2"),
         .package(url: "https://source.skip.tools/skip-ui.git", from: "1.26.4"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.7.0")
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.1.0")
     ],
     targets: [
         .target(name: "SkipFirebaseCore", dependencies: [
@@ -146,9 +146,13 @@ let package = Package(
 )
 
 if ProcessInfo.processInfo.environment["SKIP_BRIDGE"] ?? "0" != "0" {
-    package.dependencies += [.package(url: "https://source.skip.tools/skip-bridge.git", "0.0.0"..<"2.0.0")]
+    package.dependencies += [.package(url: "https://source.skip.tools/skip-fuse.git", "0.0.0"..<"2.0.0")]
     package.targets.forEach({ target in
-        target.dependencies += [.product(name: "SkipBridge", package: "skip-bridge")]
+        target.dependencies += [.product(name: "SkipFuse", package: "skip-fuse")]
+    })
+    // all library types must be dynamic to support bridging
+    package.products = package.products.map({ product in
+        guard let libraryProduct = product as? Product.Library else { return product }
+        return .library(name: libraryProduct.name, type: .dynamic, targets: libraryProduct.targets)
     })
 }
-
