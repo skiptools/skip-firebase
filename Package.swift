@@ -54,6 +54,7 @@ let package = Package(
 
         .target(name: "SkipFirebaseAuth", dependencies: [
             "SkipFirebaseCore",
+            .product(name: "SkipUI", package: "skip-ui"),
             .product(name: "FirebaseAuth", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseAuthTests", dependencies: [

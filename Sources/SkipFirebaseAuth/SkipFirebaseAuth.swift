@@ -3,6 +3,7 @@
 #if SKIP
 import Foundation
 import SkipFirebaseCore
+import android.app.Activity
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
 import skip.ui.__
@@ -79,7 +80,7 @@ public final class Auth {
     /// Throws if there is no foreground Activity.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#startActivityForSignInWithProvider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
     public func signIn(with provider: OAuthProvider) async throws -> AuthDataResult {
-        guard let activity = UIApplication.shared.androidActivity else {
+        guard let activity: Activity = UIApplication.shared.androidActivity else {
             throw NSError(domain: "SkipFirebaseAuth", code: -10, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth sign-in"])
         }
         let result = try platformValue.startActivityForSignInWithProvider(activity, provider.buildPlatformProvider()).await()
@@ -220,7 +221,7 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Interactive link with provider using current Activity
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#startactivityforlinkwithprovider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
     public func link(with provider: OAuthProvider) async throws -> AuthDataResult {
-        guard let activity = UIApplication.shared.androidActivity else {
+        guard let activity: Activity = UIApplication.shared.androidActivity else {
             throw NSError(domain: "SkipFirebaseAuth", code: -11, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth link"])
         }
         let result = try platformValue.startActivityForLinkWithProvider(activity, provider.buildPlatformProvider()).await()
@@ -230,7 +231,7 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Interactive reauthenticate with provider using current Activity
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#startactivityforreauthenticatewithprovider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
     public func reauthenticate(with provider: OAuthProvider) async throws -> AuthDataResult {
-        guard let activity = UIApplication.shared.androidActivity else {
+        guard let activity: Activity = UIApplication.shared.androidActivity else {
             throw NSError(domain: "SkipFirebaseAuth", code: -12, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth reauthenticate"])
         }
         let result = try platformValue.startActivityForReauthenticateWithProvider(activity, provider.buildPlatformProvider()).await()
@@ -343,7 +344,7 @@ public final class OAuthProvider {
 
     /// iOS-compatible API. Starts interactive OAuth flow and returns a credential in the completion.
     public func getCredentialWith(_ presentingAnchor: Any?, completion: @escaping (AuthCredential?, Error?) -> Void) {
-        guard let activity = UIApplication.shared.androidActivity else {
+        guard let activity: Activity = UIApplication.shared.androidActivity else {
             completion(nil, NSError(domain: "SkipFirebaseAuth", code: -10, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth sign-in"]))
             return
         }
@@ -356,8 +357,8 @@ public final class OAuthProvider {
                     completion(nil, nil)
                 }
             }
-            .addOnFailureListener { error in
-                completion(nil, error)
+            .addOnFailureListener { exception in
+                completion(nil, ErrorException(exception))
             }
     }
 
