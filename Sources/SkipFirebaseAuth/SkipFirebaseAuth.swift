@@ -337,19 +337,8 @@ public final class AdditionalUserInfo: KotlinConverting<com.google.firebase.auth
     public var providerID: String? { platformValue.getProviderId() }
     public var username: String? { platformValue.getUsername() }
 
-    /// Best-effort conversion of profile map to Swift dictionary
-    public var profile: [AnyHashable: Any]? {
-        guard let map = platformValue.getProfile() else { return nil }
-        var dict: [AnyHashable: Any] = [:]
-        let entries = map.entrySet()
-        let iterator = entries.iterator()
-        while iterator.hasNext() {
-            if let entry = iterator.next() {
-                dict[String(describing: entry.getKey())] = entry.getValue()
-            }
-        }
-        return dict
-    }
+    /// Minimal compatibility: profile not bridged on Android
+    public var profile: [AnyHashable: Any]? { nil }
 }
 
 // MARK: - iOS-compatible Auth error surface
@@ -369,7 +358,7 @@ fileprivate func mapAuthNSError(_ exception: Exception) -> Error {
         if let emailProvider = (collision as? com.google.firebase.auth.FirebaseAuthException) {
             // Some exceptions expose the email via getMessage or provider data; best effort only
             let message = String(describing: emailProvider.message ?? "")
-            if let range = message.range(of: "@") { // naive check for email-like token
+            if message.contains("@") { // naive check for email-like token
                 userInfo[AuthErrorUserInfoEmailKey] = message
             }
         }
