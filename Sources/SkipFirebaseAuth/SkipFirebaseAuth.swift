@@ -5,6 +5,7 @@ import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
+import skip.ui.__
 
 // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth
 // https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth
@@ -65,6 +66,24 @@ public final class Auth {
 
     public func useEmulator(withHost host: String, port: Int) {
         platformValue.useEmulator(host, port)
+    }
+
+    /// Throws `FirebaseAuthInvalidCredentialsException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#signInWithCredential(com.google.firebase.auth.AuthCredential)
+    public func signIn(with credential: AuthCredential) async throws -> AuthDataResult {
+        let result = try platformValue.signInWithCredential(credential.platformValue).await()
+        return AuthDataResult(result)
+    }
+
+    /// Interactive sign-in using an `OAuthProvider` (OIDC/SAML). Requires current Activity.
+    /// Throws if there is no foreground Activity.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#startActivityForSignInWithProvider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
+    public func signIn(with provider: OAuthProvider) async throws -> AuthDataResult {
+        guard let activity = UIApplication.shared.androidActivity else {
+            throw NSError(domain: "SkipFirebaseAuth", code: -10, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth sign-in"])
+        }
+        let result = try platformValue.startActivityForSignInWithProvider(activity, provider.buildPlatformProvider()).await()
+        return AuthDataResult(result)
     }
 
     public func addStateDidChangeListener(_ listener: @escaping (Auth, User?) -> Void) -> AuthStateListener {
@@ -191,6 +210,33 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         platformValue.reauthenticate(credential.platformValue).await()
     }
 
+    /// Link generic credential
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#linkwithcredential
+    public func link(with credential: AuthCredential) async throws -> AuthDataResult {
+        let result = try platformValue.linkWithCredential(credential.platformValue).await()
+        return AuthDataResult(result)
+    }
+
+    /// Interactive link with provider using current Activity
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#startactivityforlinkwithprovider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
+    public func link(with provider: OAuthProvider) async throws -> AuthDataResult {
+        guard let activity = UIApplication.shared.androidActivity else {
+            throw NSError(domain: "SkipFirebaseAuth", code: -11, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth link"])
+        }
+        let result = try platformValue.startActivityForLinkWithProvider(activity, provider.buildPlatformProvider()).await()
+        return AuthDataResult(result)
+    }
+
+    /// Interactive reauthenticate with provider using current Activity
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#startactivityforreauthenticatewithprovider(android.app.Activity,com.google.firebase.auth.OAuthProvider)
+    public func reauthenticate(with provider: OAuthProvider) async throws -> AuthDataResult {
+        guard let activity = UIApplication.shared.androidActivity else {
+            throw NSError(domain: "SkipFirebaseAuth", code: -12, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth reauthenticate"])
+        }
+        let result = try platformValue.startActivityForReauthenticateWithProvider(activity, provider.buildPlatformProvider()).await()
+        return AuthDataResult(result)
+    }
+
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#delete()
     public func delete() async throws {
@@ -269,6 +315,69 @@ public class EmailAuthProvider {
     public static func credential(withEmail email: String, password: String) -> AuthCredential {
         let credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
         return AuthCredential(credential)
+    }
+}
+
+// https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/OAuthProvider
+// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/OAuthProvider
+public final class OAuthProvider {
+    public let providerID: String
+    public var customParameters: [String : String] = [:]
+    public var scopes: [String] = []
+
+    public init(providerID: String) {
+        self.providerID = providerID
+    }
+
+    /// Build Android OAuthProvider from current configuration
+    internal func buildPlatformProvider() -> com.google.firebase.auth.OAuthProvider {
+        let builder = com.google.firebase.auth.OAuthProvider.newBuilder(providerID)
+        for (key, value) in customParameters {
+            builder.addCustomParameter(key, value)
+        }
+        if !scopes.isEmpty {
+            builder.setScopes(scopes.toList())
+        }
+        return builder.build()
+    }
+
+    /// iOS-compatible API. Starts interactive OAuth flow and returns a credential in the completion.
+    public func getCredentialWith(_ presentingAnchor: Any?, completion: @escaping (AuthCredential?, Error?) -> Void) {
+        guard let activity = UIApplication.shared.androidActivity else {
+            completion(nil, NSError(domain: "SkipFirebaseAuth", code: -10, userInfo: [NSLocalizedDescriptionKey: "No current Android activity available for OAuth sign-in"]))
+            return
+        }
+        let auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+        auth.startActivityForSignInWithProvider(activity, buildPlatformProvider())
+            .addOnSuccessListener { result in
+                if let cred = result.credential {
+                    completion(AuthCredential(cred), nil)
+                } else {
+                    completion(nil, nil)
+                }
+            }
+            .addOnFailureListener { error in
+                completion(nil, error)
+            }
+    }
+
+    /// Build an OAuth credential from tokens
+    public static func credential(providerID: String, idToken: String? = nil, rawNonce: String? = nil, accessToken: String? = nil) -> AuthCredential {
+        let builder = com.google.firebase.auth.OAuthProvider.newCredentialBuilder(providerID)
+        if let idToken, let rawNonce {
+            builder.setIdTokenWithRawNonce(idToken, rawNonce)
+        } else if let idToken {
+            builder.setIdToken(idToken)
+        }
+        if let accessToken {
+            builder.setAccessToken(accessToken)
+        }
+        return AuthCredential(builder.build())
+    }
+
+    /// Convenience instance API matching iOS style
+    public func credential(withIDToken idToken: String? = nil, accessToken: String? = nil, rawNonce: String? = nil) -> AuthCredential {
+        return OAuthProvider.credential(providerID: providerID, idToken: idToken, rawNonce: rawNonce, accessToken: accessToken)
     }
 }
 
