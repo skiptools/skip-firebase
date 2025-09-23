@@ -84,33 +84,8 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func document(_ path: String) -> DocumentReference {
         DocumentReference(ref: store.document(path))
     }
-
-// public func runTransaction(_ updateBlock: @escaping (Transaction, UnsafeMutablePointer<NSError>?) -> Any?, completion: @escaping (Any?, Error?) -> Void) {
-//     let task = store.runTransaction({ (androidTransaction: com.google.firebase.firestore.Transaction) -> Any? in
-//         let swiftTransaction = Transaction(transaction: androidTransaction)
-//         var error: NSError?
-        
-//         let result = updateBlock(swiftTransaction, &error)
-//         if let error = error {
-//             throw error
-//         }
-//         return result?.kotlin()
-//     })
-    
-//     task.addOnSuccessListener({ (result: Any?) -> Void in
-//         let swiftResult = result == nil ? nil : deepSwift(value: result)
-//         completion(swiftResult, nil)
-//     })
-    
-//     task.addOnFailureListener({ (exception: java.lang.Exception) -> Void in
-//         if let firestoreError = exception as? com.google.firebase.firestore.FirebaseFirestoreException {
-//             completion(nil, asNSError(firestoreException: firestoreError))
-//         } else {
-//             completion(nil, ErrorException(exception))
-//         }
-//     })
-// }
 }
+
 /// A FieldPath refers to a field in a document. The path may consist of a single field name (referring to a top level field in the document), or a list of field names (referring to a nested field in the document).
 public class FieldPath : Hashable, KotlinConverting<com.google.firebase.firestore.FieldPath> {
     public let fieldPath: com.google.firebase.firestore.FieldPath
@@ -621,42 +596,6 @@ public class Transaction: KotlinConverting<com.google.firebase.firestore.Transac
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.transaction == rhs.transaction
-    }
-    
-    public func setData(_ data: [String: Any], forDocument document: DocumentReference) -> Transaction {
-        transaction.set(document.ref, data.kotlin())
-        return self
-    }
-    
-    public func setData(_ data: [String: Any], forDocument document: DocumentReference, merge: Bool) -> Transaction {
-        if merge {
-            transaction.set(document.ref, data.kotlin(), com.google.firebase.firestore.SetOptions.merge())
-        } else {
-            transaction.set(document.ref, data.kotlin())
-        }
-        return self
-    }
-
-    public func getDocument(_ document: DocumentReference) throws -> DocumentSnapshot {
-        do {
-            let doc = transaction.get(document.kotlin())
-            return DocumentSnapshot(doc: doc)
-        } catch let error as java.lang.Exception {
-            if let firestoreError = error as? com.google.firebase.firestore.FirebaseFirestoreException {
-                throw asNSError(firestoreException: firestoreError)
-            }
-            throw ErrorException(error)
-        }
-    }
-    
-    public func updateData(_ fields: [AnyHashable: Any], forDocument document: DocumentReference) -> Transaction {
-        transaction.update(document.kotlin(), fields.kotlin() as! Map<String, Any>)
-        return self
-    }
-    
-    public func deleteDocument(_ document: DocumentReference) -> Transaction {
-        transaction.delete(document.ref)
-        return self
     }
 }
 

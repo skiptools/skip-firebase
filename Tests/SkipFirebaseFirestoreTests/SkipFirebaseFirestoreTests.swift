@@ -369,15 +369,6 @@ var appName: String = "SkipFirebaseDemo"
         await cacheApp.delete()
     }
 
-    // Transactions test disabled due to CI instability under SKIP/Android
-    
-    func assertExistsTrueForExistentDocument() async throws {
-        let docRef = db.document("test/exists")
-        try await docRef.setData(["foo": "bar"])
-        let doc = try await docRef.getDocument()
-        XCTAssertTrue(doc.exists)
-    }
-    
     func assertExistsFalseForNonExistentDocument() async throws {
         XCTAssertEqual(appName, self.app.name)
         let citiesRef = db.collection("cities")
@@ -398,7 +389,18 @@ var appName: String = "SkipFirebaseDemo"
             XCTAssertEqual(nsError.code, FirestoreErrorCode.notFound.rawValue)
         }
     }
-    
+
+    func assertExistsTrueForExistentDocument() async throws {
+        XCTAssertEqual(appName, self.app.name)
+        let citiesRef = db.collection("cities")
+        let bos = citiesRef.document("BOS")
+        try await bos.setData(Self.bostonData)
+        let ref = citiesRef.document("BOS")
+        do {
+            let snapshot = try await ref.getDocument()
+            XCTAssertTrue(snapshot.exists)
+        }
+    }
 }
 
 extension SkipFirebaseFirestoreTests {
