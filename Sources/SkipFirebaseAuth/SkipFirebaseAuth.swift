@@ -261,7 +261,7 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Throws `FirebaseAuthInvalidUserException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#sendemailverification
     public func sendEmailVerification() async throws {
-        try await platformValue.sendEmailVerification().await()
+        platformValue.sendEmailVerification().await()
     }
     
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
