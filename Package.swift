@@ -27,7 +27,6 @@ let package = Package(
         .package(url: "https://source.skip.tools/skip.git", from: "1.3.2"),
         .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.3.1"),
         .package(url: "https://source.skip.tools/skip-model.git", from: "1.4.2"),
-        .package(url: "https://source.skip.tools/skip-ui.git", from: "1.26.4"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.1.0")
     ],
     targets: [
@@ -54,7 +53,6 @@ let package = Package(
 
         .target(name: "SkipFirebaseAuth", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "SkipUI", package: "skip-ui"),
             .product(name: "FirebaseAuth", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseAuthTests", dependencies: [
@@ -73,7 +71,6 @@ let package = Package(
 
         .target(name: "SkipFirebaseMessaging", dependencies: [
             "SkipFirebaseCore",
-            .product(name: "SkipUI", package: "skip-ui"),
             .product(name: "FirebaseMessaging", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseMessagingTests", dependencies: [

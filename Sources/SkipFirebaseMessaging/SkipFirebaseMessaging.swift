@@ -11,7 +11,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import kotlinx.coroutines.tasks.await
-import skip.ui.__ // Don't import SkipUI directly because we don't need it in bridged API
 
 // https://firebase.google.com/docs/reference/swift/firebasemessaging/api/reference/Classes/Messaging
 // https://firebase.google.com/docs/reference/android/com/google/firebase/messaging/FirebaseMessaging

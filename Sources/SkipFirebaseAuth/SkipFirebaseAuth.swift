@@ -6,7 +6,6 @@ import SkipFirebaseCore
 import android.app.Activity
 import kotlinx.coroutines.tasks.await
 import android.net.Uri
-import skip.ui.__
 
 // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/Auth
 // https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth
