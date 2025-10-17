@@ -91,6 +91,21 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
         let rawData: Any? = platformValue.getData()
         return rawData ?? [String: Any]()
     }
+
+    // Alternative method-based access for debugging crashes
+    public func getDataSafe() -> [String: Any] {
+        guard let rawData = platformValue.getData() else {
+            return [String: Any]()
+        }
+
+        // Try to cast to dictionary
+        if let dict = rawData as? [String: Any] {
+            return dict
+        }
+
+        // Fallback: return empty dict
+        return [String: Any]()
+    }
 }
 
 #endif
