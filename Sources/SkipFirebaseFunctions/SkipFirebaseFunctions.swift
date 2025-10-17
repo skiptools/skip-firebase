@@ -90,6 +90,7 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
             return data
         } else {
             assertionFailure("com.google.firebase.functions.HttpsCallableResult returned nil and the Swift API returns a non-nil Any")
+            return [String: Any]() // Return empty dict as fallback instead of crashing
         }
     }
 }
