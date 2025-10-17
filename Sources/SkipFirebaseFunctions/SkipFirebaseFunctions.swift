@@ -86,9 +86,11 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
     }
 
     public var data: Any {
-        // Return the raw data object from Android Firebase SDK
-        // The Android SDK returns Object which Skip will bridge to Any
-        return platformValue.getData() ?? [String: Any]()
+        // WORKAROUND: Access getData() result through a local variable first
+        // to avoid potential crashes in Skip's property access transpilation
+        let rawData: Any? = platformValue.getData()
+        return rawData ?? [String: Any]()
+    }
 }
 
 #endif
