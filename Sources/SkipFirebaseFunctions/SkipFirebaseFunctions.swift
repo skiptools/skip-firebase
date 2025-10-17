@@ -86,13 +86,9 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
     }
 
     public var data: Any {
-        if let data = platformValue.getData() {
-            return data
-        } else {
-            assertionFailure("com.google.firebase.functions.HttpsCallableResult returned nil and the Swift API returns a non-nil Any")
-            return [String: Any]() // Return empty dict as fallback instead of crashing
-        }
-    }
+        // Return the raw data object from Android Firebase SDK
+        // The Android SDK returns Object which Skip will bridge to Any
+        return platformValue.getData() ?? [String: Any]()
 }
 
 #endif
