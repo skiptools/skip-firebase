@@ -92,13 +92,44 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
         return rawData ?? [String: Any]()
     }
 
-    // Alternative method-based access for debugging crashes
-    // Returns Any to avoid generic casting issues in Kotlin
+    // Alternative method-based access that properly converts Kotlin types to Swift
     public func getDataSafe() -> Any {
-        // Return raw data from Android Firebase SDK
-        // Let Skip bridge the Kotlin HashMap to Swift types
-        return platformValue.getData() ?? [String: Any]()
+        guard let rawData = platformValue.getData() else {
+            return [String: Any]()
+        }
+        // Convert Kotlin collections to Swift types (same approach as Firestore)
+        return deepSwift(value: rawData)
     }
+}
+
+// MARK: - Kotlin to Swift type conversion helpers (from SkipFirebaseFirestore)
+
+fileprivate func deepSwift(value: Any) -> Any {
+    if let str = value as? String {
+        return str // needed to not be treated as a Collection
+    } else if let map = value as? kotlin.collections.Map<Any, Any> {
+        return deepSwift(map: map)
+    } else if let collection = value as? kotlin.collections.Collection<Any> {
+        return deepSwift(collection: collection)
+    } else {
+        return value
+    }
+}
+
+fileprivate func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T, Any> {
+    var dict = Dictionary<T, Any>()
+    for (key, value) in map {
+        dict[key] = deepSwift(value: value)
+    }
+    return dict
+}
+
+fileprivate func deepSwift(collection: kotlin.collections.Collection<Any>) -> Array<Any> {
+    var array = Array<Any>()
+    for value in collection {
+        array.append(deepSwift(value: value))
+    }
+    return array
 }
 
 #endif
