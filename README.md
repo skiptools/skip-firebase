@@ -91,7 +91,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.android.application)
     id("skip-build-plugin")
-    id("com.google.gms.google-services") version "4.4.1" apply true
+    id("com.google.gms.google-services") version "4.4.4" apply true
+    id("com.google.firebase.crashlytics") version "3.0.2" apply true # (if using Crashlytics)
 }
 ```
 
