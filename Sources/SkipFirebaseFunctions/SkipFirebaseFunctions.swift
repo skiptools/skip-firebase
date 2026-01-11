@@ -102,35 +102,5 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
     }
 }
 
-// MARK: - Kotlin to Swift type conversion helpers (from SkipFirebaseFirestore)
-
-fileprivate func deepSwift(value: Any) -> Any {
-    if let str = value as? String {
-        return str // needed to not be treated as a Collection
-    } else if let map = value as? kotlin.collections.Map<Any, Any> {
-        return deepSwift(map: map)
-    } else if let collection = value as? kotlin.collections.Collection<Any> {
-        return deepSwift(collection: collection)
-    } else {
-        return value
-    }
-}
-
-fileprivate func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T, Any> {
-    var dict = Dictionary<T, Any>()
-    for (key, value) in map {
-        dict[key] = deepSwift(value: value)
-    }
-    return dict
-}
-
-fileprivate func deepSwift(collection: kotlin.collections.Collection<Any>) -> Array<Any> {
-    var array = Array<Any>()
-    for value in collection {
-        array.append(deepSwift(value: value))
-    }
-    return array
-}
-
 #endif
 #endif
