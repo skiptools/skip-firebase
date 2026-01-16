@@ -208,7 +208,7 @@ public func deepSwift(value: Any) -> Any {
     }
 }
 
-internal func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T, Any> {
+public func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T, Any> {
     var dict = Dictionary<T, Any>()
     for (key, value) in map {
         dict[key] = deepSwift(value: value)
@@ -216,7 +216,7 @@ internal func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T,
     return dict
 }
 
-internal func deepSwift(collection: kotlin.collections.Collection<Any>) -> Array<Any> {
+public func deepSwift(collection: kotlin.collections.Collection<Any>) -> Array<Any> {
     var array = Array<Any>()
     for value in collection {
         array.append(deepSwift(value: value))
