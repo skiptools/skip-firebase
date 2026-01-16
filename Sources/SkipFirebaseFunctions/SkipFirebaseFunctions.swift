@@ -5,6 +5,8 @@ import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
+public typealias Timestamp = SkipFirebaseCore.Timestamp
+
 // https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions
 // https://firebase.google.com/docs/reference/android/com/google/firebase/functions/FirebaseFunctions
 

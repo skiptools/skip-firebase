@@ -5,6 +5,8 @@ import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
+public typealias Timestamp = SkipFirebaseCore.Timestamp
+
 public final class Firestore: KotlinConverting<com.google.firebase.firestore.FirebaseFirestore> {
     public let store: com.google.firebase.firestore.FirebaseFirestore
 
