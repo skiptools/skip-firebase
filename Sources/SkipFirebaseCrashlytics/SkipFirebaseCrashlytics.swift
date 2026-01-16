@@ -21,6 +21,10 @@ public final class Crashlytics {
 //    public static func crashlytics(app: FirebaseApp) -> Crashlytics {
 //        Crashlytics(crashlytics: com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance(app.app))
 //    }
+
+    public func log(_ message: String) {
+        _crashlytics.log(message)
+    }
 }
 #endif
 #endif
