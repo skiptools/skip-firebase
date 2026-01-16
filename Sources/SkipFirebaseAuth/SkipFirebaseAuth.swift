@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
-#if SKIP
+#if canImport(FirebaseAuth)
+@_exported import FirebaseAuth
+#elseif SKIP
 import Foundation
 import SkipFirebaseCore
 import android.app.Activity
