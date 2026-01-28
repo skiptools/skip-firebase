@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
-#if SKIP
+#if canImport(FirebaseFirestore)
+@_exported import FirebaseFirestore
+#elseif SKIP
 import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
