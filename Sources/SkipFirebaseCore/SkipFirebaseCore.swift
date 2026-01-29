@@ -194,32 +194,39 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
 
 // MARK: - Kotlin to Swift type conversion helpers
 
-public func deepSwift(value: Any) -> Any {
+public func deepSwift(value: Any?) -> Any? {
+    guard let value = value else {
+        return nil
+    }
     if let str = value as? String {
         return str // needed to not be treated as a Collection
     } else if let ts = value as? com.google.firebase.Timestamp {
         return Timestamp(timestamp: ts)
-    } else if let map = value as? kotlin.collections.Map<Any, Any> {
+    } else if let map = value as? kotlin.collections.Map<Any?, Any?> {
         return deepSwift(map: map)
-    } else if let collection = value as? kotlin.collections.Collection<Any> {
+    } else if let collection = value as? kotlin.collections.Collection<Any?> {
         return deepSwift(collection: collection)
     } else {
         return value
     }
 }
 
-public func deepSwift<T>(map: kotlin.collections.Map<T, Any>) -> Dictionary<T, Any> {
+public func deepSwift<T>(map: kotlin.collections.Map<T, Any?>) -> Dictionary<T, Any> {
     var dict = Dictionary<T, Any>()
     for (key, value) in map {
-        dict[key] = deepSwift(value: value)
+        if let convertedValue = deepSwift(value: value) {
+            dict[key] = convertedValue
+        }
     }
     return dict
 }
 
-public func deepSwift(collection: kotlin.collections.Collection<Any>) -> Array<Any> {
+public func deepSwift(collection: kotlin.collections.Collection<Any?>) -> Array<Any> {
     var array = Array<Any>()
     for value in collection {
-        array.append(deepSwift(value: value))
+        if let convertedValue = deepSwift(value: value) {
+            array.append(convertedValue)
+        }
     }
     return array
 }

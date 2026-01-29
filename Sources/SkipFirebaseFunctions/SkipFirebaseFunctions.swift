@@ -100,7 +100,7 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
             return [String: Any]()
         }
         // Convert Kotlin collections to Swift types (same approach as Firestore)
-        return deepSwift(value: rawData)
+        return deepSwift(value: rawData) ?? [String: Any]()
     }
 }
 
