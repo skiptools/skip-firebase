@@ -10,3 +10,5 @@ build:
     - block: 'dependencies'
       contents:
         - 'implementation("com.google.firebase:firebase-appcheck")'
+        - 'implementation("com.google.firebase:firebase-appcheck-debug")'
+        - 'implementation("com.google.firebase:firebase-appcheck-playintegrity")'

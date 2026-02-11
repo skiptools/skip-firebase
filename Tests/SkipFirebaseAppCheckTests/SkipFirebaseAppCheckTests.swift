@@ -15,7 +15,25 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseAppCheckTests", category: "T
 @MainActor final class SkipFirebaseAppCheckTests: XCTestCase {
     func testSkipFirebaseAppCheckTests() async throws {
         if false {
-            let _: AppCheck = AppCheck.appCheck()
+            let appCheck: AppCheck = AppCheck.appCheck()
+            //let _: AppCheck = AppCheck.appCheck(app: FirebaseApp.app()!)
+
+            // Provider factory
+            let debugFactory = AppCheckDebugProviderFactory()
+            AppCheck.setAppCheckProviderFactory(debugFactory)
+
+            // Token retrieval
+            let token: AppCheckToken = try await appCheck.token(forcingRefresh: false)
+            let _: String = token.token
+            let _: Date = token.expirationDate
+
+            // Limited-use token
+            let limitedToken: AppCheckToken = try await appCheck.limitedUseToken()
+            let _: String = limitedToken.token
+
+            // Auto-refresh
+            appCheck.isTokenAutoRefreshEnabled = true
+            let _: Bool = appCheck.isTokenAutoRefreshEnabled
         }
     }
 }
