@@ -88,14 +88,8 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
     }
 
     public var data: Any {
-        // WORKAROUND: Access getData() result through a local variable first
-        // to avoid potential crashes in Skip's property access transpilation
-        let rawData: Any? = platformValue.getData()
-        return rawData ?? [String: Any]()
-    }
-
-    // Alternative method-based access that properly converts Kotlin types to Swift
-    public func getDataSafe() -> Any {
+        // Convert Kotlin/Java types (HashMap, ArrayList) to Swift types (Dictionary, Array)
+        // This prevents JNI crashes when Skip's bridge tries to call .kotlin() on raw Java types
         guard let rawData = platformValue.getData() else {
             return [String: Any]()
         }
