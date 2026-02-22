@@ -1,12 +1,12 @@
 # SkipFirebase
 
-This package provides Firebase support for [Skip](https://skip.tools) Swift projects.
+This package provides Firebase support for [Skip](https://skip.dev) Swift projects.
 The Swift side uses the official Firebase iOS SDK directly,
 with the various `SkipFirebase*` modules passing the transpiled calls
 through to the Firebase Android SDK.
 
-For an example of using Firebase in a [Skip Fuse](https://skip.tools/docs/status/#skip_fuse) app, see the
-[FiresideFuse Sample](https://github.com/skiptools/skipapp-fireside-fuse/). For a [Skip Lite](https://skip.tools/docs/status/#skip_fuse) app, see the [Fireside Sample](https://github.com/skiptools/skipapp-fireside/).
+For an example of using Firebase in a [Skip Fuse](https://skip.dev/docs/modes/#fuse) app, see the
+[FiresideFuse Sample](https://github.com/skiptools/skipapp-fireside-fuse/). For a [Skip Lite](https://skip.dev/docs/modes/#lite) app, see the [Fireside Sample](https://github.com/skiptools/skipapp-fireside/).
 
 ## Package
 
@@ -39,11 +39,11 @@ let package = Package(
         .library(name: "FireSideModel", targets: ["FireSideModel"]),
     ],
     dependencies: [
-        .package(url: "https://source.skip.tools/skip.git", from: "1.0.0"),
-        .package(url: "https://source.skip.tools/skip-ui.git", from: "1.0.0"),
-        .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.0.0"),
-        .package(url: "https://source.skip.tools/skip-model.git", from: "1.0.0"),
-        .package(url: "https://source.skip.tools/skip-firebase.git", "0.0.0"..<"2.0.0")
+        .package(url: "https://source.skip.dev/skip.git", from: "1.0.0"),
+        .package(url: "https://source.skip.dev/skip-ui.git", from: "1.0.0"),
+        .package(url: "https://source.skip.dev/skip-foundation.git", from: "1.0.0"),
+        .package(url: "https://source.skip.dev/skip-model.git", from: "1.0.0"),
+        .package(url: "https://source.skip.dev/skip-firebase.git", "0.0.0"..<"2.0.0")
     ],
     targets: [
         .target(name: "FireSide", dependencies: [
@@ -174,7 +174,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     ```
 
 1. Consider increasing the `minSdk` version of your Android app. Prior to SDK 33, Android does not provide any control over asking the user for push notification permissions. Rather, the system will prompt the user for permission only after receiving a notification and opening the app. Increasing your `minSdk` will allow you to decide when to request notification permissions. To do so, edit your `Android/app/build.gradle.kts` file and change the `minSdk` value to 33.
-1. Define a delegate to receive notification callbacks. In keeping with Skip's philosophy of *transparent adoption*, both the iOS and Android sides of your app will receive callbacks via iOS's standard `UNUserNotificationCenterDelegate` API, as well as the Firebase iOS SDK's `MessagingDelegate`. Here are example [Skip Fuse](https://skip.tools/docs/status/#skip_fuse) delegate implementations that works across both platforms:
+1. Define a delegate to receive notification callbacks. In keeping with Skip's philosophy of *transparent adoption*, both the iOS and Android sides of your app will receive callbacks via iOS's standard `UNUserNotificationCenterDelegate` API, as well as the Firebase iOS SDK's `MessagingDelegate`. Here are example [Skip Fuse](https://skip.dev/docs/modes/#fuse) delegate implementations that works across both platforms:
 
 ```swift
 import SwiftFuseUI

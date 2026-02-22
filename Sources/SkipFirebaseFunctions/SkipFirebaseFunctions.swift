@@ -7,6 +7,8 @@ import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
+public typealias Timestamp = SkipFirebaseCore.Timestamp
+
 // https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions
 // https://firebase.google.com/docs/reference/android/com/google/firebase/functions/FirebaseFunctions
 
@@ -88,11 +90,19 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
     }
 
     public var data: Any {
-        if let data = platformValue.getData() {
-            return data
-        } else {
-            assertionFailure("com.google.firebase.functions.HttpsCallableResult returned nil and the Swift API returns a non-nil Any")
+        // WORKAROUND: Access getData() result through a local variable first
+        // to avoid potential crashes in Skip's property access transpilation
+        let rawData: Any? = platformValue.getData()
+        return rawData ?? [String: Any]()
+    }
+
+    // Alternative method-based access that properly converts Kotlin types to Swift
+    public func getDataSafe() -> Any {
+        guard let rawData = platformValue.getData() else {
+            return [String: Any]()
         }
+        // Convert Kotlin collections to Swift types (same approach as Firestore)
+        return deepSwift(value: rawData) ?? [String: Any]()
     }
 }
 
