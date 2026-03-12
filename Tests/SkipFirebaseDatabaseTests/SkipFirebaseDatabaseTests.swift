@@ -12,6 +12,7 @@ import SkipFirebaseDatabase
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseDatabaseTests", category: "Tests")
 
+// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 @MainActor final class SkipFirebaseDatabaseTests: XCTestCase {
     func testSkipFirebaseDatabaseTests() async throws {
         if false {

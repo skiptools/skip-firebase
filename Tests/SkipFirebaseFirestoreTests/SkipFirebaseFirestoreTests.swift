@@ -13,6 +13,15 @@ import SkipFirebaseFirestore
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseFirestoreTests", category: "Tests")
 
+/// True when running in a transpiled Java runtime environment
+let isJava = ProcessInfo.processInfo.environment["java.io.tmpdir"] != nil
+/// True when running within an Android environment (either an emulator or device)
+let isAndroid = isJava && ProcessInfo.processInfo.environment["ANDROID_ROOT"] != nil
+/// True is the transpiled code is currently running in the local Robolectric test environment
+let isRobolectric = isJava && !isAndroid
+/// True if the system's `Int` type is 32-bit.
+let is32BitInteger = Int64(Int.max) == Int64(Int32.max)
+
 var appName: String = "SkipFirebaseDemo"
 
 // NOTE: we have @MainActor on SkipFirebaseFirestoreTests to force non-concurrent test execution in order to avoid errors like this:
@@ -20,6 +29,7 @@ var appName: String = "SkipFirebaseDemo"
 // Test Suite 'Selected tests' started at 2024-11-07 12:54:30.612.Test Suite 'skip-firebasePackageTests.xctest' started at 2024-11-07 12:54:30.614.Test Suite 'SkipFirebaseFirestoreTests' started at 2024-11-07 12:54:30.614.Test Case '-[SkipFirebaseFirestoreTests.SkipFirebaseFirestoreTests test_exists_trueForExistentDocument]' started.2024-11-07 12:54:30.823 xctest[15414:52946] *** Assertion failure in void firebase::firestore::core::FirestoreClient::Initialize(const User &, const Settings &)(), /var/folders/4b/7k50gk0j4f5bjk3799wdt8nw0000gn/T/ZipRelease/2024-10-14T13-23-42/project-macos/Pods/FirebaseFirestoreInternal/Firestore/core/src/core/firestore_client.cc:2172024-11-07 12:54:30.900 xctest[15414:52946] *** Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'FIRESTORE INTERNAL ASSERTION FAILED: Failed to open DB: Internal: Failed to open LevelDB database at /Users/runner/Library/Application Support/firestore/SkipFirebaseDemo/skip-firebase-demo/main: LevelDB error: IO error: lock /Users/runner/Library/Application Support/firestore/SkipFirebaseDemo/skip-firebase-demo/main/LOCK: Resource temporarily unavailable (expected created.ok())'
 
 
+// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 @MainActor final class SkipFirebaseFirestoreTests: XCTestCase {
 
     /// App needs to be initialized in setUp and cleaned up in tearDown
