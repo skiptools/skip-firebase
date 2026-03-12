@@ -13,6 +13,7 @@ import SkipFirebaseStorage
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseStorageTests", category: "Tests")
 
+// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 @MainActor final class SkipFirebaseStorageTests: XCTestCase {
     func testSkipFirebaseStorageTests() async throws {
         let metadata = StorageMetadata()
