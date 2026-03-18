@@ -12,7 +12,6 @@ import SkipFirebaseRemoteConfig
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseRemoteConfigTests", category: "Tests")
 
-// SKIP INSERT: @org.junit.runner.RunWith(androidx.test.ext.junit.runners.AndroidJUnit4::class)
 @MainActor final class SkipFirebaseRemoteConfigTests: XCTestCase {
     func testSkipFirebaseRemoteConfigTests() async throws {
         if false {
