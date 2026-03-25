@@ -66,13 +66,14 @@ public final class Analytics {
         instance.resetAnalyticsData()
     }
 
-    public static func appInstanceID() async -> String? {
-        return instance.getAppInstanceId().await()
+    public static func appInstanceID() -> String? {
+        // Android's getAppInstanceId() returns Task<String>; block to match synchronous iOS API
+        return com.google.android.gms.tasks.Tasks.await(instance.getAppInstanceId())
     }
 
-    public static func sessionID() async throws -> Int64 {
+    public static func sessionID() async throws -> Int64? {
         let id = instance.getSessionId().await()
-        return id as Int64
+        return id as? Int64
     }
 
     public static func setSessionTimeoutInterval(_ seconds: TimeInterval) {
@@ -88,30 +89,44 @@ public final class Analytics {
     }
 }
 
-public enum ConsentType {
-    case adPersonalization
-    case adStorage
-    case adUserData
-    case analyticsStorage
+public struct ConsentType: Hashable {
+    public let rawValue: String
+
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    public static let adPersonalization = ConsentType(rawValue: "ad_personalization")
+    public static let adStorage = ConsentType(rawValue: "ad_storage")
+    public static let adUserData = ConsentType(rawValue: "ad_user_data")
+    public static let analyticsStorage = ConsentType(rawValue: "analytics_storage")
 
     public var platformValue: com.google.firebase.analytics.FirebaseAnalytics.ConsentType {
-        switch self {
-        case .adPersonalization: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_PERSONALIZATION
-        case .adStorage: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_STORAGE
-        case .adUserData: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_USER_DATA
-        case .analyticsStorage: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE
+        switch rawValue {
+        case "ad_personalization": return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_PERSONALIZATION
+        case "ad_storage": return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_STORAGE
+        case "ad_user_data": return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_USER_DATA
+        case "analytics_storage": return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE
+        default: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE
         }
     }
 }
 
-public enum ConsentStatus {
-    case granted
-    case denied
+public struct ConsentStatus: Hashable {
+    public let rawValue: String
+
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+
+    public static let granted = ConsentStatus(rawValue: "granted")
+    public static let denied = ConsentStatus(rawValue: "denied")
 
     public var platformValue: com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus {
-        switch self {
-        case .granted: return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.GRANTED
-        case .denied: return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.DENIED
+        switch rawValue {
+        case "granted": return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.GRANTED
+        case "denied": return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.DENIED
+        default: return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.DENIED
         }
     }
 }
