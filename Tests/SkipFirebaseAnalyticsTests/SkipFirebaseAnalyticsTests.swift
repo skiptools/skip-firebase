@@ -13,61 +13,76 @@ import SkipFirebaseAnalytics
 let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "Tests")
 
 @MainActor final class SkipFirebaseAnalyticsTests: XCTestCase {
-    func testSkipFirebaseAnalyticsTests() async throws {
-        Analytics.logEvent("x", parameters: ["a": [1, 2, false]])
+    func skipTests() throws {
+        throw XCTSkip("test intentionally skipped because it exists just for compiler validation")
     }
 
-    func testLogEventWithNoParameters() {
-        // Verify logEvent compiles with no parameters
-        let _: (String, [String: Any]?) -> Void = Analytics.logEvent
-    }
+    func testLogEvent() throws {
+        try skipTests()
 
-    func testLogEventWithStringParameters() {
-        let _: (String, [String: Any]?) -> Void = Analytics.logEvent
-        // Verify parameter types compile
         let params: [String: Any] = [
             AnalyticsParameterItemName: "test_item",
             AnalyticsParameterPrice: 9.99,
             AnalyticsParameterQuantity: 1,
             AnalyticsParameterCurrency: "USD"
         ]
-        _ = params
+        Analytics.logEvent("ABC", parameters: params)
     }
 
-    func testSetUserProperty() {
-        let _: (String?, String) -> Void = Analytics.setUserProperty(_:forName:)
+    func testSetUserProperty() throws {
+        try skipTests()
+
+        Analytics.setUserProperty("X", forName: "Y")
+        Analytics.setUserProperty(nil, forName: "Y")
     }
 
-    func testSetUserID() {
-        let _: (String?) -> Void = Analytics.setUserID
+    func testSetUserID() throws {
+        try skipTests()
+
+        Analytics.setUserID(nil)
+        Analytics.setUserID("ABC")
     }
 
-    func testSetAnalyticsCollectionEnabled() {
-        let _: (Bool) -> Void = Analytics.setAnalyticsCollectionEnabled
+    func testSetAnalyticsCollectionEnabled() throws {
+        try skipTests()
+
+        Analytics.setAnalyticsCollectionEnabled(false)
     }
 
-    func testSetDefaultEventParameters() {
-        let _: ([String: Any]?) -> Void = Analytics.setDefaultEventParameters
+    func testSetDefaultEventParameters() throws {
+        try skipTests()
+
+        Analytics.setDefaultEventParameters(nil)
+        Analytics.setDefaultEventParameters(["x": false])
     }
 
-    func testResetAnalyticsData() {
-        let _: () -> Void = Analytics.resetAnalyticsData
+    func testResetAnalyticsData() throws {
+        try skipTests()
+
+        Analytics.resetAnalyticsData()
     }
 
-    func testAppInstanceID() {
-        let _: () -> String? = Analytics.appInstanceID
+    func testAppInstanceID() throws {
+        try skipTests()
+
+        let _: String? = Analytics.appInstanceID()
     }
 
-    func testSessionID() {
-        // sessionID is async throws -> Int64?
-        let _: () async throws -> Int64? = Analytics.sessionID
+    func testSessionID() async throws {
+        try skipTests()
+
+        let _: Int64? = try await Analytics.sessionID()
     }
 
-    func testSetSessionTimeoutInterval() {
-        let _: (TimeInterval) -> Void = Analytics.setSessionTimeoutInterval
+    func testSetSessionTimeoutInterval() throws {
+        try skipTests()
+
+        Analytics.setSessionTimeoutInterval(TimeInterval(100.0))
     }
 
-    func testConsentTypes() {
+    func testConsentTypes() throws {
+        try skipTests()
+
         // Verify ConsentType static members exist and are the right type
         let _: ConsentType = .adPersonalization
         let _: ConsentType = .adStorage
@@ -75,17 +90,26 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "
         let _: ConsentType = .analyticsStorage
     }
 
-    func testConsentStatus() {
+    func testConsentStatus() throws {
+        try skipTests()
+
         // Verify ConsentStatus static members exist and are the right type
         let _: ConsentStatus = .granted
         let _: ConsentStatus = .denied
     }
 
-    func testSetConsent() {
-        let _: ([ConsentType: ConsentStatus]) -> Void = Analytics.setConsent
+    func testSetConsent() throws {
+        try skipTests()
+
+        Analytics.setConsent([
+            .analyticsStorage: .granted,
+            .adPersonalization: .denied
+        ])
     }
 
-    func testEventNameConstants() {
+    func testEventNameConstants() throws {
+        try skipTests()
+
         // Verify event name constants exist and are strings
         let events: [String] = [
             AnalyticsEventAdImpression,
@@ -127,7 +151,9 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "
         XCTAssertFalse(events.isEmpty)
     }
 
-    func testParameterNameConstants() {
+    func testParameterNameConstants() throws {
+        try skipTests()
+
         // Verify a representative set of parameter constants exist and are strings
         let params: [String] = [
             AnalyticsParameterItemName,
@@ -152,7 +178,9 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseAnalyticsTests", category: "
         XCTAssertFalse(params.isEmpty)
     }
 
-    func testUserPropertyConstants() {
+    func testUserPropertyConstants() throws {
+        try skipTests()
+
         let _: String = AnalyticsUserPropertyAllowAdPersonalizationSignals
         let _: String = AnalyticsUserPropertySignUpMethod
     }
