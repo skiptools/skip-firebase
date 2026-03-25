@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only WITH LGPL-3.0-linking-exception
 #if !SKIP_BRIDGE
 #if SKIP
+import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
@@ -14,14 +15,104 @@ public final class Analytics {
         self.analytics = analytics
     }
 
-//    public static func analytics() -> Analytics {
-//        Analytics(analytics: com.google.firebase.analytics.FirebaseAnalytics.getInstance())
-//    }
+    private static var instance: com.google.firebase.analytics.FirebaseAnalytics {
+        com.google.firebase.analytics.FirebaseAnalytics.getInstance(skip.foundation.ProcessInfo.processInfo.androidContext)
+    }
 
-    public static func logEvent(_ name: String, parameters: [String: Any] = [:]) {
+    private static func toBundle(_ parameters: [String: Any]?) -> android.os.Bundle? {
+        guard let parameters = parameters else { return nil }
         let bundle = android.os.Bundle()
-        // TODO: add parameters to bundle
-        com.google.firebase.analytics.FirebaseAnalytics.getInstance(skip.foundation.ProcessInfo.processInfo.androidContext).logEvent(name, bundle)
+        for (key, value) in parameters {
+            if let s = value as? String {
+                bundle.putString(key, s)
+            } else if let b = value as? Bool {
+                bundle.putBoolean(key, b)
+            } else if let i = value as? Int {
+                bundle.putLong(key, Int64(i))
+            } else if let l = value as? Int64 {
+                bundle.putLong(key, l)
+            } else if let d = value as? Double {
+                bundle.putDouble(key, d)
+            } else if let f = value as? Float {
+                bundle.putFloat(key, f)
+            } else {
+                bundle.putString(key, "\(value)")
+            }
+        }
+        return bundle
+    }
+
+    public static func logEvent(_ name: String, parameters: [String: Any]? = nil) {
+        instance.logEvent(name, toBundle(parameters ?? [:]))
+    }
+
+    public static func setUserProperty(_ value: String?, forName name: String) {
+        instance.setUserProperty(name, value)
+    }
+
+    public static func setUserID(_ userID: String?) {
+        instance.setUserId(userID)
+    }
+
+    public static func setAnalyticsCollectionEnabled(_ enabled: Bool) {
+        instance.setAnalyticsCollectionEnabled(enabled)
+    }
+
+    public static func setDefaultEventParameters(_ parameters: [String: Any]?) {
+        instance.setDefaultEventParameters(toBundle(parameters))
+    }
+
+    public static func resetAnalyticsData() {
+        instance.resetAnalyticsData()
+    }
+
+    public static func appInstanceID() async -> String? {
+        return instance.getAppInstanceId().await()
+    }
+
+    public static func sessionID() async throws -> Int64 {
+        let id = instance.getSessionId().await()
+        return id as Int64
+    }
+
+    public static func setSessionTimeoutInterval(_ seconds: TimeInterval) {
+        instance.setSessionTimeoutDuration(Int64(seconds * 1000.0))
+    }
+
+    public static func setConsent(_ consentSettings: [ConsentType: ConsentStatus]) {
+        let map = java.util.HashMap<com.google.firebase.analytics.FirebaseAnalytics.ConsentType, com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus>()
+        for (type, status) in consentSettings {
+            map.put(type.platformValue, status.platformValue)
+        }
+        instance.setConsent(map)
+    }
+}
+
+public enum ConsentType {
+    case adPersonalization
+    case adStorage
+    case adUserData
+    case analyticsStorage
+
+    public var platformValue: com.google.firebase.analytics.FirebaseAnalytics.ConsentType {
+        switch self {
+        case .adPersonalization: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_PERSONALIZATION
+        case .adStorage: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_STORAGE
+        case .adUserData: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.AD_USER_DATA
+        case .analyticsStorage: return com.google.firebase.analytics.FirebaseAnalytics.ConsentType.ANALYTICS_STORAGE
+        }
+    }
+}
+
+public enum ConsentStatus {
+    case granted
+    case denied
+
+    public var platformValue: com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus {
+        switch self {
+        case .granted: return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.GRANTED
+        case .denied: return com.google.firebase.analytics.FirebaseAnalytics.ConsentStatus.DENIED
+        }
     }
 }
 
