@@ -424,7 +424,5 @@ The app's `com.google.gms:google-services` plugin must be applied to the `build.
 
 ## License
 
-This software is licensed under the
-[GNU Lesser General Public License v3.0](https://spdx.org/licenses/LGPL-3.0-only.html),
-with a [linking exception](https://spdx.org/licenses/LGPL-3.0-linking-exception.html)
-to clarify that distribution to restricted environments (e.g., app stores) is permitted.
+This software is licensed under the 
+[Mozilla Public License 2.0](https://www.mozilla.org/MPL/).
