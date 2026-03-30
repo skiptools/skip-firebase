@@ -1,5 +1,4 @@
 // swift-tools-version: 5.9
-// SPDX-License-Identifier: MPL-2.0
 import PackageDescription
 import Foundation
 
