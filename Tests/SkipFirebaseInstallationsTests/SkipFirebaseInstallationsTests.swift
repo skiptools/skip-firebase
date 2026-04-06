@@ -16,8 +16,8 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseInstallationsTests", categor
 @MainActor final class SkipFirebaseInstallationsTests: XCTestCase {
     func testSkipFirebaseInstallationsTests() async throws {
         if false {
-            let _: Installations = Installations.installations()
+            let installations: Installations = Installations.installations()
+            let _: String = try await installations.installationID()
         }
     }
 }
-
