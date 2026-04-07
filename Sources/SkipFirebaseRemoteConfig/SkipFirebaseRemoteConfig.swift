@@ -29,20 +29,21 @@ public final class RemoteConfig {
     /// Fetches and activates configs in one call.
     /// https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig#fetchandactivate()
     public func fetchAndActivate() async throws -> RemoteConfigFetchAndActivateStatus {
-        let activated = try await remoteconfig.fetchAndActivate().await() == true
-        return activated ? .successFetchedFromRemote : .successUsingPreFetchedData
+        let activated: Boolean = remoteconfig.fetchAndActivate().await()
+        return activated == true ? .successFetchedFromRemote : .successUsingPreFetchedData
     }
 
     /// Activates the most recently fetched configs.
     public func activate() async throws -> Bool {
-        try await remoteconfig.activate().await() == true
+        let result: Boolean = remoteconfig.activate().await()
+        return result == true
     }
 
     /// Fetches configs using the default minimum fetch interval.
     /// https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig#fetch()
     @discardableResult
     public func fetch() async throws -> RemoteConfigFetchStatus {
-        try await remoteconfig.fetch().await()
+        remoteconfig.fetch().await()
         return .success
     }
 
@@ -50,13 +51,13 @@ public final class RemoteConfig {
     /// https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig#fetchwithexpirationduration(_:)
     @discardableResult
     public func fetch(withExpirationDuration expirationDuration: TimeInterval) async throws -> RemoteConfigFetchStatus {
-        try await remoteconfig.fetch(Int64(expirationDuration)).await()
+        remoteconfig.fetch(Int64(expirationDuration)).await()
         return .success
     }
 
     /// Ensures the Remote Config instance is initialized.
     public func ensureInitialized() async throws {
-        try await remoteconfig.ensureInitialized().await()
+        let _: com.google.firebase.remoteconfig.FirebaseRemoteConfigInfo = remoteconfig.ensureInitialized().await()
     }
 
     // MARK: - Get values
@@ -125,9 +126,9 @@ public final class RemoteConfig {
     /// Sets config defaults synchronously (iOS API).
     public func setDefaults(_ defaults: [String: NSObject]?) {
         guard let defaults else { return }
-        var map: [String: Any] = [:]
-        for (k, v) in defaults { map[k] = v }
-        remoteconfig.setDefaultsAsync(map as Map<String, Object>)
+        let map = java.util.HashMap<String, Any>()
+        for (k, v) in defaults { map.put(k, v) }
+        remoteconfig.setDefaultsAsync(map)
     }
 
     public func defaultValue(forKey key: String?) -> RemoteConfigValue? {
@@ -157,7 +158,8 @@ public final class RemoteConfigValue {
 
     /// Gets the value as an NSNumber.
     public var numberValue: NSNumber {
-        NSNumber(value: platformValue.asDouble())
+        let d: Double = platformValue.asDouble()
+        return NSNumber(value: d)
     }
 
     /// Gets the value as Data.

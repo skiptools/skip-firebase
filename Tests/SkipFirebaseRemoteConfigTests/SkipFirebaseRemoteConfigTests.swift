@@ -37,7 +37,7 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseRemoteConfigTests", category
             let _: Date? = rc.lastFetchTime
 
             // Settings
-            var settings = RemoteConfigSettings()
+            let settings = RemoteConfigSettings()
             settings.minimumFetchInterval = 3600
             settings.fetchTimeout = 30
             let _: TimeInterval = settings.minimumFetchInterval
