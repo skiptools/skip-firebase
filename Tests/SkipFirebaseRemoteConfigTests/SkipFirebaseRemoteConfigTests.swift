@@ -53,6 +53,7 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseRemoteConfigTests", category
             let _: Bool = val.boolValue
             let _ = val.numberValue
             let _: Data = val.dataValue
+            let _: Any? = val.jsonValue
             let _: RemoteConfigSource = val.source
         }
     }

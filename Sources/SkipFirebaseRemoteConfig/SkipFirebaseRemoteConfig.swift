@@ -166,6 +166,21 @@ public final class RemoteConfigValue {
         return Data(platformValue: bytes)
     }
 
+    /// Gets a foundation object by parsing the value as JSON.
+    public var jsonValue: Any? {
+        let str = platformValue.asString()
+        guard !str.isEmpty else { return nil }
+        guard let data = str.data(using: .utf8) else { return nil }
+        return try? JSONSerialization.jsonObject(with: data, options: [])
+    }
+
+    /// Decodes the JSON-encoded value to the requested Decodable type.
+    public func decoded<Value: Decodable>(asType: Value.Type = Value.self) throws -> Value {
+        let str = platformValue.asString()
+        let data = str.data(using: .utf8) ?? Data()
+        return try JSONDecoder().decode(Value.self, from: data)
+    }
+
     /// Identifies the source of the fetched value.
     public var source: RemoteConfigSource {
         switch platformValue.getSource() {
