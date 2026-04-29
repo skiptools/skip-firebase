@@ -495,7 +495,7 @@ public class EmailAuthProvider {
 public final class ActionCodeSettings: KotlinConverting<com.google.firebase.auth.ActionCodeSettings> {
     public var url: URL?
     public var handleCodeInApp: Bool = false
-    public var iOSBundleID: String?
+    private var iOSBundleIDValue: String?
     private var androidPackageName: String?
     private var androidInstallIfNotAvailable: Bool = false
     private var androidMinimumVersion: String?
@@ -505,7 +505,7 @@ public final class ActionCodeSettings: KotlinConverting<com.google.firebase.auth
     public init() {}
 
     public func setIOSBundleID(_ bundleID: String) {
-        self.iOSBundleID = bundleID
+        self.iOSBundleIDValue = bundleID
     }
 
     public func setAndroidPackageName(_ packageName: String, installIfNotAvailable: Bool, minimumVersion: String?) {
