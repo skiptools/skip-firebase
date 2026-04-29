@@ -69,13 +69,13 @@ public final class Auth {
     /// Send a sign-in link to the given email address.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#sendSignInLinkToEmail(java.lang.String,com.google.firebase.auth.ActionCodeSettings)
     public func sendSignInLink(toEmail email: String, actionCodeSettings: ActionCodeSettings) async throws {
-        platformValue.sendSignInLinkToEmail(email, actionCodeSettings.platformValue).await()
+        platformValue.sendSignInLinkToEmail(email, actionCodeSettings.build()).await()
     }
 
     /// iOS-style completion API for sending an email sign-in link.
     public func sendSignInLink(toEmail email: String, actionCodeSettings: ActionCodeSettings, completion: @escaping (Error?) -> Void) {
         platformValue
-            .sendSignInLinkToEmail(email, actionCodeSettings.platformValue)
+            .sendSignInLinkToEmail(email, actionCodeSettings.build())
             .addOnSuccessListener { _ in completion(nil) }
             .addOnFailureListener { exception in completion(mapAuthNSError(exception)) }
     }
@@ -487,7 +487,7 @@ public class EmailAuthProvider {
 
 // https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/ActionCodeSettings
 // https://firebase.google.com/docs/reference/android/com/google/firebase/auth/ActionCodeSettings
-public final class ActionCodeSettings: KotlinConverting<com.google.firebase.auth.ActionCodeSettings> {
+public final class ActionCodeSettings {
     public var url: URL?
     public var handleCodeInApp: Bool = false
     public var iOSBundleID: String?
@@ -509,12 +509,8 @@ public final class ActionCodeSettings: KotlinConverting<com.google.firebase.auth
         self.androidMinimumVersion = minimumVersion
     }
 
-    // SKIP @nooverride
-    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.ActionCodeSettings {
-        return platformValue
-    }
-
-    public var platformValue: com.google.firebase.auth.ActionCodeSettings {
+    /// Build the underlying Android `ActionCodeSettings` from the current values.
+    public func build() -> com.google.firebase.auth.ActionCodeSettings {
         let builder = com.google.firebase.auth.ActionCodeSettings.newBuilder()
         if let url {
             builder.setUrl(url.absoluteString)
