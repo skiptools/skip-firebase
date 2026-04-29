@@ -66,6 +66,41 @@ public final class Auth {
         return AuthDataResult(result)
     }
 
+    /// Send a sign-in link to the given email address.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#sendSignInLinkToEmail(java.lang.String,com.google.firebase.auth.ActionCodeSettings)
+    public func sendSignInLink(toEmail email: String, actionCodeSettings: ActionCodeSettings) async throws {
+        platformValue.sendSignInLinkToEmail(email, actionCodeSettings.platformValue).await()
+    }
+
+    /// iOS-style completion API for sending an email sign-in link.
+    public func sendSignInLink(toEmail email: String, actionCodeSettings: ActionCodeSettings, completion: @escaping (Error?) -> Void) {
+        platformValue
+            .sendSignInLinkToEmail(email, actionCodeSettings.platformValue)
+            .addOnSuccessListener { _ in completion(nil) }
+            .addOnFailureListener { exception in completion(mapAuthNSError(exception)) }
+    }
+
+    /// Whether the link is a sign-in-with-email link.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#isSignInWithEmailLink(java.lang.String)
+    public func isSignIn(withEmailLink link: String) -> Bool {
+        platformValue.isSignInWithEmailLink(link)
+    }
+
+    /// Sign in using an email and the link previously sent via `sendSignInLink(toEmail:actionCodeSettings:)`.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#signInWithEmailLink(java.lang.String,java.lang.String)
+    public func signIn(withEmail email: String, link: String) async throws -> AuthDataResult {
+        let result = platformValue.signInWithEmailLink(email, link).await()
+        return AuthDataResult(result)
+    }
+
+    /// iOS-style completion API for sign-in with email link.
+    public func signIn(withEmail email: String, link: String, completion: @escaping (AuthDataResult?, Error?) -> Void) {
+        platformValue
+            .signInWithEmailLink(email, link)
+            .addOnSuccessListener { result in completion(AuthDataResult(result), nil) }
+            .addOnFailureListener { exception in completion(nil, mapAuthNSError(exception)) }
+    }
+
     public func useEmulator(withHost host: String, port: Int) {
         platformValue.useEmulator(host, port)
     }
@@ -440,6 +475,58 @@ public class EmailAuthProvider {
     public static func credential(withEmail email: String, password: String) -> AuthCredential {
         let credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
         return AuthCredential(credential)
+    }
+
+    /// Build a credential for sign-in via an email link.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/EmailAuthProvider#getCredentialWithLink(java.lang.String,java.lang.String)
+    public static func credential(withEmail email: String, link: String) -> AuthCredential {
+        let credential = com.google.firebase.auth.EmailAuthProvider.getCredentialWithLink(email, link)
+        return AuthCredential(credential)
+    }
+}
+
+// https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/ActionCodeSettings
+// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/ActionCodeSettings
+public final class ActionCodeSettings: KotlinConverting<com.google.firebase.auth.ActionCodeSettings> {
+    public var url: URL?
+    public var handleCodeInApp: Bool = false
+    public var iOSBundleID: String?
+    private var androidPackageName: String?
+    private var androidInstallIfNotAvailable: Bool = false
+    private var androidMinimumVersion: String?
+    public var dynamicLinkDomain: String?
+    public var linkDomain: String?
+
+    public init() {}
+
+    public func setIOSBundleID(_ bundleID: String) {
+        self.iOSBundleID = bundleID
+    }
+
+    public func setAndroidPackageName(_ packageName: String, installIfNotAvailable: Bool, minimumVersion: String?) {
+        self.androidPackageName = packageName
+        self.androidInstallIfNotAvailable = installIfNotAvailable
+        self.androidMinimumVersion = minimumVersion
+    }
+
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.ActionCodeSettings {
+        return platformValue
+    }
+
+    public var platformValue: com.google.firebase.auth.ActionCodeSettings {
+        let builder = com.google.firebase.auth.ActionCodeSettings.newBuilder()
+        if let url {
+            builder.setUrl(url.absoluteString)
+        }
+        builder.setHandleCodeInApp(handleCodeInApp)
+        if let androidPackageName {
+            builder.setAndroidPackageName(androidPackageName, androidInstallIfNotAvailable, androidMinimumVersion)
+        }
+        if let domain = linkDomain ?? dynamicLinkDomain {
+            builder.setDynamicLinkDomain(domain)
+        }
+        return builder.build()
     }
 }
 
