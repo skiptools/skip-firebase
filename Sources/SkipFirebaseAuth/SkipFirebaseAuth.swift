@@ -478,9 +478,13 @@ public class EmailAuthProvider {
     }
 
     /// Build a credential for sign-in via an email link.
+    ///
+    /// On iOS, Firebase exposes this as `EmailAuthProvider.credential(withEmail:link:)`, but
+    /// that signature collides with `credential(withEmail:password:)` at the JVM level
+    /// (both erase to `(String, String) -> AuthCredential`). Use this method on Android
+    /// and gate iOS callers with `#if !SKIP`.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/EmailAuthProvider#getCredentialWithLink(java.lang.String,java.lang.String)
-    // SKIP INSERT: @JvmStatic @JvmName("credentialWithLink")
-    public static func credential(withEmail email: String, link: String) -> AuthCredential {
+    public static func credentialWithLink(email: String, link: String) -> AuthCredential {
         let credential = com.google.firebase.auth.EmailAuthProvider.getCredentialWithLink(email, link)
         return AuthCredential(credential)
     }
