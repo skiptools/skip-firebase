@@ -88,13 +88,13 @@ public final class Auth {
 
     /// Sign in using an email and the link previously sent via `sendSignInLink(toEmail:actionCodeSettings:)`.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#signInWithEmailLink(java.lang.String,java.lang.String)
-    public func signIn(withEmail email: String, link: String) async throws -> AuthDataResult {
+    public func signInWithLink(withEmail email: String, link: String) async throws -> AuthDataResult {
         let result = platformValue.signInWithEmailLink(email, link).await()
         return AuthDataResult(result)
     }
 
     /// iOS-style completion API for sign-in with email link.
-    public func signIn(withEmail email: String, link: String, completion: @escaping (AuthDataResult?, Error?) -> Void) {
+    public func signInWithLink(withEmail email: String, link: String, completion: @escaping (AuthDataResult?, Error?) -> Void) {
         platformValue
             .signInWithEmailLink(email, link)
             .addOnSuccessListener { result in completion(AuthDataResult(result), nil) }
