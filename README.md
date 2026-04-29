@@ -102,12 +102,7 @@ For concrete examples, see the [FireSideFuse Sample](https://github.com/skiptool
 Once Firebase has been added to your project, you need to configure the `FirebaseApp` on app startup. This is typically done in the `onInit()` callback of the `*AppDelegate` in your `*App.swift` file. Here is a snippet from the FireSideFuse sample app:
 
 ```swift
-#if os(Android)
 import SkipFirebaseCore
-#else
-import FirebaseCore
-#endif
-
 ...
 
 /* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
@@ -132,11 +127,7 @@ imported Firebase modules. For example, the following actor uses the `Firestore`
 ```swift
 // Sources/FireSideFuse/FireSideFuseApp.swift
 
-#if os(Android)
 import SkipFirebaseFirestore
-#else
-import FirebaseFirestore
-#endif
 
 ...
 
@@ -187,11 +178,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 
 ```swift
 import SwiftFuseUI
-#if os(Android)
 import SkipFirebaseMessaging
-#else
-import FirebaseMessaging
-#endif
 
 final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, Sendable {
     public func requestPermission() {
@@ -242,11 +229,7 @@ final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, S
 ```swift
 // Sources/FireSideFuse/FireSideFuseApp.swift
 
-#if os(Android)
 import SkipFirebaseCore
-#else
-import FirebaseCore
-#endif
 
 ...
 

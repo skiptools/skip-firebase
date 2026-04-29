@@ -1,7 +1,9 @@
 // Copyright 2025–2026 Skip
 // SPDX-License-Identifier: MPL-2.0
 #if !SKIP_BRIDGE
-#if SKIP
+#if canImport(FirebaseRemoteConfig)
+@_exported import FirebaseRemoteConfig
+#elseif SKIP
 import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
