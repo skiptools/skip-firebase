@@ -17,6 +17,7 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseFunctionsTests", category: "
     func testSkipFirebaseFunctionsTests() async throws {
         if false {
             let _: Functions = Functions.functions()
+            let _: Functions = Functions.functions(region: "europe-west4")
         }
     }
 }
