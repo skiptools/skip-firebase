@@ -26,6 +26,14 @@ public final class Functions {
         Functions(functions: com.google.firebase.functions.FirebaseFunctions.getInstance(app.app))
     }
 
+    public static func functions(region: String) -> Functions {
+        Functions(functions: com.google.firebase.functions.FirebaseFunctions.getInstance(region))
+    }
+
+    public static func functions(app: FirebaseApp, region: String) -> Functions {
+        Functions(functions: com.google.firebase.functions.FirebaseFunctions.getInstance(app.app, region))
+    }
+
     public func useEmulator(withHost host: String, port: Int) {
         functions.useEmulator(host, port)
     }
