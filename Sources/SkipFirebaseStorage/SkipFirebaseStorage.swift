@@ -367,13 +367,15 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
 
     /// Throws `StorageException`
     public func list(maxResults: Int64) async throws -> StorageListResult {
-        let result: com.google.firebase.storage.ListResult = platformValue.list(Int(maxResults)).await()
+        let clamped = Int(max(min(maxResults, Int64(Int.max)), Int64(Int.min)))
+        let result: com.google.firebase.storage.ListResult = platformValue.list(clamped).await()
         return StorageListResult(platformValue: result)
     }
 
     /// Throws `StorageException`
     public func list(maxResults: Int64, pageToken: String) async throws -> StorageListResult {
-        let result: com.google.firebase.storage.ListResult = platformValue.list(Int(maxResults), pageToken).await()
+        let clamped = Int(max(min(maxResults, Int64(Int.max)), Int64(Int.min)))
+        let result: com.google.firebase.storage.ListResult = platformValue.list(clamped, pageToken).await()
         return StorageListResult(platformValue: result)
     }
 
