@@ -269,7 +269,6 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return StorageUploadTask(platformValue: uploadTask)
     }
 
-    // TODO: Support onProgress once SKIP has support for Progress
     /// Error is `StorageException`
     public func putFileAsync(from url: URL, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
         return try await withCheckedThrowingContinuation { continuation in
@@ -301,7 +300,6 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
         return StorageUploadTask(platformValue: uploadTask)
     }
 
-    // TODO: Support onProgress once SKIP has support for Progress
     /// Throws `StorageException`
     public func putDataAsync(_ uploadData: Data, metadata: StorageMetadata? = nil) async throws -> StorageMetadata {
         return try await withCheckedThrowingContinuation { continuation in
@@ -366,6 +364,87 @@ public class StorageReference: KotlinConverting<com.google.firebase.storage.Stor
     public func delete() async throws {
         platformValue.delete().await()
     }
+
+    /// Throws `StorageException`
+    public func list(maxResults: Int64) async throws -> StorageListResult {
+        let result: com.google.firebase.storage.ListResult = platformValue.list(Int(maxResults)).await()
+        return StorageListResult(platformValue: result)
+    }
+
+    /// Throws `StorageException`
+    public func list(maxResults: Int64, pageToken: String) async throws -> StorageListResult {
+        let result: com.google.firebase.storage.ListResult = platformValue.list(Int(maxResults), pageToken).await()
+        return StorageListResult(platformValue: result)
+    }
+
+    /// Throws `StorageException`
+    public func listAll() async throws -> StorageListResult {
+        let result: com.google.firebase.storage.ListResult = platformValue.listAll().await()
+        return StorageListResult(platformValue: result)
+    }
+}
+
+public class StorageListResult {
+    public let platformValue: com.google.firebase.storage.ListResult
+
+    public init(platformValue: com.google.firebase.storage.ListResult) {
+        self.platformValue = platformValue
+    }
+
+    public var items: [StorageReference] {
+        var refs: [StorageReference] = []
+        for item in platformValue.items {
+            refs.append(StorageReference(platformValue: item))
+        }
+        return refs
+    }
+
+    public var prefixes: [StorageReference] {
+        var refs: [StorageReference] = []
+        for prefix in platformValue.prefixes {
+            refs.append(StorageReference(platformValue: prefix))
+        }
+        return refs
+    }
+
+    public var pageToken: String? {
+        platformValue.pageToken
+    }
+}
+
+public enum StorageTaskStatus: Int {
+    case unknown = 0
+    case resume = 1
+    case progress = 2
+    case pause = 3
+    case success = 4
+    case failure = 5
+}
+
+/// Byte-level progress for a storage transfer, mirroring the fields of `Foundation.Progress`
+/// that are relevant to Firebase Storage operations.
+public struct StorageProgress {
+    public let completedUnitCount: Int64
+    public let totalUnitCount: Int64
+
+    public var fractionCompleted: Double {
+        guard totalUnitCount > 0 else { return 0 }
+        return Double(completedUnitCount) / Double(totalUnitCount)
+    }
+}
+
+public class StorageTaskSnapshot {
+    public let status: StorageTaskStatus
+    public var progress: StorageProgress?
+    public var metadata: StorageMetadata?
+    public var error: Error?
+
+    init(status: StorageTaskStatus, progress: StorageProgress? = nil, metadata: StorageMetadata? = nil, error: Error? = nil) {
+        self.status = status
+        self.progress = progress
+        self.metadata = metadata
+        self.error = error
+    }
 }
 
 public class StorageTask {
@@ -387,6 +466,7 @@ public class StorageObservableTask : StorageTask {
 
 public final class StorageUploadTask : StorageTaskManagement {
     public let platformValue: com.google.firebase.storage.UploadTask
+    private var activeObservers: [String: Bool] = [:]
 
     init(platformValue: com.google.firebase.storage.UploadTask) {
         super.init()
@@ -407,9 +487,69 @@ public final class StorageUploadTask : StorageTaskManagement {
         platformValue.resume()
         return
     }
+
+    @discardableResult
+    public func observe(_ status: StorageTaskStatus, handler: @escaping (StorageTaskSnapshot) -> Void) -> String {
+        let handle = UUID().uuidString
+        activeObservers[handle] = true
+
+        switch status {
+        case .progress:
+            platformValue.addOnProgressListener { taskSnapshot in
+                guard self.activeObservers[handle] == true else { return }
+                let p = StorageProgress(completedUnitCount: taskSnapshot.bytesTransferred, totalUnitCount: taskSnapshot.totalByteCount)
+                handler(StorageTaskSnapshot(status: .progress, progress: p))
+            }
+        case .success:
+            platformValue.addOnSuccessListener { taskSnapshot in
+                guard self.activeObservers[handle] == true else { return }
+                var metadata: StorageMetadata? = nil
+                if let m = taskSnapshot.metadata {
+                    metadata = StorageMetadata(platformValue: m)
+                }
+                handler(StorageTaskSnapshot(status: .success, metadata: metadata))
+            }
+        case .failure:
+            platformValue.addOnFailureListener { exception in
+                guard self.activeObservers[handle] == true else { return }
+                handler(StorageTaskSnapshot(status: .failure, error: ErrorException(exception)))
+            }
+        case .pause:
+            platformValue.addOnPausedListener { _ in
+                guard self.activeObservers[handle] == true else { return }
+                handler(StorageTaskSnapshot(status: .pause))
+            }
+        default:
+            break
+        }
+
+        return handle
+    }
+
+    public func removeObserver(withHandle handle: String) {
+        activeObservers[handle] = false
+    }
+
+    public func removeAllObservers() {
+        for key in activeObservers.keys {
+            activeObservers[key] = false
+        }
+    }
+
+    public func removeAllObservers(for status: StorageTaskStatus) {
+        removeAllObservers()
+    }
 }
 
 public class StorageDownloadTask {
+    @discardableResult
+    open func observe(_ status: StorageTaskStatus, handler: @escaping (StorageTaskSnapshot) -> Void) -> String {
+        return ""
+    }
+
+    open func removeObserver(withHandle handle: String) { }
+    open func removeAllObservers() { }
+    open func removeAllObservers(for status: StorageTaskStatus) { }
 }
 
 public final class StoragBytesDownloadTask : StorageDownloadTask {
@@ -420,8 +560,9 @@ public final class StoragBytesDownloadTask : StorageDownloadTask {
     }
 }
 
-public final class StorageFileDownloadTask : StorageDownloadTask, StorageTaskManagement {
+public class StorageFileDownloadTask : StorageDownloadTask, StorageTaskManagement {
     public let platformValue: com.google.firebase.storage.FileDownloadTask
+    private var activeObservers: [String: Bool] = [:]
 
     init(platformValue: com.google.firebase.storage.FileDownloadTask) {
         super.init()
@@ -441,6 +582,54 @@ public final class StorageFileDownloadTask : StorageDownloadTask, StorageTaskMan
     public func resume() {
         platformValue.resume()
         return
+    }
+
+    @discardableResult
+    override public func observe(_ status: StorageTaskStatus, handler: @escaping (StorageTaskSnapshot) -> Void) -> String {
+        let handle = UUID().uuidString
+        activeObservers[handle] = true
+
+        switch status {
+        case .progress:
+            platformValue.addOnProgressListener { taskSnapshot in
+                guard self.activeObservers[handle] == true else { return }
+                let p = StorageProgress(completedUnitCount: taskSnapshot.bytesTransferred, totalUnitCount: taskSnapshot.totalByteCount)
+                handler(StorageTaskSnapshot(status: .progress, progress: p))
+            }
+        case .success:
+            platformValue.addOnSuccessListener { (taskSnapshot: com.google.firebase.storage.FileDownloadTask.TaskSnapshot) in
+                guard self.activeObservers[handle] == true else { return }
+                handler(StorageTaskSnapshot(status: .success))
+            }
+        case .failure:
+            platformValue.addOnFailureListener { exception in
+                guard self.activeObservers[handle] == true else { return }
+                handler(StorageTaskSnapshot(status: .failure, error: ErrorException(exception)))
+            }
+        case .pause:
+            platformValue.addOnPausedListener { _ in
+                guard self.activeObservers[handle] == true else { return }
+                handler(StorageTaskSnapshot(status: .pause))
+            }
+        default:
+            break
+        }
+
+        return handle
+    }
+
+    override public func removeObserver(withHandle handle: String) {
+        activeObservers[handle] = false
+    }
+
+    override public func removeAllObservers() {
+        for key in activeObservers.keys {
+            activeObservers[key] = false
+        }
+    }
+
+    override public func removeAllObservers(for status: StorageTaskStatus) {
+        removeAllObservers()
     }
 }
 

@@ -71,7 +71,72 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseStorageTests", category: "Te
             let sdt2: StorageDownloadTask = ref.write(toFile: fileURL)
             let sdt3: StorageDownloadTask = ref.write(toFile: fileURL, completion: { url, error in
             })
+
+            // list / listAll
+            let listResult: StorageListResult = try await ref.listAll()
+            let _: [StorageReference] = listResult.items
+            let _: [StorageReference] = listResult.prefixes
+            let _: String? = listResult.pageToken
+
+            let pagedResult: StorageListResult = try await ref.list(maxResults: 10)
+            let _: [StorageReference] = pagedResult.items
+            let pagedResultWithToken: StorageListResult = try await ref.list(maxResults: 10, pageToken: "token")
+            let _: [StorageReference] = pagedResultWithToken.items
+
+            // progress observers — upload
+            let handle1: String = sut.observe(.progress) { snapshot in
+                let _: StorageTaskStatus = snapshot.status
+                let _ = snapshot.progress
+                let _: StorageMetadata? = snapshot.metadata
+                let _: Error? = snapshot.error
+            }
+            let _: String = sut.observe(.success) { _ in }
+            let _: String = sut.observe(.failure) { _ in }
+            let _: String = sut.observe(.pause) { _ in }
+            sut.removeObserver(withHandle: handle1)
+            sut.removeAllObservers()
+            sut.removeAllObservers(for: .progress)
+
+            // progress observers — file download
+            let handle2: String = sdt2.observe(.progress) { snapshot in
+                let _ = snapshot.progress
+            }
+            let _: String = sdt2.observe(.success) { _ in }
+            let _: String = sdt2.observe(.failure) { _ in }
+            sdt2.removeObserver(withHandle: handle2)
+            sdt2.removeAllObservers()
+            sdt2.removeAllObservers(for: .progress)
         }
+    }
+
+    func testStorageListResultTypes() throws {
+        #if SKIP
+        // Validate that list/listAll and StorageListResult properties exist.
+        // Async function references and typed closures cause Kotlin type-inference issues,
+        // so we use named variables to preserve type context.
+        let _items: (StorageListResult) -> [StorageReference] = { result in result.items }
+        let _prefixes: (StorageListResult) -> [StorageReference] = { result in result.prefixes }
+        let _pageToken: (StorageListResult) -> String? = { result in result.pageToken }
+        #endif
+    }
+
+    func testStorageTaskObserverTypes() throws {
+        #if SKIP
+        // Validate StorageTaskStatus, StorageTaskSnapshot, and observer API types compile.
+        // These are Skip-specific wrappers; the iOS SDK uses StorageTaskState/Progress instead.
+        let _: StorageTaskStatus = StorageTaskStatus.progress
+        let _: StorageTaskStatus = StorageTaskStatus.success
+        let _: StorageTaskStatus = StorageTaskStatus.failure
+        let _: StorageTaskStatus = StorageTaskStatus.pause
+        let _: StorageTaskStatus = StorageTaskStatus.resume
+        let _: StorageTaskStatus = StorageTaskStatus.unknown
+
+        let snapshot = StorageTaskSnapshot(status: StorageTaskStatus.progress)
+        let _: StorageTaskStatus = snapshot.status
+        let _: StorageProgress? = snapshot.progress
+        let _: StorageMetadata? = snapshot.metadata
+        let _: Error? = snapshot.error
+        #endif
     }
 }
 
