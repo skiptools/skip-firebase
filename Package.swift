@@ -21,6 +21,7 @@ let package = Package(
         .library(name: "SkipFirebaseFunctions", targets: ["SkipFirebaseFunctions"]),
         .library(name: "SkipFirebaseInstallations", targets: ["SkipFirebaseInstallations"]),
         .library(name: "SkipFirebaseStorage", targets: ["SkipFirebaseStorage"]),
+        .library(name: "SkipFirebasePerformance", targets: ["SkipFirebasePerformance"]),
     ],
     dependencies: [
         .package(url: "https://source.skip.tools/skip.git", from: "1.8.0"),
@@ -141,6 +142,15 @@ let package = Package(
         ], resources: [.process("Resources")], plugins: skipstone),
         .testTarget(name: "SkipFirebaseStorageTests", dependencies: [
             "SkipFirebaseStorage",
+            .product(name: "SkipTest", package: "skip")
+        ], resources: [.process("Resources")], plugins: skipstone),
+
+        .target(name: "SkipFirebasePerformance", dependencies: [
+            "SkipFirebaseCore",
+            .product(name: "FirebasePerformance", package: "firebase-ios-sdk", condition: .when(platforms: [.macOS, .iOS, .tvOS, .watchOS, .macCatalyst])),
+        ], resources: [.process("Resources")], plugins: skipstone),
+        .testTarget(name: "SkipFirebasePerformanceTests", dependencies: [
+            "SkipFirebasePerformance",
             .product(name: "SkipTest", package: "skip")
         ], resources: [.process("Resources")], plugins: skipstone),
     ]
