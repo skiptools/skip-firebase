@@ -34,10 +34,10 @@ See the `Package.swift` files in the
 | `SkipFirebaseCrashlytics` | ~75% | `log`, `setCustomValue`/`setCustomKeysAndValues`, `setUserID`, `didCrashDuringPreviousExecution`, `checkForUnsentReports`/`sendUnsentReports`/`deleteUnsentReports`, `record(error:userInfo:)`, `recordExceptionModel`, `FIRExceptionModel`/`FIRStackFrame` | `logWithFormat` and `checkAndUpdateUnsentReports` are marked `@available(*, unavailable)`; no per-`FirebaseApp` instance accessor |
 | `SkipFirebaseFunctions` | ~45% | Default/regional/emulator instance, `httpsCallable(_:)`, completion-based `call`, automatic Kotlin→Swift result conversion via `deepSwift` | `async`/`await` `call` signatures, streaming RPCs, per-call options (`HTTPSCallableOptions`), explicit call timeouts |
 | `SkipFirebaseDatabase` | ~5% | `Database.database()` / `Database.database(app:)` singleton accessors | Effectively the entire API: `DatabaseReference`, `child`/`push`/`setValue`/`updateChildValues`/`removeValue`, `observe`/`observeSingleEvent`, queries, `DataSnapshot`, `ServerValue`, online/offline toggle |
-| `SkipFirebaseInstallations` | ~20% | Singleton accessor, `installationID()` | `authTokenForcingRefresh`, `delete()`, `installationIDDidChangeNotification` |
+| `SkipFirebaseInstallations` | ~75% | Singleton accessor (`installations()`/`installations(app:)`), `installationID()`, `authToken()`, `authTokenForcingRefresh(_:)`, `delete()`, `InstallationsAuthTokenResult` (`authToken`, `expirationDate`) | `installationIDDidChangeNotification`, per-`FirebaseApp` notification keys |
 | `SkipFirebasePerformance` | ~65% | `Performance.sharedInstance()`, `isDataCollectionEnabled`, `trace(name:)`, `HTTPMetric(url:httpMethod:)`, full `Trace` API (start/stop, `incrementMetric`, `valueForMetric`, attributes), full `HTTPMetric` API (start/stop, `responseCode`, payload sizes, content type, attributes), `HTTPMethod` enum | `isInstrumentationEnabled` (no Android equivalent, marked unavailable), `Performance.startTrace(name:)` static convenience, per-`FirebaseApp` instance accessor |
 
-**Overall coverage across the thirteen modules: roughly 60% of the iOS API surface.** The most production-used modules — Core, Firestore, Auth, Storage, Messaging, Analytics, Crashlytics, and RemoteConfig — sit in the 60–80% range and cover the standard read/write/sign-in/log/notify paths. `SkipFirebaseDatabase` (Realtime Database) and `SkipFirebaseInstallations` are mostly stubs.
+**Overall coverage across the fourteen modules: roughly 60% of the iOS API surface.** The most production-used modules — Core, Firestore, Auth, Storage, Messaging, Analytics, Crashlytics, and RemoteConfig — sit in the 60–80% range and cover the standard read/write/sign-in/log/notify paths. `SkipFirebaseDatabase` (Realtime Database) is mostly a stub.
 
 ### What is working well
 
@@ -55,7 +55,7 @@ See the `Package.swift` files in the
 - **`SkipFirebaseFunctions`** lacks `async`/`await` call signatures, streaming RPCs, and per-call options. Only completion-based callback calls are supported.
 - **`SkipFirebaseRemoteConfig`** does not yet expose `addOnConfigUpdateListener` (real-time config updates) or custom signals.
 - **`SkipFirebaseAppCheck`** ships only the `Debug` provider factory; custom provider implementations are not yet bridgeable.
-- **`SkipFirebaseInstallations`** is essentially a no-op beyond fetching the installation ID.
+- **`SkipFirebaseInstallations`** cannot bridge the `InstallationIDDidChange` notification or the `InstallationIDDidChangeAppNameKey` userInfo key. The Firebase Android SDK has no equivalent push-notification mechanism for installation ID changes — it exposes no broadcast, callback, or listener that fires when the ID rotates. As a result, any code that observes `NotificationCenter.default.publisher(for: .InstallationIDDidChange)` on iOS will compile on Android but never receive an event. If your app relies on this to, for example, re-upload the installation ID to your backend after it changes, you will need an alternative strategy on Android (such as fetching the ID on every app foreground, or polling after Firebase SDK upgrades).
 
 ### Firebase modules not yet wrapped
 
