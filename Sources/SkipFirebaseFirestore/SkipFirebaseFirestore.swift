@@ -10,8 +10,157 @@ import kotlinx.coroutines.tasks.await
 
 public typealias Timestamp = SkipFirebaseCore.Timestamp
 
+// MARK: - GeoPoint
+
+public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.firestore.GeoPoint>, Codable {
+    public let latitude: Double
+    public let longitude: Double
+
+    public init(latitude: Double, longitude: Double) {
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.GeoPoint {
+        return com.google.firebase.firestore.GeoPoint(latitude, longitude)
+    }
+
+    public var description: String { "GeoPoint(\(latitude), \(longitude))" }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.latitude == rhs.latitude && lhs.longitude == rhs.longitude
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(latitude)
+        hasher.combine(longitude)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case latitude = "__fgp_lat__"
+        case longitude = "__fgp_lng__"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.latitude = try container.decode(Double.self, forKey: .latitude)
+        self.longitude = try container.decode(Double.self, forKey: .longitude)
+    }
+}
+
+// MARK: - Firestore-aware deep conversion (adds GeoPoint on top of Core's deepSwift)
+
+fileprivate func firestoreDeepSwift(value: Any?) -> Any? {
+    guard let value = value else { return nil }
+    if let str = value as? String { return str }
+    if let ts = value as? com.google.firebase.Timestamp {
+        return Timestamp(timestamp: ts)
+    }
+    if let gp = value as? com.google.firebase.firestore.GeoPoint {
+        return GeoPoint(latitude: gp.latitude, longitude: gp.longitude)
+    }
+    if let map = value as? kotlin.collections.Map<Any?, Any?> {
+        return firestoreDeepSwift(map: map)
+    }
+    if let collection = value as? kotlin.collections.Collection<Any?> {
+        return firestoreDeepSwift(collection: collection)
+    }
+    return value
+}
+
+fileprivate func firestoreDeepSwift<T>(map: kotlin.collections.Map<T, Any?>) -> Dictionary<T, Any> {
+    var dict = Dictionary<T, Any>()
+    for (key, val) in map {
+        if let v = firestoreDeepSwift(value: val) {
+            dict[key] = v
+        }
+    }
+    return dict
+}
+
+fileprivate func firestoreDeepSwift(collection: kotlin.collections.Collection<Any?>) -> [Any] {
+    var array = [Any]()
+    for val in collection {
+        if let v = firestoreDeepSwift(value: val) {
+            array.append(v)
+        }
+    }
+    return array
+}
+
+// MARK: - Cache settings
+
+public let FirestoreCacheSizeUnlimited: Int64 = -1
+
+public protocol FirestoreCacheSettings {}
+
+public protocol MemoryGarbageCollectionSettings {}
+
+public struct MemoryLRUGCSettings: MemoryGarbageCollectionSettings {
+    public var cacheSize: Int64
+    public init(cacheSize: Int64 = FirestoreCacheSizeUnlimited) {
+        self.cacheSize = cacheSize
+    }
+}
+
+public struct MemoryEagerGCSettings: MemoryGarbageCollectionSettings {
+    public init() {}
+}
+
+public struct MemoryCacheSettings: FirestoreCacheSettings {
+    public var garbageCollectionSettings: MemoryGarbageCollectionSettings
+    public init(garbageCollectionSettings: MemoryGarbageCollectionSettings = MemoryLRUGCSettings()) {
+        self.garbageCollectionSettings = garbageCollectionSettings
+    }
+}
+
+public struct PersistentCacheSettings: FirestoreCacheSettings {
+    public var sizeBytes: Int64
+    public init(sizeBytes: Int64 = FirestoreCacheSizeUnlimited) {
+        self.sizeBytes = sizeBytes
+    }
+}
+
+// MARK: - FirestoreSettings
+
+public class FirestoreSettings {
+    public var host: String = "firestore.googleapis.com"
+    public var isSSLEnabled: Bool = true
+    public var cacheSettings: FirestoreCacheSettings = PersistentCacheSettings()
+
+    public init() {}
+
+    func toAndroid() -> com.google.firebase.firestore.FirebaseFirestoreSettings {
+        let builder = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
+        _ = builder.setHost(host)
+        _ = builder.setSslEnabled(isSSLEnabled)
+        if let persistent = cacheSettings as? PersistentCacheSettings {
+            let cacheBuilder = com.google.firebase.firestore.PersistentCacheSettings.newBuilder()
+            if persistent.sizeBytes != FirestoreCacheSizeUnlimited {
+                _ = cacheBuilder.setSizeBytes(persistent.sizeBytes)
+            }
+            _ = builder.setLocalCacheSettings(cacheBuilder.build())
+        } else if cacheSettings is MemoryCacheSettings {
+            let cacheBuilder = com.google.firebase.firestore.MemoryCacheSettings.newBuilder()
+            _ = builder.setLocalCacheSettings(cacheBuilder.build())
+        }
+        return builder.build()
+    }
+}
+
+// https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Firestore
+// https://firebase.google.com/docs/reference/android/com/google/firebase/firestore/FirebaseFirestore
+
 public final class Firestore: KotlinConverting<com.google.firebase.firestore.FirebaseFirestore> {
     public let store: com.google.firebase.firestore.FirebaseFirestore
+    private var _settings: FirestoreSettings = FirestoreSettings()
 
     public init(store: com.google.firebase.firestore.FirebaseFirestore) {
         self.store = store
@@ -24,6 +173,14 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     // SKIP @nooverride
     public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.FirebaseFirestore {
         store
+    }
+
+    public var settings: FirestoreSettings {
+        get { _settings }
+        set {
+            _settings = newValue
+            store.firestoreSettings = newValue.toAndroid()
+        }
     }
 
     public static func firestore(app: FirebaseApp, database: String) -> Firestore {
@@ -61,11 +218,6 @@ public final class Firestore: KotlinConverting<com.google.firebase.firestore.Fir
     public func loadBundle(_ data: Data) async -> LoadBundleTaskProgress {
         return LoadBundleTaskProgress(progress: store.loadBundle(data.kotlin()).await())
     }
-
-    // TODO: SkipFoundation.InputStream
-//    public func loadBundle(_ inputStream: InputStream) async {
-//        store.loadBundle(inputStream.kotlin()).await()
-//    }
 
     public func getQuery(named name: String) async -> Query? {
         guard let query = store.getNamedQuery(name).await() else {
@@ -221,7 +373,7 @@ public class Filter: Equatable, KotlinConverting<com.google.firebase.firestore.F
     public init() {
         self.filter = com.google.firebase.firestore.Filter()
     }
-    
+
     public init(filter: com.google.firebase.firestore.Filter) {
         self.filter = filter
     }
@@ -344,6 +496,10 @@ public class SnapshotMetadata: KotlinConverting<com.google.firebase.firestore.Sn
 
     public var hasPendingWrites: Bool {
         meta.hasPendingWrites()
+    }
+
+    public var isFromCache: Bool {
+        meta.isFromCache()
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
@@ -514,7 +670,6 @@ public class Query: KotlinConverting<com.google.firebase.firestore.Query> {
 }
 
 public class CollectionReference : Query {
-    //public let ref: com.google.firebase.firestore.CollectionReference
     public var ref: com.google.firebase.firestore.CollectionReference {
         self.query as! com.google.firebase.firestore.CollectionReference
     }
@@ -555,6 +710,12 @@ public class CollectionReference : Query {
         } catch is com.google.firebase.firestore.FirebaseFirestoreException {
             throw asNSError(firestoreException: error)
         }
+    }
+
+    public func addDocument(data: [String: Any], completion: @escaping (Error?) -> Void) {
+        ref.add(data.kotlin())
+            .addOnSuccessListener { _ in completion(nil) }
+            .addOnFailureListener { exception in completion(ErrorException(exception)) }
     }
 }
 
@@ -747,7 +908,7 @@ public class AggregateQuerySnapshot: KotlinConverting<com.google.firebase.firest
         guard let value = snap.get(aggregateField.agg) else {
             return nil
         }
-        return deepSwift(value: value)
+        return firestoreDeepSwift(value: value)
     }
 }
 
@@ -821,9 +982,17 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
         doc.exists()
     }
 
+    public var metadata: SnapshotMetadata {
+        SnapshotMetadata(meta: doc.getMetadata())
+    }
+
+    public var reference: DocumentReference {
+        DocumentReference(ref: doc.reference)
+    }
+
     public func data() -> [String: Any]? {
         if let data = doc.getData() {
-            return deepSwift(map: data)
+            return firestoreDeepSwift(map: data)
         } else {
             return nil
         }
@@ -833,7 +1002,25 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
         guard let value = doc.get(fieldName) else {
             return nil
         }
-        return deepSwift(value: value)
+        return firestoreDeepSwift(value: value)
+    }
+
+    public func get(_ fieldPath: FieldPath) -> Any? {
+        guard let value = doc.get(fieldPath.fieldPath) else {
+            return nil
+        }
+        return firestoreDeepSwift(value: value)
+    }
+
+    // NOTE: use return-type inference on Android:
+    //   let model: MyModel = try snapshot.decoded()
+    // On iOS use FirebaseFirestoreSwift's data(as: MyModel.self) instead.
+    // SKIP DECLARE: public inline fun <reified T : Decodable> decoded(): T
+    public func decoded<T: Decodable>() throws -> T {
+        guard let dict = data() else {
+            throw NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.notFound.rawValue, userInfo: [NSLocalizedDescriptionKey: "Document does not exist"])
+        }
+        return try FirestoreDecoder().decode(from: dict)
     }
 }
 
@@ -846,13 +1033,13 @@ public class QueryDocumentSnapshot : DocumentSnapshot {
         super.init(doc: snapshot)
     }
 
-    public var reference: DocumentReference {
+    override public var reference: DocumentReference {
         DocumentReference(ref: snapshot.reference)
     }
 
     override public func data() -> [String: Any] {
         if let data = doc.getData() {
-            return deepSwift(map: data)
+            return firestoreDeepSwift(map: data)
         } else {
             return [:]
         }
@@ -886,6 +1073,15 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
     public func getDocument() async throws -> DocumentSnapshot {
         do {
             let snapshot = try ref.get().await()
+            return DocumentSnapshot(doc: snapshot)
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
+    }
+
+    public func getDocument(source: FirestoreSource) async throws -> DocumentSnapshot {
+        do {
+            let snapshot = try ref.get(source.source).await()
             return DocumentSnapshot(doc: snapshot)
         } catch is com.google.firebase.firestore.FirebaseFirestoreException {
             throw asNSError(firestoreException: error)
@@ -931,6 +1127,24 @@ public class DocumentReference: KotlinConverting<com.google.firebase.firestore.D
         } catch is com.google.firebase.firestore.FirebaseFirestoreException {
             throw asNSError(firestoreException: error)
         }
+    }
+
+    public func setData(_ keyValues: [String: Any], mergeFields: [String]) async throws {
+        do {
+            try ref.set(keyValues.kotlin(), com.google.firebase.firestore.SetOptions.mergeFields(mergeFields.toList())).await()
+        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
+            throw asNSError(firestoreException: error)
+        }
+    }
+
+    public func setData<T: Encodable>(from value: T, merge: Bool = false) async throws {
+        let data = try FirestoreEncoder().encode(value)
+        try await setData(data, merge: merge)
+    }
+
+    public func setData<T: Encodable>(from value: T, mergeFields: [String]) async throws {
+        let data = try FirestoreEncoder().encode(value)
+        try await setData(data, mergeFields: mergeFields)
     }
 
     public func updateData(_ keyValues: [String: Any]) async throws {
@@ -1056,6 +1270,106 @@ fileprivate func asNSError(firestoreException: com.google.firebase.firestore.Fir
         userInfo[NSLocalizedFailureReasonErrorKey] = detailMessage
     }
     return NSError(domain: FirestoreErrorDomain, code: firestoreException.code.value(), userInfo: userInfo)
+}
+
+// MARK: - Codable support
+
+/// Encodes a `Codable` value into a `[String: Any]` Firestore document map.
+/// `Timestamp` and `GeoPoint` fields are preserved as native Firestore types.
+/// Note: use `Timestamp` (not `Date`) in your model for Firestore timestamp fields.
+public class FirestoreEncoder {
+    public init() {}
+
+    public func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
+        let data = try JSONEncoder().encode(value)
+        let json = try JSONSerialization.jsonObject(with: data)
+        guard let dict = json as? [String: Any] else {
+            throw NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.invalidArgument.rawValue,
+                          userInfo: [NSLocalizedDescriptionKey: "Top-level encoded value must be a dictionary"])
+        }
+        return restoreFirestoreTypes(dict) as! [String: Any]
+    }
+
+    private func restoreFirestoreTypes(_ value: Any) -> Any {
+        if let dict = value as? [String: Any] {
+            if dict.count == 2, let s = dict["__fts__"], let n = dict["__ftn__"] {
+                let seconds = coerceInt64(s) ?? Int64(0)
+                let nanos = coerceInt32(n) ?? Int32(0)
+                return Timestamp(seconds: seconds, nanoseconds: nanos)
+            }
+            if dict.count == 2, let lat = dict["__fgp_lat__"], let lng = dict["__fgp_lng__"] {
+                return GeoPoint(latitude: coerceDouble(lat) ?? 0.0, longitude: coerceDouble(lng) ?? 0.0)
+            }
+            var result = [String: Any]()
+            for (key, val) in dict {
+                result[key] = restoreFirestoreTypes(val)
+            }
+            return result
+        }
+        if let array = value as? [Any] {
+            return array.map { restoreFirestoreTypes($0) }
+        }
+        return value
+    }
+}
+
+/// Decodes a `Codable` value from a `[String: Any]` Firestore document map.
+/// `Timestamp` and `GeoPoint` values in the map are round-tripped correctly.
+public class FirestoreDecoder {
+    public init() {}
+
+    // SKIP DECLARE: public inline fun <reified T : Decodable> decode(from: Dictionary<String, Any>): T
+    public func decode<T: Decodable>(from data: [String: Any]) throws -> T {
+        let prepared = prepareForJSON(data)
+        let jsonData = try JSONSerialization.data(withJSONObject: prepared)
+        return try JSONDecoder().decode(T.self, from: jsonData)
+    }
+
+    public func prepareForJSON(_ value: Any?) -> Any {
+        guard let value = value else { return NSNull() }
+        if let ts = value as? Timestamp {
+            return ["__fts__": ts.seconds, "__ftn__": ts.nanoseconds]
+        }
+        if let gp = value as? GeoPoint {
+            return ["__fgp_lat__": gp.latitude, "__fgp_lng__": gp.longitude]
+        }
+        if let dict = value as? [String: Any] {
+            var result = [String: Any]()
+            for (key, val) in dict {
+                result[key] = prepareForJSON(val)
+            }
+            return result
+        }
+        if let array = value as? [Any] {
+            return array.map { prepareForJSON($0) }
+        }
+        return value
+    }
+}
+
+// MARK: - JSON numeric coercion helpers
+
+fileprivate func coerceInt64(_ v: Any) -> Int64? {
+    if let x = v as? Int64 { return x }
+    if let x = v as? Int { return Int64(x) }
+    if let x = v as? Int32 { return Int64(x) }
+    if let x = v as? Double { return Int64(x) }
+    return nil
+}
+
+fileprivate func coerceInt32(_ v: Any) -> Int32? {
+    if let x = v as? Int32 { return x }
+    if let x = v as? Int64 { return Int32(x) }
+    if let x = v as? Int { return Int32(x) }
+    if let x = v as? Double { return Int32(x) }
+    return nil
+}
+
+fileprivate func coerceDouble(_ v: Any) -> Double? {
+    if let x = v as? Double { return x }
+    if let x = v as? Int64 { return Double(x) }
+    if let x = v as? Int { return Double(x) }
+    return nil
 }
 
 #endif
