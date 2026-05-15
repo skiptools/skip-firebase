@@ -35,6 +35,7 @@ See the `Package.swift` files in the
 | `SkipFirebaseFunctions` | ~45% | Default/regional/emulator instance, `httpsCallable(_:)`, completion-based `call`, automatic Kotlin→Swift result conversion via `deepSwift` | `async`/`await` `call` signatures, streaming RPCs, per-call options (`HTTPSCallableOptions`), explicit call timeouts |
 | `SkipFirebaseDatabase` | ~5% | `Database.database()` / `Database.database(app:)` singleton accessors | Effectively the entire API: `DatabaseReference`, `child`/`push`/`setValue`/`updateChildValues`/`removeValue`, `observe`/`observeSingleEvent`, queries, `DataSnapshot`, `ServerValue`, online/offline toggle |
 | `SkipFirebaseInstallations` | ~75% | Singleton accessor (`installations()`/`installations(app:)`), `installationID()`, `authToken()`, `authTokenForcingRefresh(_:)`, `delete()`, `InstallationsAuthTokenResult` (`authToken`, `expirationDate`) | `installationIDDidChangeNotification`, per-`FirebaseApp` notification keys |
+| `SkipFirebasePerformance` | ~65% | `Performance.sharedInstance()`, `isDataCollectionEnabled`, `trace(name:)`, `HTTPMetric(url:httpMethod:)`, full `Trace` API (start/stop, `incrementMetric`, `valueForMetric`, attributes), full `HTTPMetric` API (start/stop, `responseCode`, payload sizes, content type, attributes), `HTTPMethod` enum | `isInstrumentationEnabled` (no Android equivalent, marked unavailable), `Performance.startTrace(name:)` static convenience, per-`FirebaseApp` instance accessor |
 
 **Overall coverage across the fourteen modules: roughly 60% of the iOS API surface.** The most production-used modules — Core, Firestore, Auth, Storage, Messaging, Analytics, Crashlytics, and RemoteConfig — sit in the 60–80% range and cover the standard read/write/sign-in/log/notify paths. `SkipFirebaseDatabase` (Realtime Database) is mostly a stub.
 
@@ -58,7 +59,7 @@ See the `Package.swift` files in the
 
 ### Firebase modules not yet wrapped
 
-The following Firebase iOS SDK products do not yet have a `SkipFirebase*` counterpart in this package: `FirebaseABTesting`, `FirebaseAI` / Vertex AI, `FirebaseAppDistribution`, `FirebaseDataConnect`, `FirebaseDynamicLinks` (deprecated upstream), `FirebaseInAppMessaging`, `FirebaseMLModelDownloader`, and `FirebasePerformance`. Pull requests adding any of these are welcome.
+The following Firebase iOS SDK products do not yet have a `SkipFirebase*` counterpart in this package: `FirebaseABTesting`, `FirebaseAI` / Vertex AI, `FirebaseAppDistribution`, `FirebaseDataConnect`, `FirebaseDynamicLinks` (deprecated upstream), `FirebaseInAppMessaging`, and `FirebaseMLModelDownloader`. Pull requests adding any of these are welcome.
 
 <!--
 An example of a Skip Lite app projects using the `Firestore` API at the model layer and the `Messaging` API at the app layer can be seen from the command:
@@ -412,6 +413,7 @@ import SkipFirebaseMessaging
 import SkipFirebaseCrashlytics
 import SkipFirebaseRemoteConfig
 import SkipFirebaseInstallations
+import SkipFirebasePerformance
 
 let appName = "myapp"
 let options = FirebaseOptions(googleAppID: "1:GCM:ios:HASH", gcmSenderID: "GCM")
