@@ -21,9 +21,9 @@ public final class HTTPSCallableOptions {
     }
 
     var androidOptions: com.google.firebase.functions.HttpsCallableOptions {
-        com.google.firebase.functions.HttpsCallableOptions.Builder()
-            .setRequireLimitedUseAppCheckTokens(requireLimitedUseAppCheckTokens)
-            .build()
+        let builder = com.google.firebase.functions.HttpsCallableOptions.Builder()
+        builder.limitedUseAppCheckTokens = requireLimitedUseAppCheckTokens
+        return builder.build()
     }
 }
 
