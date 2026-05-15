@@ -206,6 +206,13 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
     }
 
     public init(from decoder: Decoder) throws {
+        // Support decoding from a plain Double (seconds since epoch) produced by FirestoreDecoder's prepareForJSON pass
+        if let svc = try? decoder.singleValueContainer(), let interval = try? svc.decode(Double.self) {
+            let s = Int64(interval)
+            let n = Int32((interval - Double(s)) * 1_000_000_000)
+            self.timestamp = com.google.firebase.Timestamp(s, n)
+            return
+        }
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let s = try container.decode(Int64.self, forKey: .seconds)
         let n = try container.decode(Int32.self, forKey: .nanoseconds)

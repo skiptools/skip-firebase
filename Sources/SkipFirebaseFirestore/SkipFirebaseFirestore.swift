@@ -95,6 +95,82 @@ fileprivate func firestoreDeepSwift(collection: kotlin.collections.Collection<An
     return array
 }
 
+// MARK: - Codable property wrappers
+
+extension CodingUserInfoKey {
+    static let firestoreDocumentID = CodingUserInfoKey(rawValue: "__firestore_document_id_key__")!
+}
+
+private enum _DocumentIDCodingKey: String, CodingKey {
+    case value = "__document_id__"
+}
+
+/// Marks a `String?` property to be populated with the Firestore document ID during decoding.
+/// The property is not written back to the document on encode.
+/// Usage: `@DocumentID var id: String?`
+// SKIP REPLACE: @Target(AnnotationTarget.FIELD) @Retention(AnnotationRetention.RUNTIME) annotation class DocumentID
+@propertyWrapper
+public struct DocumentID<Value: Codable>: Codable {
+    public var wrappedValue: Value?
+
+    public init(wrappedValue: Value? = nil) {
+        self.wrappedValue = wrappedValue
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        // document ID is not stored in the document data
+    }
+
+    public init(from decoder: Decoder) throws {
+        // Primary: read from userInfo (set by FirestoreDecoder.decode(from:documentID:))
+        if let id = decoder.userInfo[CodingUserInfoKey.firestoreDocumentID] as? String {
+            wrappedValue = id as? Value
+            return
+        }
+        // Fallback: read the __document_id__ key injected into the top-level dict
+        // This path is taken when decoder.userInfo is not available (e.g. some Skip runtimes)
+        if let container = try? decoder.container(keyedBy: _DocumentIDCodingKey.self),
+           let id = try? container.decodeIfPresent(String.self, forKey: .value) {
+            wrappedValue = id as? Value
+            return
+        }
+        wrappedValue = nil
+    }
+}
+
+private struct _ServerTimestampSentinel: Encodable {
+    private enum CodingKeys: String, CodingKey { case marker = "__fts_server__" }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(true, forKey: .marker)
+    }
+}
+
+/// Marks a `Timestamp?` property so that a nil value is written as `FieldValue.serverTimestamp()`.
+/// A non-nil value is written as the actual `Timestamp`.
+/// Usage: `@ServerTimestamp var createdAt: Timestamp?`
+// SKIP REPLACE: @Target(AnnotationTarget.FIELD) @Retention(AnnotationRetention.RUNTIME) annotation class ServerTimestamp
+@propertyWrapper
+public struct ServerTimestamp: Codable {
+    public var wrappedValue: Timestamp?
+
+    public init(wrappedValue: Timestamp? = nil) {
+        self.wrappedValue = wrappedValue
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        if let ts = wrappedValue {
+            try ts.encode(to: encoder)
+        } else {
+            try _ServerTimestampSentinel().encode(to: encoder)
+        }
+    }
+
+    public init(from decoder: Decoder) throws {
+        wrappedValue = try? Timestamp(from: decoder)
+    }
+}
+
 // MARK: - Cache settings
 
 public let FirestoreCacheSizeUnlimited: Int64 = -1
@@ -717,6 +793,11 @@ public class CollectionReference : Query {
             .addOnSuccessListener { _ in completion(nil) }
             .addOnFailureListener { exception in completion(ErrorException(exception)) }
     }
+
+    public func addDocument<T: Encodable>(from value: T) async throws -> DocumentReference {
+        let data = try FirestoreEncoder().encode(value)
+        return try await addDocument(data: data)
+    }
 }
 
 public class ListenerRegistration: KotlinConverting<com.google.firebase.firestore.ListenerRegistration> {
@@ -1020,7 +1101,7 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
         guard let dict = data() else {
             throw NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.notFound.rawValue, userInfo: [NSLocalizedDescriptionKey: "Document does not exist"])
         }
-        return try FirestoreDecoder().decode(from: dict)
+        return try FirestoreDecoder().decode(from: dict, documentID: documentID)
     }
 }
 
@@ -1210,6 +1291,16 @@ public class WriteBatch {
         let newBatch = batch.update(document.ref, fields.kotlin() as! Map<String, Any>)
         return WriteBatch(batch: newBatch)
     }
+
+    public func setData<T: Encodable>(from value: T, forDocument document: DocumentReference) throws -> WriteBatch {
+        let data = try FirestoreEncoder().encode(value)
+        return setData(data, forDocument: document)
+    }
+
+    public func setData<T: Encodable>(from value: T, forDocument document: DocumentReference, mergeFields: [String]) throws -> WriteBatch {
+        let data = try FirestoreEncoder().encode(value)
+        return setData(data, forDocument: document, mergeFields: mergeFields)
+    }
 }
 
 public class FieldValue {
@@ -1281,22 +1372,50 @@ public class FirestoreEncoder {
     public init() {}
 
     public func encode<T: Encodable>(_ value: T) throws -> [String: Any] {
-        let data = try JSONEncoder().encode(value)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, enc in
+            var container = enc.container(keyedBy: _FirestoreDateSentinelKeys.self)
+            try container.encode(date.timeIntervalSince1970, forKey: .marker)
+        }
+        let data = try encoder.encode(value)
         let json = try JSONSerialization.jsonObject(with: data)
         guard let dict = json as? [String: Any] else {
             throw NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.invalidArgument.rawValue,
                           userInfo: [NSLocalizedDescriptionKey: "Top-level encoded value must be a dictionary"])
         }
-        return restoreFirestoreTypes(dict) as! [String: Any]
+        var result = restoreFirestoreTypes(dict) as! [String: Any]
+        /* SKIP INSERT:
+        for (field in value.javaClass.declaredFields) {
+            if (field.isAnnotationPresent(ServerTimestamp::class.java)) {
+                field.isAccessible = true
+                val fieldVal = try { field.get(value) } catch (e: Exception) { null }
+                if (fieldVal == null) {
+                    result[field.name] = com.google.firebase.firestore.FieldValue.serverTimestamp()
+                }
+            }
+        }
+        */
+        return result
     }
 
     private func restoreFirestoreTypes(_ value: Any) -> Any {
         if let dict = value as? [String: Any] {
+            // @ServerTimestamp nil sentinel → FieldValue.serverTimestamp()
+            if dict.count == 1, let _ = dict["__fts_server__"] {
+                return com.google.firebase.firestore.FieldValue.serverTimestamp()
+            }
+            // Date sentinel → Timestamp
+            if dict.count == 1, let t = dict["__firestore_date__"] {
+                let interval = coerceDouble(t) ?? 0.0
+                return Timestamp(date: Date(timeIntervalSince1970: interval))
+            }
+            // Timestamp sentinel → Timestamp
             if dict.count == 2, let s = dict["__fts__"], let n = dict["__ftn__"] {
                 let seconds = coerceInt64(s) ?? Int64(0)
                 let nanos = coerceInt32(n) ?? Int32(0)
                 return Timestamp(seconds: seconds, nanoseconds: nanos)
             }
+            // GeoPoint sentinel → GeoPoint
             if dict.count == 2, let lat = dict["__fgp_lat__"], let lng = dict["__fgp_lng__"] {
                 return GeoPoint(latitude: coerceDouble(lat) ?? 0.0, longitude: coerceDouble(lng) ?? 0.0)
             }
@@ -1313,22 +1432,56 @@ public class FirestoreEncoder {
     }
 }
 
+private enum _FirestoreDateSentinelKeys: String, CodingKey {
+    case marker = "__firestore_date__"
+}
+
 /// Decodes a `Codable` value from a `[String: Any]` Firestore document map.
-/// `Timestamp` and `GeoPoint` values in the map are round-tripped correctly.
+/// `Timestamp` fields decode as either `Timestamp` or `Date` (via `.secondsSince1970`).
+/// Pass `documentID` to populate `@DocumentID`-annotated properties.
 public class FirestoreDecoder {
     public init() {}
 
     // SKIP DECLARE: public inline fun <reified T : Decodable> decode(from: Dictionary<String, Any>): T
     public func decode<T: Decodable>(from data: [String: Any]) throws -> T {
-        let prepared = prepareForJSON(data)
+        return try decode(from: data, documentID: nil)
+    }
+
+    // SKIP DECLARE: public inline fun <reified T : Decodable> decode(from: Dictionary<String, Any>, documentID: String?): T
+    public func decode<T: Decodable>(from data: [String: Any], documentID: String?) throws -> T {
+        var prepared = prepareForJSON(data) as! [String: Any]
+        if let id = documentID {
+            prepared["__document_id__"] = id
+        }
         let jsonData = try JSONSerialization.data(withJSONObject: prepared)
-        return try JSONDecoder().decode(T.self, from: jsonData)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        if let id = documentID {
+            // SKIP REPLACE: decoder.userInfo[CodingUserInfoKey(rawValue = "__firestore_document_id_key__")!!] = id
+            decoder.userInfo[CodingUserInfoKey.firestoreDocumentID] = id
+        }
+        /* SKIP INSERT:
+        val result = decoder.decode(T::class, from = jsonData)
+        if (documentID != null) {
+            for (field in result.javaClass.declaredFields) {
+                if (field.isAnnotationPresent(DocumentID::class.java)) {
+                    field.isAccessible = true
+                    try { field.set(result, documentID) } catch (e: Exception) { }
+                }
+            }
+        }
+        return result
+        */
+        // SKIP REPLACE:
+        return try decoder.decode(T.self, from: jsonData)
     }
 
     public func prepareForJSON(_ value: Any?) -> Any {
         guard let value = value else { return NSNull() }
+        // Convert Timestamp to timeInterval Double so both Date and Timestamp fields decode correctly.
+        // Timestamp.init(from:) handles Double via its singleValueContainer path.
         if let ts = value as? Timestamp {
-            return ["__fts__": ts.seconds, "__ftn__": ts.nanoseconds]
+            return ts.seconds + Double(ts.nanoseconds) / 1_000_000_000.0
         }
         if let gp = value as? GeoPoint {
             return ["__fgp_lat__": gp.latitude, "__fgp_lng__": gp.longitude]
