@@ -92,13 +92,9 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
     }
 
     public var timeoutInterval: TimeInterval {
-        get { _timeoutInterval }
-        set {
-            _timeoutInterval = newValue
-            platformValue.setTimeout(Int64(newValue * 1000), java.util.concurrent.TimeUnit.MILLISECONDS)
-        }
+        get { Double(platformValue.timeout) / 1000.0 }
+        set { platformValue.setTimeout(Int64(newValue * 1000), java.util.concurrent.TimeUnit.MILLISECONDS) }
     }
-    private var _timeoutInterval: TimeInterval = 70.0
 
     public func call(_ data: Any? = nil) async throws -> HTTPSCallableResult {
         let task = data == nil ? platformValue.call() : platformValue.call(data!.kotlin())
