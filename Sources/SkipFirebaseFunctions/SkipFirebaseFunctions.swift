@@ -13,6 +13,20 @@ public typealias Timestamp = SkipFirebaseCore.Timestamp
 // https://firebase.google.com/docs/reference/swift/firebasefunctions/api/reference/Classes/Functions
 // https://firebase.google.com/docs/reference/android/com/google/firebase/functions/FirebaseFunctions
 
+public final class HTTPSCallableOptions {
+    public let requireLimitedUseAppCheckTokens: Bool
+
+    public init(requireLimitedUseAppCheckTokens: Bool) {
+        self.requireLimitedUseAppCheckTokens = requireLimitedUseAppCheckTokens
+    }
+
+    var androidOptions: com.google.firebase.functions.HttpsCallableOptions {
+        let builder = com.google.firebase.functions.HttpsCallableOptions.Builder()
+        builder.limitedUseAppCheckTokens = requireLimitedUseAppCheckTokens
+        return builder.build()
+    }
+}
+
 public final class Functions {
     public let functions: com.google.firebase.functions.FirebaseFunctions
 
@@ -43,6 +57,18 @@ public final class Functions {
     public func httpsCallable(_ name: String) -> HTTPSCallable {
         HTTPSCallable(functions.getHttpsCallable(name))
     }
+
+    public func httpsCallable(_ name: String, options: HTTPSCallableOptions) -> HTTPSCallable {
+        HTTPSCallable(functions.getHttpsCallable(name, options.androidOptions))
+    }
+
+    public func httpsCallable(_ url: URL) -> HTTPSCallable {
+        HTTPSCallable(functions.getHttpsCallableFromUrl(java.net.URL(url.absoluteString)))
+    }
+
+    public func httpsCallable(_ url: URL, options: HTTPSCallableOptions) -> HTTPSCallable {
+        HTTPSCallable(functions.getHttpsCallableFromUrl(java.net.URL(url.absoluteString), options.androidOptions))
+    }
 }
 
 public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.HttpsCallableReference> {
@@ -63,6 +89,16 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.platformValue == rhs.platformValue
+    }
+
+    public var timeoutInterval: TimeInterval {
+        get { Double(platformValue.timeout) / 1000.0 }
+        set { platformValue.setTimeout(Int64(newValue * 1000), java.util.concurrent.TimeUnit.MILLISECONDS) }
+    }
+
+    public func call(_ data: Any? = nil) async throws -> HTTPSCallableResult {
+        let task = data == nil ? platformValue.call() : platformValue.call(data!.kotlin())
+        return HTTPSCallableResult(try await task.await())
     }
 
     public func call(_ data: Any? = nil,

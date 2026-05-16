@@ -18,6 +18,11 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseInstallationsTests", categor
         if false {
             let installations: Installations = Installations.installations()
             let _: String = try await installations.installationID()
+            let tokenResult: InstallationsAuthTokenResult = try await installations.authToken()
+            let _: String = tokenResult.authToken
+            let _: Date = tokenResult.expirationDate
+            let _: InstallationsAuthTokenResult = try await installations.authTokenForcingRefresh(true)
+            try await installations.delete()
         }
     }
 }
