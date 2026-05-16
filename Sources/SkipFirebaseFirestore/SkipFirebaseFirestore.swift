@@ -12,7 +12,7 @@ public typealias Timestamp = SkipFirebaseCore.Timestamp
 
 // MARK: - GeoPoint
 
-public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.firestore.GeoPoint> {
+public final class GeoPoint: Hashable, Codable, KotlinConverting<com.google.firebase.firestore.GeoPoint>, SwiftCustomBridged {
     public let latitude: Double
     public let longitude: Double
 
@@ -55,11 +55,6 @@ public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.fire
     }
 }
 
-// Declare Codable conformance in a separate extension so the Skip bridge generator does
-// not include Codable in the generated bridge class. The bridge class has a JObject peer
-// that cannot auto-synthesize Codable; the actual encode/decode implementations above
-// satisfy the conformance requirement.
-extension GeoPoint: Codable {}
 
 // MARK: - Firestore-aware deep conversion (adds GeoPoint on top of Core's deepSwift)
 
@@ -1532,4 +1527,29 @@ fileprivate func coerceDouble(_ v: Any) -> Double? {
 }
 
 #endif
+#endif
+
+#if SKIP_BRIDGE
+// The generated GeoPoint bridge class declares Codable but cannot auto-synthesize it
+// (JObject peer is not Codable, and encode/decode methods are not JNI-bridgeable).
+// This extension satisfies the Codable conformance using the JNI-bridged properties.
+extension GeoPoint {
+    private enum CodingKeys: String, CodingKey {
+        case latitude = "__fgp_lat__"
+        case longitude = "__fgp_lng__"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(latitude, forKey: .latitude)
+        try container.encode(longitude, forKey: .longitude)
+    }
+
+    public convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let lat = try container.decode(Double.self, forKey: .latitude)
+        let lng = try container.decode(Double.self, forKey: .longitude)
+        self.init(latitude: lat, longitude: lng)
+    }
+}
 #endif
