@@ -12,7 +12,7 @@ public typealias Timestamp = SkipFirebaseCore.Timestamp
 
 // MARK: - GeoPoint
 
-public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.firestore.GeoPoint>, Codable {
+public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.firestore.GeoPoint> {
     public let latitude: Double
     public let longitude: Double
 
@@ -54,6 +54,12 @@ public final class GeoPoint: Hashable, KotlinConverting<com.google.firebase.fire
         self.longitude = try container.decode(Double.self, forKey: .longitude)
     }
 }
+
+// Declare Codable conformance in a separate extension so the Skip bridge generator does
+// not include Codable in the generated bridge class. The bridge class has a JObject peer
+// that cannot auto-synthesize Codable; the actual encode/decode implementations above
+// satisfy the conformance requirement.
+extension GeoPoint: Codable {}
 
 // MARK: - Firestore-aware deep conversion (adds GeoPoint on top of Core's deepSwift)
 

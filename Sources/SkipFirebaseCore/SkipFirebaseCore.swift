@@ -146,7 +146,7 @@ public final class FirebaseOptions {
 // https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Timestamp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/Timestamp
 
-public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp>, Codable {
+public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
     public let timestamp: com.google.firebase.Timestamp
 
     public init(timestamp: com.google.firebase.Timestamp) {
@@ -219,6 +219,12 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
         self.timestamp = com.google.firebase.Timestamp(s, n)
     }
 }
+
+// Declare Codable conformance in a separate extension so the Skip bridge generator does
+// not include Codable in the generated bridge class. The bridge class has a JObject peer
+// that cannot auto-synthesize Codable; the actual encode/decode implementations above
+// satisfy the conformance requirement.
+extension Timestamp: Codable {}
 
 // MARK: - Kotlin to Swift type conversion helpers
 
