@@ -12,7 +12,7 @@ public typealias Timestamp = SkipFirebaseCore.Timestamp
 
 // MARK: - GeoPoint
 
-public final class GeoPoint: Hashable, Codable, KotlinConverting<com.google.firebase.firestore.GeoPoint>, SwiftCustomBridged {
+public final class GeoPoint: Hashable, Codable, KotlinConverting<com.google.firebase.firestore.GeoPoint> {
     public let latitude: Double
     public let longitude: Double
 

@@ -146,7 +146,7 @@ public final class FirebaseOptions {
 // https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Timestamp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/Timestamp
 
-public final class Timestamp: Hashable, Codable, KotlinConverting<com.google.firebase.Timestamp>, SwiftCustomBridged {
+public final class Timestamp: Hashable, Codable, KotlinConverting<com.google.firebase.Timestamp> {
     public let timestamp: com.google.firebase.Timestamp
 
     public init(timestamp: com.google.firebase.Timestamp) {
