@@ -18,6 +18,26 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseFunctionsTests", category: "
         if false {
             let _: Functions = Functions.functions()
             let _: Functions = Functions.functions(region: "europe-west4")
+
+            let options = HTTPSCallableOptions(requireLimitedUseAppCheckTokens: true)
+            let _: Bool = options.requireLimitedUseAppCheckTokens
+
+            let functions = Functions.functions()
+            let callable: HTTPSCallable = functions.httpsCallable("myFunc")
+            let callableWithOptions: HTTPSCallable = functions.httpsCallable("myFunc", options: options)
+            let urlCallable: HTTPSCallable = functions.httpsCallable(URL(string: "https://example.com/myFunc")!)
+            let urlCallableWithOptions: HTTPSCallable = functions.httpsCallable(URL(string: "https://example.com/myFunc")!, options: options)
+
+            callable.timeoutInterval = 30.0
+            let _: TimeInterval = callable.timeoutInterval
+
+            let result: HTTPSCallableResult = try await callable.call()
+            let resultWithData: HTTPSCallableResult = try await callable.call(["key": "value"])
+            let _: Any = result.data
+            let _: HTTPSCallable = callableWithOptions
+            let _: HTTPSCallable = urlCallable
+            let _: HTTPSCallable = urlCallableWithOptions
+            let _: HTTPSCallableResult = resultWithData
         }
     }
 }
