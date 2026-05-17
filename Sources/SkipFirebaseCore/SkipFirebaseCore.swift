@@ -146,7 +146,7 @@ public final class FirebaseOptions {
 // https://firebase.google.com/docs/reference/swift/firebasefirestore/api/reference/Classes/Timestamp
 // https://firebase.google.com/docs/reference/android/com/google/firebase/Timestamp
 
-public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp> {
+public final class Timestamp: Hashable, Codable, KotlinConverting<com.google.firebase.Timestamp> {
     public let timestamp: com.google.firebase.Timestamp
 
     public init(timestamp: com.google.firebase.Timestamp) {
@@ -193,7 +193,33 @@ public class Timestamp: Hashable, KotlinConverting<com.google.firebase.Timestamp
     public var nanoseconds: Int32 {
         timestamp.nanoseconds
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case seconds = "__fts__"
+        case nanoseconds = "__ftn__"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(seconds, forKey: .seconds)
+        try container.encode(nanoseconds, forKey: .nanoseconds)
+    }
+
+    public init(from decoder: Decoder) throws {
+        // Support decoding from a plain Double (seconds since epoch) produced by FirestoreDecoder's prepareForJSON pass
+        if let svc = try? decoder.singleValueContainer(), let interval = try? svc.decode(Double.self) {
+            let s = Int64(interval)
+            let n = Int32((interval - Double(s)) * 1_000_000_000)
+            self.timestamp = com.google.firebase.Timestamp(s, n)
+            return
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let s = try container.decode(Int64.self, forKey: .seconds)
+        let n = try container.decode(Int32.self, forKey: .nanoseconds)
+        self.timestamp = com.google.firebase.Timestamp(s, n)
+    }
 }
+
 
 // MARK: - Kotlin to Swift type conversion helpers
 
@@ -235,4 +261,35 @@ public func deepSwift(collection: kotlin.collections.Collection<Any?>) -> Array<
 }
 
 #endif
+#endif
+
+#if SKIP_BRIDGE
+// The generated Timestamp bridge class declares Codable but cannot auto-synthesize it
+// (JObject peer is not Codable, and encode/decode methods are not JNI-bridgeable).
+// This extension satisfies the Codable conformance using the JNI-bridged properties.
+extension Timestamp {
+    private enum CodingKeys: String, CodingKey {
+        case seconds = "__fts__"
+        case nanoseconds = "__ftn__"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(seconds, forKey: .seconds)
+        try container.encode(nanoseconds, forKey: .nanoseconds)
+    }
+
+    public convenience init(from decoder: Decoder) throws {
+        if let svc = try? decoder.singleValueContainer(), let interval = try? svc.decode(Double.self) {
+            let s = Int64(interval)
+            let n = Int32((interval - Double(s)) * 1_000_000_000)
+            self.init(seconds: s, nanoseconds: n)
+            return
+        }
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let s = try container.decode(Int64.self, forKey: .seconds)
+        let n = try container.decode(Int32.self, forKey: .nanoseconds)
+        self.init(seconds: s, nanoseconds: n)
+    }
+}
 #endif
