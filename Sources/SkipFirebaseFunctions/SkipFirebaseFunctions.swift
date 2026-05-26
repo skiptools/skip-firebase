@@ -112,6 +112,16 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
             completion(nil, ErrorException(exception))
         }
     }
+
+    // Async overload matching native FirebaseFunctions' `call(_:) async throws`.
+    // The Kotlin Task is awaited via kotlinx-coroutines' `.await()` (the same
+    // bridge used throughout Auth/Messaging) so callers can drop the
+    // `#if os(Android)` `withCheckedThrowingContinuation` shims the
+    // completion-handler-only API forced on them.
+    public func call(_ data: Any? = nil) async throws -> HTTPSCallableResult {
+        let result = (data == nil ? platformValue.call() : platformValue.call(data!.kotlin())).await()
+        return HTTPSCallableResult(result)
+    }
 }
 
 public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions.HttpsCallableResult> {
