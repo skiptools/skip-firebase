@@ -1097,6 +1097,7 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     // NOTE: use return-type inference on Android:
     //   let model: MyModel = try snapshot.decoded()
     // On iOS use FirebaseFirestoreSwift's data(as: MyModel.self) instead.
+    // SKIP @nobridge
     // SKIP DECLARE: public inline fun <reified T : Decodable> decoded(): T
     public func decoded<T: Decodable>() throws -> T {
         guard let dict = data() else {
