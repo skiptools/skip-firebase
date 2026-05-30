@@ -201,14 +201,6 @@ var appName: String = "SkipFirebaseDemo"
     }
 
     func testFirestore() async throws {
-        if isRobolectric {
-            // Firebase testing used to work in Robolectric, but then recently started failing around August 1st, 2025 (right when updating Robolectric from 4.14.1 to 4.15.1, but downgrading does not fix the problem). New log errors are:
-            //
-            // W/GooglePlayServicesUtil: skip.firebase.firestore.test requires the Google Play Store, but it is missing.
-            // E/GooglePlayServicesUtil: GooglePlayServices not available due to error 9
-            // W/Firestore: (25.1.3) [GrpcCallProvider]: Failed to update ssl context: com.google.android.gms.common.GooglePlayServicesNotAvailableException
-            throw XCTSkip("Firebase testing does not work in Robolectric")
-        }
         XCTAssertEqual(appName, self.app.name)
 
         let citiesRef = db.collection("cities")
