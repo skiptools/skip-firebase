@@ -1097,8 +1097,10 @@ public class DocumentSnapshot: KotlinConverting<com.google.firebase.firestore.Do
     // NOTE: use return-type inference on Android:
     //   let model: MyModel = try snapshot.decoded()
     // On iOS use FirebaseFirestoreSwift's data(as: MyModel.self) instead.
-    // SKIP @nobridge
-    // SKIP DECLARE: public inline fun <reified T : Decodable> decoded(): T
+    // @inline(__always) makes Skip emit a Kotlin `inline fun <reified T>`, so the
+    // body is inlined at the call site (no JVM-callable `decoded` method, no broken
+    // bridge JNI lookup) while staying reachable for native-Swift Android callers.
+    @inline(__always)
     public func decoded<T: Decodable>() throws -> T {
         guard let dict = data() else {
             throw NSError(domain: FirestoreErrorDomain, code: FirestoreErrorCode.notFound.rawValue, userInfo: [NSLocalizedDescriptionKey: "Document does not exist"])
