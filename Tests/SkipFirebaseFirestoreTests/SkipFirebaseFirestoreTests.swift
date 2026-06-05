@@ -5,8 +5,8 @@ import OSLog
 import Foundation
 
 #if !SKIP
-import FirebaseCore
-import FirebaseFirestore
+@preconcurrency import FirebaseCore
+@preconcurrency import FirebaseFirestore
 #else
 import SkipFirebaseCore
 import SkipFirebaseFirestore
@@ -23,7 +23,7 @@ let isRobolectric = isJava && !isAndroid
 /// True if the system's `Int` type is 32-bit.
 let is32BitInteger = Int64(Int.max) == Int64(Int32.max)
 
-var appName: String = "SkipFirebaseDemo"
+let appName: String = "SkipFirebaseDemo"
 
 // NOTE: we have @MainActor on SkipFirebaseFirestoreTests to force non-concurrent test execution in order to avoid errors like this:
 //
