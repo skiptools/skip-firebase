@@ -3,6 +3,8 @@
 #if !SKIP_BRIDGE
 #if canImport(FirebaseMessaging)
 @_exported import FirebaseMessaging
+
+extension Messaging: @retroactive @unchecked Sendable {}
 #elseif SKIP
 import Foundation
 import OSLog

@@ -3,6 +3,9 @@
 #if !SKIP_BRIDGE
 #if canImport(FirebaseFirestore)
 @_exported import FirebaseFirestore
+
+extension Firestore: @retroactive @unchecked Sendable {}
+extension CollectionReference: @retroactive @unchecked Sendable {}
 #elseif SKIP
 import Foundation
 import SkipFirebaseCore
