@@ -225,7 +225,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 import SwiftFuseUI
 import SkipFirebaseMessaging
 
-final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, Sendable {
+final class NotificationDelegate : NSObject, @preconcurrency UNUserNotificationCenterDelegate, Sendable {
     public func requestPermission() {
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         Task { @MainActor in
@@ -241,12 +241,14 @@ final class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, S
         }
     }
 
+    @MainActor
     public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         let content = notification.request.content
         logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
         return [.banner, .sound]
     }
 
+    @MainActor
     public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let content = response.notification.request.content
         logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
