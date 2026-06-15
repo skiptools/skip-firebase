@@ -8,104 +8,60 @@ import Foundation
 import SkipFirebaseCore
 import kotlinx.coroutines.tasks.await
 
-// MARK: - Expression
+// MARK: - PipelineBooleanExpression
 
-/// A value that can be used in Firestore Pipeline expressions.
-public protocol Expression: AnyObject {
-    /// Returns the underlying Kotlin `com.google.firebase.firestore.pipeline.Expression`.
-    func kotlinExpression() -> com.google.firebase.firestore.pipeline.Expression
-}
+/// A boolean-valued Firestore Pipeline expression.
+///
+/// Construct via static factories such as ``documentMatches(_:)``,
+/// ``fieldEqualTo(_:value:)``, or ``fieldArrayContainsAny(_:values:)``.
+public final class PipelineBooleanExpression: KotlinConverting<com.google.firebase.firestore.pipeline.BooleanExpression> {
+    public let expression: com.google.firebase.firestore.pipeline.BooleanExpression
 
-// MARK: - BooleanExpression
-
-/// A boolean-valued Pipeline expression.
-public protocol BooleanExpression: Expression {
-    /// Returns the underlying Kotlin `com.google.firebase.firestore.pipeline.BooleanExpression`.
-    func kotlinBooleanExpression() -> com.google.firebase.firestore.pipeline.BooleanExpression
-}
-
-extension BooleanExpression {
-    public func kotlinExpression() -> com.google.firebase.firestore.pipeline.Expression {
-        kotlinBooleanExpression()
-    }
-}
-
-// MARK: - Field
-
-/// Represents a field reference in a Firestore Pipeline.
-public final class Field: Expression {
-    let platformField: com.google.firebase.firestore.pipeline.Field
-
-    public init(_ name: String) {
-        // SKIP REPLACE: platformField = com.google.firebase.firestore.pipeline.Field.field(name)
-        platformField = com.google.firebase.firestore.pipeline.Field.field(name)
+    public init(expression: com.google.firebase.firestore.pipeline.BooleanExpression) {
+        self.expression = expression
     }
 
-    init(platformField: com.google.firebase.firestore.pipeline.Field) {
-        self.platformField = platformField
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.firestore.pipeline.BooleanExpression {
+        expression
     }
 
-    public func kotlinExpression() -> com.google.firebase.firestore.pipeline.Expression {
-        platformField
+    /// Full-text search expression: matches documents whose text-indexed fields
+    /// contain the given query.
+    public static func documentMatches(_ query: String) -> PipelineBooleanExpression {
+        PipelineBooleanExpression(expression: com.google.firebase.firestore.pipeline.Expression.documentMatches(query))
     }
 
-    /// Creates a `BooleanExpression` that checks if this field equals `value`.
-    public func equalTo(_ value: Any) -> BooleanExpression {
-        return WrappedBooleanExpression(platformField.equal(value.kotlin()))
+    /// Equality filter on `field`.
+    public static func fieldEqualTo(_ field: String, value: Any) -> PipelineBooleanExpression {
+        let f = com.google.firebase.firestore.pipeline.Field.field(field)
+        return PipelineBooleanExpression(expression: f.equal(value.kotlin()))
     }
 
-    /// Creates a `BooleanExpression` that checks if this field's array contains any of `values`.
-    public func arrayContainsAny(_ values: [Any]) -> BooleanExpression {
+    /// `arrayContainsAny` filter on `field` over a list of allowed values.
+    public static func fieldArrayContainsAny(_ field: String, values: [Any]) -> PipelineBooleanExpression {
+        let f = com.google.firebase.firestore.pipeline.Field.field(field)
         let list = values.map { $0.kotlin() }.toList()
-        return WrappedBooleanExpression(platformField.arrayContainsAny(list))
-    }
-}
-
-// MARK: - WrappedBooleanExpression
-
-/// Internal box that wraps a Kotlin `BooleanExpression`.
-final class WrappedBooleanExpression: BooleanExpression {
-    private let expr: com.google.firebase.firestore.pipeline.BooleanExpression
-
-    init(_ expr: com.google.firebase.firestore.pipeline.BooleanExpression) {
-        self.expr = expr
-    }
-
-    public func kotlinBooleanExpression() -> com.google.firebase.firestore.pipeline.BooleanExpression {
-        expr
+        return PipelineBooleanExpression(expression: f.arrayContainsAny(list))
     }
 }
 
 // MARK: - DocumentMatches
 
-/// A full-text search expression that matches documents against a query string.
-///
-/// Use this in a `pipeline.search(query:)` stage:
-/// ```swift
-/// db.pipeline()
-///   .collection("restaurants")
-///   .search(query: DocumentMatches("waffles OR pancakes"))
-/// ```
-public final class DocumentMatches: BooleanExpression {
-    private let query: String
-
-    public init(_ query: String) {
-        self.query = query
-    }
-
-    // SKIP REPLACE: override fun kotlinBooleanExpression(): com.google.firebase.firestore.pipeline.BooleanExpression = com.google.firebase.firestore.pipeline.Expression.documentMatches(query)
-    public func kotlinBooleanExpression() -> com.google.firebase.firestore.pipeline.BooleanExpression {
-        com.google.firebase.firestore.pipeline.Expression.documentMatches(query)
-    }
+/// Free-function alias for ``PipelineBooleanExpression/documentMatches(_:)``
+/// so call sites read like the native Firestore Pipeline API:
+/// `pipeline.search(query: DocumentMatches("waffles"))`.
+public func DocumentMatches(_ query: String) -> PipelineBooleanExpression {
+    PipelineBooleanExpression.documentMatches(query)
 }
 
 // MARK: - PipelineSnapshot
 
 /// The results of a Firestore Pipeline execution.
 public final class PipelineSnapshot {
-    let snapshot: com.google.firebase.firestore.Pipeline.Snapshot
+    public let snapshot: com.google.firebase.firestore.Pipeline.Snapshot
 
-    init(snapshot: com.google.firebase.firestore.Pipeline.Snapshot) {
+    public init(snapshot: com.google.firebase.firestore.Pipeline.Snapshot) {
         self.snapshot = snapshot
     }
 
@@ -119,9 +75,9 @@ public final class PipelineSnapshot {
 
 /// A single result document from a Firestore Pipeline execution.
 public final class PipelineResult {
-    let result: com.google.firebase.firestore.PipelineResult
+    public let result: com.google.firebase.firestore.PipelineResult
 
-    init(result: com.google.firebase.firestore.PipelineResult) {
+    public init(result: com.google.firebase.firestore.PipelineResult) {
         self.result = result
     }
 
@@ -133,10 +89,12 @@ public final class PipelineResult {
     /// All fields of this result as a Swift dictionary.
     public func data() -> [String: Any] {
         let map = result.getData()
-        var dict = [String: Any]()
-        for (key, val) in map {
-            if let k = key as? String, let v = val {
-                dict[k] = v
+        var dict: [String: Any] = [:]
+        if map != nil {
+            for (key, val) in map! {
+                if let k = key as? String, let v = val {
+                    dict[k] = v
+                }
             }
         }
         return dict
@@ -145,26 +103,32 @@ public final class PipelineResult {
 
 // MARK: - Pipeline
 
-/// A Firestore Pipeline that can be configured and executed.
+/// A configured Firestore Pipeline. Build one via ``Firestore/pipeline()``
+/// followed by ``collection(_:)`` or ``collectionGroup(_:)``, then chain
+/// stages and ``execute()``.
 public final class Pipeline {
-    let platformPipeline: com.google.firebase.firestore.Pipeline
+    public let platformPipeline: com.google.firebase.firestore.Pipeline
 
-    init(platformPipeline: com.google.firebase.firestore.Pipeline) {
+    public init(platformPipeline: com.google.firebase.firestore.Pipeline) {
         self.platformPipeline = platformPipeline
     }
 
     /// Filters documents from this pipeline stage using the given boolean expression.
-    public func `where`(_ condition: BooleanExpression) -> Pipeline {
-        Pipeline(platformPipeline: platformPipeline.where(condition.kotlinBooleanExpression()))
+    ///
+    /// Equivalent to the native `.where(...)` stage; renamed to avoid clashing
+    /// with the Swift `where` keyword in Skip-generated bridge code.
+    public func whereCondition(_ condition: PipelineBooleanExpression) -> Pipeline {
+        Pipeline(platformPipeline: platformPipeline.where(condition.expression))
     }
 
-    /// Performs a full-text search stage using the given `BooleanExpression` (e.g. `DocumentMatches`).
+    /// Performs a full-text search stage using the given boolean expression.
     ///
-    /// On Android, this uses `Pipeline.search(SearchStage)` via `SearchStage.Companion.withQuery`.
-    // SKIP REPLACE: fun search(query: BooleanExpression): Pipeline = Pipeline(platformPipeline = platformPipeline.search(com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.kotlinBooleanExpression())))
-    public func search(query: BooleanExpression) -> Pipeline {
+    /// Typically combined with ``DocumentMatches(_:)``:
+    /// `pipeline.search(query: DocumentMatches("..."))`.
+    // SKIP REPLACE: fun search(query: PipelineBooleanExpression): Pipeline = Pipeline(platformPipeline = platformPipeline.search(com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.expression)))
+    public func search(query: PipelineBooleanExpression) -> Pipeline {
         Pipeline(platformPipeline: platformPipeline.search(
-            com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.kotlinBooleanExpression())
+            com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.expression)
         ))
     }
 
@@ -191,13 +155,11 @@ public final class Pipeline {
 
 // MARK: - PipelineSource
 
-/// Entry point for building a Firestore Pipeline.
-///
-/// Obtain an instance via `Firestore.pipeline()`.
+/// Entry point for building a Firestore Pipeline. Obtain via ``Firestore/pipeline()``.
 public final class PipelineSource {
-    let platformSource: com.google.firebase.firestore.PipelineSource
+    public let platformSource: com.google.firebase.firestore.PipelineSource
 
-    init(platformSource: com.google.firebase.firestore.PipelineSource) {
+    public init(platformSource: com.google.firebase.firestore.PipelineSource) {
         self.platformSource = platformSource
     }
 
@@ -215,7 +177,7 @@ public final class PipelineSource {
 // MARK: - Firestore extension
 
 extension Firestore {
-    /// Returns a `PipelineSource` for building a Firestore Pipeline.
+    /// Returns a ``PipelineSource`` for building a Firestore Pipeline.
     public func pipeline() -> PipelineSource {
         PipelineSource(platformSource: store.pipeline())
     }
