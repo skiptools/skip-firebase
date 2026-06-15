@@ -6,7 +6,10 @@ import Foundation
 
 #if !SKIP
 import FirebaseCore
-import FirebaseStorage
+// @preconcurrency: Firebase's Objective-C types (e.g. StorageMetadata, StorageListResult) are
+// not audited for Sendable, so awaiting its async methods from this @MainActor test would be a
+// hard error under Swift 6. Downgrade those to warnings for this pre-concurrency interop.
+@preconcurrency import FirebaseStorage
 #else
 import SkipFirebaseCore
 import SkipFirebaseStorage
