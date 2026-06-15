@@ -36,9 +36,20 @@ let appName: String = "SkipFirebaseDemo"
 
 @MainActor final class SkipFirebaseFirestoreTests: XCTestCase {
 
-    /// App needs to be initialized in setUp and cleaned up in tearDown
+    /// App needs to be initialized in setUp and cleaned up in tearDown.
+    ///
+    /// The class is `@MainActor` (to serialize test execution), which makes these static
+    /// properties main-actor-isolated — inaccessible from XCTest's `setUp()` on SDKs where it
+    /// is nonisolated, a hard error under Swift 6. `nonisolated(unsafe)` opts them out of
+    /// isolation checking; safe because `@MainActor` already serializes all access. Applied
+    /// only on the native side: the transpiled Kotlin has no actor isolation.
+    #if !SKIP
+    nonisolated(unsafe) fileprivate static var app: FirebaseApp?
+    nonisolated(unsafe) fileprivate static var db: Firestore?
+    #else
     fileprivate static var app: FirebaseApp?
     fileprivate static var db: Firestore?
+    #endif
 
     // runtestFirestoreBundles$SkipFirebaseFirestore_debugUnitTest kotlinx.coroutines.test.UncompletedCoroutinesError: After waiting for 10s, the test coroutine is not completing, there were active child jobs: [DispatchedCoroutine{Active}@3816ef2f]
     // Suppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call
