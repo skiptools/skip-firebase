@@ -34,13 +34,13 @@ public final class PipelineBooleanExpression: KotlinConverting<com.google.fireba
 
     /// Equality filter on `field`.
     public static func fieldEqualTo(_ field: String, value: Any) -> PipelineBooleanExpression {
-        let f = com.google.firebase.firestore.pipeline.Field.field(field)
+        let f = com.google.firebase.firestore.pipeline.Expression.field(field)
         return PipelineBooleanExpression(expression: f.equal(value.kotlin()))
     }
 
     /// `arrayContainsAny` filter on `field` over a list of allowed values.
     public static func fieldArrayContainsAny(_ field: String, values: [Any]) -> PipelineBooleanExpression {
-        let f = com.google.firebase.firestore.pipeline.Field.field(field)
+        let f = com.google.firebase.firestore.pipeline.Expression.field(field)
         let list = values.map { $0.kotlin() }.toList()
         return PipelineBooleanExpression(expression: f.arrayContainsAny(list))
     }
@@ -67,7 +67,11 @@ public final class PipelineSnapshot {
 
     /// All documents returned by the pipeline.
     public var results: [PipelineResult] {
-        snapshot.results.map { PipelineResult(result: $0) }
+        var arr: [PipelineResult] = []
+        for r in snapshot.results {
+            arr.append(PipelineResult(result: r))
+        }
+        return arr
     }
 }
 
@@ -143,13 +147,13 @@ public final class Pipeline {
     }
 
     /// Executes this pipeline and returns its results.
+    ///
+    /// Any `FirebaseFirestoreException` thrown by the underlying SDK is
+    /// propagated as-is; callers should map it to a domain error as they
+    /// would for any other Firestore call.
     public func execute() async throws -> PipelineSnapshot {
-        do {
-            let snapshot = try platformPipeline.execute().await()
-            return PipelineSnapshot(snapshot: snapshot)
-        } catch is com.google.firebase.firestore.FirebaseFirestoreException {
-            throw asNSError(firestoreException: error)
-        }
+        let snapshot = try platformPipeline.execute().await()
+        return PipelineSnapshot(snapshot: snapshot)
     }
 }
 
