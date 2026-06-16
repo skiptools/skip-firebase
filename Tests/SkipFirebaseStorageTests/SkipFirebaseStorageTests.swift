@@ -6,7 +6,7 @@ import Foundation
 
 #if !SKIP
 import FirebaseCore
-import FirebaseStorage
+@preconcurrency import FirebaseStorage
 #else
 import SkipFirebaseCore
 import SkipFirebaseStorage

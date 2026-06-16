@@ -6,7 +6,7 @@ import Foundation
 
 #if !SKIP
 import FirebaseCore
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 #else
 import SkipFirebaseCore
 import SkipFirebaseFirestore
@@ -23,7 +23,7 @@ let isRobolectric = isJava && !isAndroid
 /// True if the system's `Int` type is 32-bit.
 let is32BitInteger = Int64(Int.max) == Int64(Int32.max)
 
-var appName: String = "SkipFirebaseDemo"
+let appName: String = "SkipFirebaseDemo"
 
 // NOTE: we have @MainActor on SkipFirebaseFirestoreTests to force non-concurrent test execution in order to avoid errors like this:
 //
@@ -32,9 +32,16 @@ var appName: String = "SkipFirebaseDemo"
 
 @MainActor final class SkipFirebaseFirestoreTests: XCTestCase {
 
-    /// App needs to be initialized in setUp and cleaned up in tearDown
-    fileprivate static var app: FirebaseApp?
-    fileprivate static var db: Firestore?
+    /// App needs to be initialized in setUp and cleaned up in tearDown.
+    ///
+    /// The class is `@MainActor` (to serialize test execution), which makes these static
+    /// properties main-actor-isolated — and thus a hard error under Swift 6 to access from
+    /// XCTest's `setUp()` (nonisolated on some SDKs) or to send into nonisolated Firebase
+    /// async methods. `nonisolated(unsafe)` opts them out of isolation checking; safe because
+    /// `@MainActor` already serializes all access. (Stripped by the transpiler for Kotlin,
+    /// which has no actor isolation.)
+    nonisolated(unsafe) fileprivate static var app: FirebaseApp?
+    nonisolated(unsafe) fileprivate static var db: Firestore?
 
     // runtestFirestoreBundles$SkipFirebaseFirestore_debugUnitTest kotlinx.coroutines.test.UncompletedCoroutinesError: After waiting for 10s, the test coroutine is not completing, there were active child jobs: [DispatchedCoroutine{Active}@3816ef2f]
     // Suppressed: org.robolectric.android.internal.AndroidTestEnvironment$UnExecutedRunnablesException: Main looper has queued unexecuted runnables. This might be the cause of the test failure. You might need a shadowOf(Looper.getMainLooper()).idle() call
@@ -355,7 +362,9 @@ var appName: String = "SkipFirebaseDemo"
         FirebaseApp.configure(name: appName, options: options)
 
         // the app is registered statically, so check to see if it has been registered
-        let cacheApp = try XCTUnwrap(FirebaseApp.app(name: appName))
+        // nonisolated(unsafe): the @MainActor class isolates this local, but it is sent into
+        // the nonisolated `delete()` below; safe because access is already serialized.
+        nonisolated(unsafe) let cacheApp = try XCTUnwrap(FirebaseApp.app(name: appName))
 
         let store = Firestore.firestore(app: cacheApp)
 
@@ -406,7 +415,7 @@ var appName: String = "SkipFirebaseDemo"
 }
 
 extension SkipFirebaseFirestoreTests {
-    private static let bostonData: [String : Any] = [
+    nonisolated(unsafe) private static let bostonData: [String : Any] = [
         "name": "Boston",
         "state": "MA",
         "country": "USA",
