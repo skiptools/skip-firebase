@@ -6,10 +6,6 @@ import Foundation
 
 #if !SKIP
 import FirebaseCore
-// @preconcurrency: the Firebase SDK's types (Firestore, DocumentSnapshot, etc.) are not
-// audited for Sendable, so awaiting its async methods or passing its instances across
-// isolation from this @MainActor test would be hard errors under Swift 6. Downgrade those
-// to warnings for this pre-concurrency interop.
 @preconcurrency import FirebaseFirestore
 #else
 import SkipFirebaseCore

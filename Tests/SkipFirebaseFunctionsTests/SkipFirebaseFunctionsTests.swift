@@ -5,9 +5,6 @@ import OSLog
 import Foundation
 #if !SKIP
 import FirebaseCore
-// @preconcurrency: Firebase's Objective-C types (e.g. HTTPSCallableResult) are not audited
-// for Sendable, so awaiting its async methods from this @MainActor test would be a hard error
-// under Swift 6. Downgrade those to warnings for this pre-concurrency interop.
 @preconcurrency import FirebaseFunctions
 #else
 import SkipFirebaseCore
