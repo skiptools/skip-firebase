@@ -4,13 +4,8 @@ import XCTest
 import OSLog
 import Foundation
 
-#if !SKIP
-import FirebaseCore
-@preconcurrency import FirebaseFirestore
-#else
 import SkipFirebaseCore
 import SkipFirebaseFirestore
-#endif
 
 let logger: Logger = Logger(subsystem: "SkipFirebaseFirestoreTests", category: "Tests")
 
