@@ -366,7 +366,9 @@ let appName: String = "SkipFirebaseDemo"
         FirebaseApp.configure(name: appName, options: options)
 
         // the app is registered statically, so check to see if it has been registered
-        let cacheApp = try XCTUnwrap(FirebaseApp.app(name: appName))
+        // nonisolated(unsafe): the @MainActor class isolates this local, but it is sent into
+        // the nonisolated `delete()` below; safe because access is already serialized.
+        nonisolated(unsafe) let cacheApp = try XCTUnwrap(FirebaseApp.app(name: appName))
 
         let store = Firestore.firestore(app: cacheApp)
 
