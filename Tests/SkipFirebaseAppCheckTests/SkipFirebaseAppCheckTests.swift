@@ -5,7 +5,7 @@ import OSLog
 import Foundation
 #if !SKIP
 import FirebaseCore
-import FirebaseAppCheck
+@preconcurrency import FirebaseAppCheck
 #else
 import SkipFirebaseCore
 import SkipFirebaseAppCheck
