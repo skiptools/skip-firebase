@@ -3,6 +3,8 @@
 #if !SKIP_BRIDGE
 #if canImport(FirebaseFunctions)
 @_exported import FirebaseFunctions
+
+extension HTTPSCallableResult: @retroactive @unchecked Sendable {}
 #elseif SKIP
 import Foundation
 import SkipFirebaseCore
