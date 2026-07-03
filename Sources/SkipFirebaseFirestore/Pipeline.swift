@@ -129,7 +129,13 @@ public final class Pipeline {
     ///
     /// Typically combined with ``DocumentMatches(_:)``:
     /// `pipeline.search(query: DocumentMatches("..."))`.
-    // SKIP REPLACE: fun search(query: PipelineBooleanExpression): Pipeline = Pipeline(platformPipeline = platformPipeline.search(com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.expression)))
+    ///
+    /// No `// SKIP REPLACE:` override here on purpose: the body below already
+    /// transpiles to equivalent Kotlin via direct interop, and a `SKIP REPLACE`
+    /// override on this method causes SkipBridge to silently omit `search`
+    /// from the generated Swift bridge peer (`Pipeline_Bridge.swift`) even
+    /// though the Kotlin transpile output is correct — `limit`/`offset`/
+    /// `whereCondition`, which have no override, bridge fine.
     public func search(query: PipelineBooleanExpression) -> Pipeline {
         Pipeline(platformPipeline: platformPipeline.search(
             com.google.firebase.firestore.pipeline.SearchStage.withQuery(query.expression)
