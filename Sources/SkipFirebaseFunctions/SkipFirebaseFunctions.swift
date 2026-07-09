@@ -97,8 +97,12 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
     }
 
     public func call(_ data: Any? = nil) async throws -> HTTPSCallableResult {
-        let task = data == nil ? platformValue.call() : platformValue.call(data!.kotlin())
-        return HTTPSCallableResult(try await task.await())
+        do {
+            let task = data == nil ? platformValue.call() : platformValue.call(data!.kotlin())
+            return HTTPSCallableResult(try await task.await())
+        } catch is com.google.firebase.functions.FirebaseFunctionsException {
+            throw asNSError(functionsException: error)
+        }
     }
 
     public func call(_ data: Any? = nil,
@@ -109,7 +113,11 @@ public class HTTPSCallable: KotlinConverting<com.google.firebase.functions.Https
             completion(HTTPSCallableResult(httpsCallableResult), nil)
         }
         .addOnFailureListener { exception in
-            completion(nil, ErrorException(exception))
+            if let functionsException = exception as? com.google.firebase.functions.FirebaseFunctionsException {
+                completion(nil, asNSError(functionsException: functionsException))
+            } else {
+                completion(nil, ErrorException(exception))
+            }
         }
     }
 }
@@ -143,6 +151,46 @@ public class HTTPSCallableResult: KotlinConverting<com.google.firebase.functions
         // Convert Kotlin collections to Swift types (same approach as Firestore)
         return deepSwift(value: rawData) ?? [String: Any]()
     }
+}
+
+// The gRPC canonical status codes, matching iOS `FunctionsErrorCode`
+// (FIRFunctionsErrorCode) and Firestore's `FirestoreErrorCode` 1:1. The Android
+// `FirebaseFunctionsException.Code` enum is declared in this exact order, so its
+// `ordinal` equals the canonical code value (OK=0 … UNAUTHENTICATED=16).
+public enum FunctionsErrorCode: Int {
+    case OK = 0
+    case cancelled = 1
+    case unknown = 2
+    case invalidArgument = 3
+    case deadlineExceeded = 4
+    case notFound = 5
+    case alreadyExists = 6
+    case permissionDenied = 7
+    case resourceExhausted = 8
+    case failedPrecondition = 9
+    case aborted = 10
+    case outOfRange = 11
+    case unimplemented = 12
+    case `internal` = 13
+    case unavailable = 14
+    case dataLoss = 15
+    case unauthenticated = 16
+}
+
+// Matches iOS `FunctionsErrorDomain` (FIRFunctionsErrorDomain) so callers can
+// classify Functions failures by domain + code identically on both platforms.
+public let FunctionsErrorDomain = "com.firebase.functions"
+
+// Bridge an Android `FirebaseFunctionsException` to an iOS-shaped `NSError`,
+// mirroring `asNSError(firestoreException:)`. Firestore's `Code` exposes a
+// public `value()`; the Functions `Code` does not, but the enum's declaration
+// order is the canonical gRPC order, so `ordinal` is the code value.
+fileprivate func asNSError(functionsException: com.google.firebase.functions.FirebaseFunctionsException) -> Error {
+    let userInfo: [String: Any] = [:]
+    if let detailMessage = functionsException.message {
+        userInfo[NSLocalizedFailureReasonErrorKey] = detailMessage
+    }
+    return NSError(domain: FunctionsErrorDomain, code: functionsException.code.ordinal, userInfo: userInfo)
 }
 
 #endif
