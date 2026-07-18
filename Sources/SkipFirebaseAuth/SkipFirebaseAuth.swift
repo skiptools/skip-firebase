@@ -353,6 +353,12 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         platformValue.delete().await()
     }
 
+    /// Refreshes the user's profile data (e.g. `isEmailVerified`) from the Firebase server.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reload()
+    public func reload() async throws {
+        platformValue.reload().await()
+    }
+
     public func getIDToken(forcingRefresh: Bool = false) async throws -> String {
         let result = try platformValue.getIdToken(forcingRefresh).await()
         guard let token = result.token else {
