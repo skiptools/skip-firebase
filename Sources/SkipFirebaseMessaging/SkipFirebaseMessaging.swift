@@ -184,19 +184,31 @@ public class MessagingService : FirebaseMessagingService {
 
     public override func onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        guard let activity = UIApplication.shared.androidActivity, let notification = message.notification else {
-            return
-        }
-        let notificationCenter = UNUserNotificationCenter.current()
-        guard let delegate = notificationCenter.delegate else {
-            return
-        }
 
         // We recognize notification intents by the google.message_id key
         let messageID = message.messageId ?? "0"
         var userInfo: [AnyHashable: Any] = ["google.message_id": messageID]
         for (key, value) in message.data {
             userInfo[key] = value
+        }
+
+        guard let notification = message.notification else {
+            // Background data-only message, with no notification property to display to user
+            let messaging = Messaging.messaging()
+            if let messagingDelegate = messaging.delegate {
+                Task { @MainActor in
+                    messagingDelegate.messaging(messaging, didReceiveRemoteMessage: userInfo)
+                }
+            }
+            return
+        }
+
+        guard let activity = UIApplication.shared.androidActivity else {
+            return
+        }
+        let notificationCenter = UNUserNotificationCenter.current()
+        guard let delegate = notificationCenter.delegate else {
+            return
         }
         let attachments: [UNNotificationAttachment]
         if let imageUri = notification.imageUrl, let url = URL(string: imageUri.toString()) {
@@ -268,10 +280,23 @@ public class MessagingService : FirebaseMessagingService {
 
 public protocol MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?)
+
+    /// Called on the main actor when a remote message that has no notification payload
+    /// (a "data-only" message) is received, whether the app is in the foreground or the
+    /// background. The `userInfo` dictionary contains the message's data payload along
+    /// with the `google.message_id` key.
+    ///
+    /// This is the Android-side equivalent of handling silent pushes via
+    /// `application(_:didReceiveRemoteNotification:)` on iOS; it has a default empty
+    /// implementation, so conforming to it is optional.
+    func messaging(_ messaging: Messaging, didReceiveRemoteMessage userInfo: [AnyHashable: Any])
 }
 
 extension MessagingDelegate {
     public func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+    }
+
+    public func messaging(_ messaging: Messaging, didReceiveRemoteMessage userInfo: [AnyHashable: Any]) {
     }
 }
 
