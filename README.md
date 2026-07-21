@@ -273,6 +273,8 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     ```swift
     public class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
     
+        // ...
+    
         /// Android only: called by SkipFirebaseMessaging when a data-only (silent) push is received,
         /// including while the app is in the background. On iOS, these messages arrive through
         /// `application(_:didReceiveRemoteNotification:)` in the AppMainDelegate instead.
@@ -283,7 +285,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     }
     ```
     
-    To receive Data-Only push notifications in iOS, connect through the `func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any])` provided natively  in the `UIApplicationDelegate`:
+    To receive Data-Only push notifications in iOS, connect through the `func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any])` provided natively by the `UIApplicationDelegate`:
     ```swift
     #if canImport(UIKit)
     ...
@@ -312,7 +314,7 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 
     import SkipFirebaseCore
 
-    ...
+    // ...
 
     /* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
         /* SKIP @bridge */public static let shared = FireSideFuseAppDelegate()
@@ -338,17 +340,17 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
             notificationDelegate.requestPermission()
         }
 
-        ...
+        // ...
     }
     ```
 
     ```swift
     // Darwin/Sources/Main.swift
 
-    ...
+    // ...
 
     class AppMainDelegate: NSObject, AppMainDelegateBase {
-        ...
+        // ...
 
         func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
             AppDelegate.shared.onLaunch()
@@ -356,32 +358,32 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
             return true
         }
 
-        ...
+        // ...
     }
     ```
 
     ```kotlin
     // Android/app/src/main/kotlin/.../Main.kt
 
-    ...
+    // ...
 
     open class MainActivity: AppCompatActivity {
-        ...
+        // ...
 
         override fun onCreate(savedInstanceState: android.os.Bundle?) {
-            ...
+            // ...
 
             setContent {
-                ...
+                // ...
             }
 
             skip.firebase.messaging.Messaging.messaging().onActivityCreated(this) // <-- Insert
             FireSideFuseAppDelegate.shared.onLaunch()
 
-            ...
+            // ...
         }
 
-        ...
+        // ...
     }
     ```
 
@@ -401,7 +403,7 @@ do {
     try await Firestore.firestore().collection("foo").document("bar").updateData(...)
 } catch let error as NSError {
     if error.domain == FirestoreErrorDomain && error.code == FirestoreErrorCode.notFound.rawValue {
-        ...
+        // ...
     }
 }
 ```
