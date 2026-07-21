@@ -243,6 +243,11 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
         public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
             let content = notification.request.content
             logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
+            
+            // (See Important iOS Note #2 below)
+            // If swizzling is disabled you must let Messaging know about the message, for Analytics
+            Messaging.messaging().appDidReceiveMessage(userInfo)
+            
             return [.banner, .sound]
         }
 
@@ -250,6 +255,11 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
         public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
             let content = response.notification.request.content
             logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
+            
+            // (See Important iOS Note #2 below)
+            // If swizzling is disabled you must let Messaging know about the message, for Analytics
+            Messaging.messaging().appDidReceiveMessage(userInfo)
+            
             #if os(Android) || !os(macOS)
             // Example of using a deep_link key passed in the notification to route to the app's `onOpenURL` handler
             if let deepLink = response.notification.request.content.userInfo["deep_link"] as? String, let url = URL(string: deepLink) {
@@ -279,13 +289,14 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
         /// including while the app is in the background. On iOS, these messages arrive through
         /// `application(_:didReceiveRemoteNotification:)` in the AppMainDelegate instead.
         public func messaging(_ messaging: Messaging, didReceiveRemoteMessage userInfo: [AnyHashable: Any]) {
+            // NOTE: Messaging.messaging().appDidReceiveMessage(userInfo) is a no-op in SkipFirebaseMessaging and is not required here 
             logger.info("didReceiveRemoteMessage: \(userInfo)")
             // ... handle Android data-only notification logic here
         }
     }
     ```
     
-    To receive Data-Only push notifications in iOS, connect through the `func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any])` provided natively by the `UIApplicationDelegate`:
+    To receive Data-Only push notifications in iOS, connect through the `func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {` provided natively by the `UIApplicationDelegate`:
     ```swift
     #if canImport(UIKit)
     ...
@@ -301,12 +312,23 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
     #if canImport(UIKit)
     // ... other application delegate functions above
     
-    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) {
+    // source: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:didreceiveremotenotification:fetchcompletionhandler:)
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // (See Important iOS Note #2 below)
+        // If swizzling is disabled you must let Messaging know about the message, for Analytics
+        Messaging.messaging().appDidReceiveMessage(userInfo)
+        
         // ... handle iOS data-only notification logic here
     }
     
     // ... other application delegate functions continued below
     ```
+    
+    Important iOS notes: 
+    1. "The notification’s POST request should contain the apns-push-type header field with a value of background, and the apns-priority field with a value of 5. The APNs server requires the apns-push-type field when sending push notifications to Apple Watch, and recommends it for all platforms."
+        More info here: https://developer.apple.com/documentation/usernotifications/pushing-background-updates-to-your-app#Create-a-background-notification
+    2. Firebase Cloud Messaging's "swizzling" feature may fail to adequately pick up the above UIApplicationDelegate function, and may never fire with swizzling enabled. To disable swizzling, update your Info.plist with the entry `FirebaseAppDelegateProxyEnabled: NO` and ensure this analytics line is declared manually which was previously auto-handled by swizzling: `Messaging.messaging().appDidReceiveMessage(userInfo)`
+       More info here: https://firebase.google.com/docs/cloud-messaging/ios/get-started#method-swizzling-in-fcm, https://firebase.google.com/docs/cloud-messaging/ios/receive-messages#handle-silent-push-notifications
 
 1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform these actions. This is taken from our FireSideFuse sample app:
     ```swift
