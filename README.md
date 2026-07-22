@@ -200,7 +200,6 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 1. Follow Firebase's [instructions](https://firebase.google.com/docs/cloud-messaging/ios/client) for creating and uploading your Apple Push Notification Service (APNS) key.
 1. Use Xcode to [add the Push capability](https://developer.apple.com/documentation/xcode/adding-capabilities-to-your-app/) to your iOS app.
 1. Add Skip's Firebase messaging service and default messaging channel to `Android/app/src/main/AndroidManifest.xml`:
-
     ```xml
     ...
     <application ...>
@@ -220,136 +219,195 @@ After [setting up](#setup) your app to use Firebase, enabling push notifications
 
 1. Consider increasing the `minSdk` version of your Android app. Prior to SDK 33, Android does not provide any control over asking the user for push notification permissions. Rather, the system will prompt the user for permission only after receiving a notification and opening the app. Increasing your `minSdk` will allow you to decide when to request notification permissions. To do so, edit your `Android/app/build.gradle.kts` file and change the `minSdk` value to 33.
 1. Define a delegate to receive notification callbacks. In keeping with Skip's philosophy of *transparent adoption*, both the iOS and Android sides of your app will receive callbacks via iOS's standard `UNUserNotificationCenterDelegate` API, as well as the Firebase iOS SDK's `MessagingDelegate`. Here are example [Skip Fuse](https://skip.dev/docs/modes/#fuse) delegate implementations that works across both platforms:
+    ```swift
+    import SwiftFuseUI
+    import SkipFirebaseMessaging
 
-```swift
-import SwiftFuseUI
-import SkipFirebaseMessaging
-
-final class NotificationDelegate : NSObject, @preconcurrency UNUserNotificationCenterDelegate, Sendable {
-    public func requestPermission() {
-        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        Task { @MainActor in
-            do {
-                if try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions) {
-                    logger.info("notification permission granted")
-                } else {
-                    logger.info("notification permission denied")
-                }
-            } catch {
-                logger.error("notification permission error: \(error)")
-            }
-        }
-    }
-
-    @MainActor
-    public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        let content = notification.request.content
-        logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
-        return [.banner, .sound]
-    }
-
-    @MainActor
-    public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        let content = response.notification.request.content
-        logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
-        #if os(Android) || !os(macOS)
-        // Example of using a deep_link key passed in the notification to route to the app's `onOpenURL` handler
-        if let deepLink = response.notification.request.content.userInfo["deep_link"] as? String, let url = URL(string: deepLink) {
+    public class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
+        public func requestPermission() {
+            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
             Task { @MainActor in
-                await UIApplication.shared.open(url)
+                do {
+                    if try await UNUserNotificationCenter.current().requestAuthorization(options: authOptions) {
+                        logger.info("notification permission granted")
+                    } else {
+                        logger.info("notification permission denied")
+                    }
+                } catch {
+                    logger.error("notification permission error: \(error)")
+                }
             }
         }
-        #endif
-    }
-}
 
-// Your Firebase MessageDelegate must bridge because we use the Firebase Kotlin API on Android.
-/* SKIP @bridge */final class MessageDelegate : NSObject, MessagingDelegate, Sendable {
-    /* SKIP @bridge */public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
-        logger.info("didReceiveRegistrationToken: \(token ?? "nil")")
+        @MainActor
+        public func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+            let content = notification.request.content
+            logger.info("willPresentNotification: \(content.title): \(content.body) \(content.userInfo)")
+            
+            // (See Important iOS Note #2 below)
+            // If swizzling is disabled you must let Messaging know about the message, for Analytics
+            Messaging.messaging().appDidReceiveMessage(userInfo)
+            
+            return [.banner, .sound]
+        }
+
+        @MainActor
+        public func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+            let content = response.notification.request.content
+            logger.info("didReceiveNotification: \(content.title): \(content.body) \(content.userInfo)")
+            
+            // (See Important iOS Note #2 below)
+            // If swizzling is disabled you must let Messaging know about the message, for Analytics
+            Messaging.messaging().appDidReceiveMessage(userInfo)
+            
+            #if os(Android) || !os(macOS)
+            // Example of using a deep_link key passed in the notification to route to the app's `onOpenURL` handler
+            if let deepLink = response.notification.request.content.userInfo["deep_link"] as? String, let url = URL(string: deepLink) {
+                Task { @MainActor in
+                    await UIApplication.shared.open(url)
+                }
+            }
+            #endif
+        }
+        
+        // Your Firebase MessageDelegate must bridge because we use the Firebase Kotlin API on Android.
+        /* SKIP @bridge */final class MessageDelegate : NSObject, MessagingDelegate, Sendable {
+            /* SKIP @bridge */public func messaging(_ messaging: Messaging, didReceiveRegistrationToken token: String?) {
+                logger.info("didReceiveRegistrationToken: \(token ?? "nil")")
+            }
+        }
     }
-}
-```
+    ```
+    
+1. (Optional) To receive Data-Only push notifications in Android (ie. notifications without a user-presented banner) Add the custom `public func messaging(_ messaging: Messaging, didReceiveRemoteMessage userInfo: [AnyHashable: Any])` defined in the `MessagingDelegate` in `SkipFirebaseMessaging`:
+    ```swift
+    public class NotificationDelegate : NSObject, UNUserNotificationCenterDelegate, MessagingDelegate {
+    
+        // ...
+    
+        /// Android only: called by SkipFirebaseMessaging when a data-only (silent) push is received,
+        /// including while the app is in the background. On iOS, these messages arrive through
+        /// `application(_:didReceiveRemoteNotification:)` in the AppMainDelegate instead.
+        public func messaging(_ messaging: Messaging, didReceiveRemoteMessage userInfo: [AnyHashable: Any]) {
+            // NOTE: Messaging.messaging().appDidReceiveMessage(userInfo) is a no-op in SkipFirebaseMessaging and is not required here 
+            logger.info("didReceiveRemoteMessage: \(userInfo)")
+            // ... handle Android data-only notification logic here
+        }
+    }
+    ```
+    
+    To receive Data-Only push notifications in iOS, connect through the `func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {` provided natively by the `UIApplicationDelegate`:
+    ```swift
+    #if canImport(UIKit)
+    ...
+    typealias AppMainDelegateBase = UIApplicationDelegate
+    ...
+    #endif
+    
+    @MainActor final class AppMainDelegate: NSObject, AppMainDelegateBase {
+    
+    let notificationsDelegate = NotificationDelegate() // Defined in <AppName>App.swift
+    let application = AppType.shared
+
+    #if canImport(UIKit)
+    // ... other application delegate functions above
+    
+    // source: https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:didreceiveremotenotification:fetchcompletionhandler:)
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        // (See Important iOS Note #2 below)
+        // If swizzling is disabled you must let Messaging know about the message, for Analytics
+        Messaging.messaging().appDidReceiveMessage(userInfo)
+        
+        // ... handle iOS data-only notification logic here
+    }
+    
+    // ... other application delegate functions continued below
+    ```
+    
+    Important iOS notes: 
+    1. "The notification’s POST request should contain the apns-push-type header field with a value of background, and the apns-priority field with a value of 5. The APNs server requires the apns-push-type field when sending push notifications to Apple Watch, and recommends it for all platforms."
+        More info here: https://developer.apple.com/documentation/usernotifications/pushing-background-updates-to-your-app#Create-a-background-notification
+    2. Firebase Cloud Messaging's "swizzling" feature may fail to adequately pick up the above UIApplicationDelegate function, and may never fire with swizzling enabled. To disable swizzling, update your Info.plist with the entry `FirebaseAppDelegateProxyEnabled: NO` and ensure this analytics line is declared manually which was previously auto-handled by swizzling: `Messaging.messaging().appDidReceiveMessage(userInfo)`
+       More info here: https://firebase.google.com/docs/cloud-messaging/ios/get-started#method-swizzling-in-fcm, https://firebase.google.com/docs/cloud-messaging/ios/receive-messages#handle-silent-push-notifications
 
 1. Wire everything up. This includes assigning your shared delegate, registering for remote notifications, and other necessary steps. Below we build on our [previous Firebase setup code](#setup) to perform these actions. This is taken from our FireSideFuse sample app:
+    ```swift
+    // Sources/FireSideFuse/FireSideFuseApp.swift
 
-```swift
-// Sources/FireSideFuse/FireSideFuseApp.swift
+    import SkipFirebaseCore
 
-import SkipFirebaseCore
+    // ...
 
-...
+    /* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
+        /* SKIP @bridge */public static let shared = FireSideFuseAppDelegate()
 
-/* SKIP @bridge */public final class FireSideFuseAppDelegate : Sendable {
-    /* SKIP @bridge */public static let shared = FireSideFuseAppDelegate()
+        private let notificationDelegate = NotificationDelegate()
+        private let messageDelegate = MessageDelegate()
 
-    private let notificationDelegate = NotificationDelegate()
-    private let messageDelegate = MessageDelegate()
-
-    private init() {
-    }
-
-    /* SKIP @bridge */public func onInit() {
-        logger.debug("onInit")
-
-        // Configure Firebase and notifications
-        FirebaseApp.configure()
-        Messaging.messaging().delegate = messageDelegate
-        UNUserNotificationCenter.current().delegate = notificationDelegate
-    }
-
-    /* SKIP @bridge */public func onLaunch() {
-        logger.debug("onLaunch")
-        // Ask for permissions at a time appropriate for your app
-        notificationDelegate.requestPermission()
-    }
-
-    ...
-}
-```
-
-```swift
-// Darwin/Sources/Main.swift
-
-...
-
-class AppMainDelegate: NSObject, AppMainDelegateBase {
-    ...
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        AppDelegate.shared.onLaunch()
-        application.registerForRemoteNotifications() // <-- Insert
-        return true
-    }
-
-    ...
-}
-```
-
-```kotlin
-// Android/app/src/main/kotlin/.../Main.kt
-
-...
-
-open class MainActivity: AppCompatActivity {
-    ...
-
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
-        ...
-
-        setContent {
-            ...
+        private init() {
         }
 
-        skip.firebase.messaging.Messaging.messaging().onActivityCreated(this) // <-- Insert
-        FireSideFuseAppDelegate.shared.onLaunch()
+        /* SKIP @bridge */public func onInit() {
+            logger.debug("onInit")
 
-        ...
+            // Configure Firebase and notifications
+            FirebaseApp.configure()
+            Messaging.messaging().delegate = messageDelegate
+            UNUserNotificationCenter.current().delegate = notificationDelegate
+        }
+
+        /* SKIP @bridge */public func onLaunch() {
+            logger.debug("onLaunch")
+            // Ask for permissions at a time appropriate for your app
+            notificationDelegate.requestPermission()
+        }
+
+        // ...
     }
+    ```
 
-    ...
-}
-```
+    ```swift
+    // Darwin/Sources/Main.swift
+
+    // ...
+
+    class AppMainDelegate: NSObject, AppMainDelegateBase {
+        // ...
+
+        func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+            AppDelegate.shared.onLaunch()
+            application.registerForRemoteNotifications() // <-- Insert
+            return true
+        }
+
+        // ...
+    }
+    ```
+
+    ```kotlin
+    // Android/app/src/main/kotlin/.../Main.kt
+
+    // ...
+
+    open class MainActivity: AppCompatActivity {
+        // ...
+
+        override fun onCreate(savedInstanceState: android.os.Bundle?) {
+            // ...
+
+            setContent {
+                // ...
+            }
+
+            skip.firebase.messaging.Messaging.messaging().onActivityCreated(this) // <-- Insert
+            FireSideFuseAppDelegate.shared.onLaunch()
+
+            // ...
+        }
+
+        // ...
+    }
+    ```
 
 1. See Firebase's [iOS instructions](https://firebase.google.com/docs/cloud-messaging/ios/client) and [Android instructions](https://firebase.google.com/docs/cloud-messaging/android/client) for additional details and options, including how to send test messages to your apps!
 
@@ -367,7 +425,7 @@ do {
     try await Firestore.firestore().collection("foo").document("bar").updateData(...)
 } catch let error as NSError {
     if error.domain == FirestoreErrorDomain && error.code == FirestoreErrorCode.notFound.rawValue {
-        ...
+        // ...
     }
 }
 ```
