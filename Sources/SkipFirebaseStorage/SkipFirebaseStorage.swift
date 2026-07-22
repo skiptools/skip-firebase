@@ -39,6 +39,27 @@ public final class Storage {
         FirebaseApp(app: platformValue.getApp())
     }
 
+    /// Maximum time in seconds to retry an upload if a failure occurs.
+    /// Defaults to 10 minutes (600 seconds).
+    public var maxUploadRetryTime: TimeInterval {
+        get { TimeInterval(platformValue.getMaxUploadRetryTimeMillis()) / 1000.0 }
+        set { platformValue.setMaxUploadRetryTimeMillis(Int64(newValue * 1000.0)) }
+    }
+
+    /// Maximum time in seconds to retry a download if a failure occurs.
+    /// Defaults to 10 minutes (600 seconds).
+    public var maxDownloadRetryTime: TimeInterval {
+        get { TimeInterval(platformValue.getMaxDownloadRetryTimeMillis()) / 1000.0 }
+        set { platformValue.setMaxDownloadRetryTimeMillis(Int64(newValue * 1000.0)) }
+    }
+
+    /// Maximum time in seconds to retry operations other than upload and download if a failure occurs.
+    /// Defaults to 2 minutes (120 seconds).
+    public var maxOperationRetryTime: TimeInterval {
+        get { TimeInterval(platformValue.getMaxOperationRetryTimeMillis()) / 1000.0 }
+        set { platformValue.setMaxOperationRetryTimeMillis(Int64(newValue * 1000.0)) }
+    }
+
     public func reference() -> StorageReference {
         return StorageReference(platformValue.reference)
     }

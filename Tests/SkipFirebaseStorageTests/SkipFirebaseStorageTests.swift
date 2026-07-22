@@ -36,6 +36,14 @@ let logger: Logger = Logger(subsystem: "SkipFirebaseStorageTests", category: "Te
             let storageCustomURL = Storage.storage(url: "gs://")
 
             let storage = Storage.storage()
+
+            storage.maxUploadRetryTime = 60.0
+            storage.maxDownloadRetryTime = 60.0
+            storage.maxOperationRetryTime = 60.0
+            let _: TimeInterval = storage.maxUploadRetryTime
+            let _: TimeInterval = storage.maxDownloadRetryTime
+            let _: TimeInterval = storage.maxOperationRetryTime
+
             let ref: StorageReference = storage.reference()
             let _: StorageReference = storage.reference(withPath: "test")
             let _: StorageReference = storage.reference(forURL: "https://firebase.google.com/")
