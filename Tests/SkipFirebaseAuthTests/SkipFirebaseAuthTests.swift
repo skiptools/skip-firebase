@@ -23,6 +23,12 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
                 let signIn = try await auth.signInAnonymously()
                 XCTAssertNotNil(signIn.user.metadata.creationDate)
                 XCTAssertNotNil(signIn.user.metadata.lastSignInDate)
+                // Shape parity with iOS FirebaseAuth: `providerData` is a list of
+                // `UserInfo` carrying `providerID`, and the pre-change email
+                // verification takes the new address.
+                let providers: [String] = signIn.user.providerData.map { $0.providerID }
+                XCTAssertNotNil(providers)
+                try await signIn.user.sendEmailVerification(beforeUpdatingEmail: "new@example.org")
             } catch {
             }
             auth.removeStateDidChangeListener(listener)
