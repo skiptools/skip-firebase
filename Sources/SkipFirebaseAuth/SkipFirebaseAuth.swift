@@ -41,15 +41,23 @@ public final class Auth {
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthInvalidCredentialsException`/`FirebaseAuthInvalidCredentialsException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#signInWithEmailAndPassword(java.lang.String,java.lang.String)
     public func signIn(withEmail email: String, password: String) async throws -> AuthDataResult {
-        let result = platformValue.signInWithEmailAndPassword(email, password).await()
-        return AuthDataResult(result)
+        do {
+            let result = platformValue.signInWithEmailAndPassword(email, password).await()
+            return AuthDataResult(result)
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
 
     /// Throws `FirebaseAuthWeakPasswordException`/`FirebaseAuthInvalidCredentialsException`/`FirebaseAuthUserCollisionException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseAuth#createUserWithEmailAndPassword(java.lang.String,java.lang.String)
     public func createUser(withEmail email: String, password: String) async throws -> AuthDataResult {
-        let result = platformValue.createUserWithEmailAndPassword(email, password).await()
-        return AuthDataResult(result)
+        do {
+            let result = platformValue.createUserWithEmailAndPassword(email, password).await()
+            return AuthDataResult(result)
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
 
     /// Does not throw from Kotlin
@@ -59,7 +67,11 @@ public final class Auth {
 
     /// Throws `FirebaseAuthInvalidUserException`
     public func sendPasswordReset(withEmail email: String) async throws {
-        platformValue.sendPasswordResetEmail(email).await()
+        do {
+            platformValue.sendPasswordResetEmail(email).await()
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
 
     /// Throws `Exception`
@@ -315,7 +327,11 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Throws `FirebaseAuthInvalidUserException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#sendemailverification
     public func sendEmailVerification() async throws {
-        platformValue.sendEmailVerification().await()
+        do {
+            platformValue.sendEmailVerification().await()
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
     
     /// Sends a verification link to `email`; the account's address only changes
@@ -329,7 +345,11 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reauthenticate(com.google.firebase.auth.AuthCredential)
     public func reauthenticate(with credential: AuthCredential) async throws {
-        platformValue.reauthenticate(credential.platformValue).await()
+        do {
+            platformValue.reauthenticate(credential.platformValue).await()
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
 
     /// Link generic credential
@@ -374,7 +394,11 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#delete()
     public func delete() async throws {
-        platformValue.delete().await()
+        do {
+            platformValue.delete().await()
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
     }
 
     /// Refreshes the user's profile data (e.g. `isEmailVerified`) from the Firebase server.
@@ -460,25 +484,129 @@ public final class AdditionalUserInfo: KotlinConverting<com.google.firebase.auth
 public let AuthErrorDomain = "FIRAuthErrorDomain"
 public let AuthErrorUserInfoEmailKey = "FIRAuthErrorUserInfoEmailKey"
 
+/// The subset of `FIRAuthErrorCode` that Android's `FirebaseAuthException.errorCode`
+/// can be resolved to. Raw values are Apple's, so `(error as NSError).code` means
+/// the same thing on both platforms.
 public enum AuthErrorCode: Int {
+    case invalidCustomToken = 17000
+    case customTokenMismatch = 17002
+    case invalidCredential = 17004
+    case userDisabled = 17005
+    case operationNotAllowed = 17006
+    case emailAlreadyInUse = 17007
+    case invalidEmail = 17008
+    case wrongPassword = 17009
+    case tooManyRequests = 17010
+    case userNotFound = 17011
     case accountExistsWithDifferentCredential = 17012
+    case requiresRecentLogin = 17014
+    case providerAlreadyLinked = 17015
+    case noSuchProvider = 17016
+    case invalidUserToken = 17017
+    case networkError = 17020
+    case userTokenExpired = 17021
+    case invalidAPIKey = 17023
+    case userMismatch = 17024
+    case credentialAlreadyInUse = 17025
+    case weakPassword = 17026
+    case appNotAuthorized = 17028
+    case expiredActionCode = 17029
+    case invalidActionCode = 17030
+    case invalidRecipientEmail = 17033
+    case missingEmail = 17034
+    case internalError = 17999
 }
 
-/// Map Android auth exceptions to iOS-style NSError when feasible
+/// Android's `FirebaseAuthException.getErrorCode()` string → the matching
+/// `FIRAuthErrorCode` raw value.
+///
+/// Note on newer Firebase Android versions: with email-enumeration protection
+/// enabled, `ERROR_USER_NOT_FOUND` and `ERROR_WRONG_PASSWORD` are collapsed into
+/// `ERROR_INVALID_CREDENTIAL` — the same thing iOS does, so callers that handle
+/// `.invalidCredential` stay correct on both platforms.
+fileprivate func authErrorCode(forAndroidCode code: String) -> Int? {
+    switch code {
+    case "ERROR_INVALID_CUSTOM_TOKEN": return AuthErrorCode.invalidCustomToken.rawValue
+    case "ERROR_CUSTOM_TOKEN_MISMATCH": return AuthErrorCode.customTokenMismatch.rawValue
+    case "ERROR_INVALID_CREDENTIAL": return AuthErrorCode.invalidCredential.rawValue
+    case "ERROR_USER_DISABLED": return AuthErrorCode.userDisabled.rawValue
+    case "ERROR_OPERATION_NOT_ALLOWED": return AuthErrorCode.operationNotAllowed.rawValue
+    case "ERROR_EMAIL_ALREADY_IN_USE": return AuthErrorCode.emailAlreadyInUse.rawValue
+    case "ERROR_INVALID_EMAIL": return AuthErrorCode.invalidEmail.rawValue
+    case "ERROR_WRONG_PASSWORD": return AuthErrorCode.wrongPassword.rawValue
+    case "ERROR_TOO_MANY_REQUESTS": return AuthErrorCode.tooManyRequests.rawValue
+    case "ERROR_USER_NOT_FOUND": return AuthErrorCode.userNotFound.rawValue
+    case "ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL": return AuthErrorCode.accountExistsWithDifferentCredential.rawValue
+    case "ERROR_REQUIRES_RECENT_LOGIN": return AuthErrorCode.requiresRecentLogin.rawValue
+    case "ERROR_PROVIDER_ALREADY_LINKED": return AuthErrorCode.providerAlreadyLinked.rawValue
+    case "ERROR_NO_SUCH_PROVIDER": return AuthErrorCode.noSuchProvider.rawValue
+    case "ERROR_INVALID_USER_TOKEN": return AuthErrorCode.invalidUserToken.rawValue
+    case "ERROR_USER_TOKEN_EXPIRED": return AuthErrorCode.userTokenExpired.rawValue
+    case "ERROR_INVALID_API_KEY": return AuthErrorCode.invalidAPIKey.rawValue
+    case "ERROR_USER_MISMATCH": return AuthErrorCode.userMismatch.rawValue
+    case "ERROR_CREDENTIAL_ALREADY_IN_USE": return AuthErrorCode.credentialAlreadyInUse.rawValue
+    case "ERROR_WEAK_PASSWORD": return AuthErrorCode.weakPassword.rawValue
+    case "ERROR_APP_NOT_AUTHORIZED": return AuthErrorCode.appNotAuthorized.rawValue
+    case "ERROR_EXPIRED_ACTION_CODE": return AuthErrorCode.expiredActionCode.rawValue
+    case "ERROR_INVALID_ACTION_CODE": return AuthErrorCode.invalidActionCode.rawValue
+    case "ERROR_INVALID_RECIPIENT_EMAIL": return AuthErrorCode.invalidRecipientEmail.rawValue
+    case "ERROR_MISSING_EMAIL": return AuthErrorCode.missingEmail.rawValue
+    case "ERROR_INTERNAL_ERROR": return AuthErrorCode.internalError.rawValue
+    default: return nil
+    }
+}
+
+/// Map Android auth exceptions to iOS-style NSError when feasible.
+///
+/// Without this every auth failure reaches Swift as a bare `ErrorException`
+/// whose `localizedDescription` is the generic bridge text ("The operation could
+/// not be completed. (SwiftJNI.ThrowableError error 1.)") — a caller cannot tell
+/// "wrong password" from "email already in use", and any message it shows is
+/// wrong. Mirrors `asNSError(functionsException:)` in SkipFirebaseFunctions and
+/// `asNSError(firestoreException:)` in SkipFirebaseFirestore.
 fileprivate func mapAuthNSError(_ exception: Exception) -> Error {
-    if let collision = exception as? com.google.firebase.auth.FirebaseAuthUserCollisionException {
-        var userInfo: [String: Any] = [:]
-        // Try to extract email if available
-        if let emailProvider = (collision as? com.google.firebase.auth.FirebaseAuthException) {
-            // Some exceptions expose the email via getMessage or provider data; best effort only
-            let message = String(describing: emailProvider.message ?? "")
-            if message.contains("@") { // naive check for email-like token
-                userInfo[AuthErrorUserInfoEmailKey] = message
-            }
+    // Network failures are not FirebaseAuthExceptions and carry no error code.
+    if let networkException = exception as? com.google.firebase.FirebaseNetworkException {
+        var networkInfo: [String: Any] = [:]
+        if let detailMessage = networkException.message {
+            networkInfo[NSLocalizedDescriptionKey] = detailMessage
         }
+        return NSError(domain: AuthErrorDomain, code: AuthErrorCode.networkError.rawValue, userInfo: networkInfo)
+    }
+
+    guard let authException = exception as? com.google.firebase.auth.FirebaseAuthException else {
+        return ErrorException(exception)
+    }
+
+    var userInfo: [String: Any] = [:]
+    if let detailMessage = authException.message {
+        // iOS puts the human-readable reason in localizedDescription; keep the
+        // Android message there so existing message-matching callers still work.
+        userInfo[NSLocalizedDescriptionKey] = detailMessage
+        if detailMessage.contains("@") { // naive check for an email-like token
+            userInfo[AuthErrorUserInfoEmailKey] = detailMessage
+        }
+    }
+
+    if let code = authErrorCode(forAndroidCode: authException.errorCode) {
+        return NSError(domain: AuthErrorDomain, code: code, userInfo: userInfo)
+    }
+
+    // Unknown error code: fall back to the exception class, which is coarser but
+    // still classifies the three cases callers care about most.
+    if exception is com.google.firebase.auth.FirebaseAuthUserCollisionException {
         return NSError(domain: AuthErrorDomain, code: AuthErrorCode.accountExistsWithDifferentCredential.rawValue, userInfo: userInfo)
     }
-    return ErrorException(exception)
+    if exception is com.google.firebase.auth.FirebaseAuthWeakPasswordException {
+        return NSError(domain: AuthErrorDomain, code: AuthErrorCode.weakPassword.rawValue, userInfo: userInfo)
+    }
+    if exception is com.google.firebase.auth.FirebaseAuthInvalidUserException {
+        return NSError(domain: AuthErrorDomain, code: AuthErrorCode.userNotFound.rawValue, userInfo: userInfo)
+    }
+    if exception is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException {
+        return NSError(domain: AuthErrorDomain, code: AuthErrorCode.invalidCredential.rawValue, userInfo: userInfo)
+    }
+    return NSError(domain: AuthErrorDomain, code: AuthErrorCode.internalError.rawValue, userInfo: userInfo)
 }
 
 // Provide a FirebaseAuth namespace so app code can reference `FirebaseAuth.User` on Android
