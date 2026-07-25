@@ -291,6 +291,22 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         UserMetadata(platformValue.metadata)
     }
 
+    /// The identity providers linked to this account, in the order Firebase
+    /// returns them.
+    ///
+    /// Android additionally reports a synthetic `"firebase"` entry that iOS does
+    /// not; it is filtered out so `providerData.first?.providerID` means the same
+    /// thing on both platforms.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#getProviderData()
+    public var providerData: [UserInfo] {
+        var infos: [UserInfo] = []
+        for info in platformValue.providerData {
+            if info.providerId == com.google.firebase.auth.FirebaseAuthProvider.PROVIDER_ID { continue }
+            infos.append(UserInfo(info))
+        }
+        return infos
+    }
+
     public func createProfileChangeRequest() -> UserProfileChangeRequest {
         return UserProfileChangeRequest(self)
     }
@@ -302,6 +318,14 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         platformValue.sendEmailVerification().await()
     }
     
+    /// Sends a verification link to `email`; the account's address only changes
+    /// once the user follows it. Matches iOS
+    /// `sendEmailVerification(beforeUpdatingEmail:)`.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#verifyBeforeUpdateEmail(java.lang.String)
+    public func sendEmailVerification(beforeUpdatingEmail email: String) async throws {
+        platformValue.verifyBeforeUpdateEmail(email).await()
+    }
+
     /// Throws `FirebaseAuthInvalidUserException`/`FirebaseAuthRecentLoginRequiredException`
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reauthenticate(com.google.firebase.auth.AuthCredential)
     public func reauthenticate(with credential: AuthCredential) async throws {
@@ -367,6 +391,46 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
             ])
         }
         return token
+    }
+}
+
+/// A single identity provider entry from `User.providerData`.
+/// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/UserInfo
+public class UserInfo: KotlinConverting<com.google.firebase.auth.UserInfo> {
+    public let platformValue: com.google.firebase.auth.UserInfo
+
+    public init(_ platformValue: com.google.firebase.auth.UserInfo) {
+        self.platformValue = platformValue
+    }
+
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.auth.UserInfo {
+        platformValue
+    }
+
+    public var providerID: String {
+        platformValue.providerId
+    }
+
+    public var uid: String {
+        platformValue.uid
+    }
+
+    public var displayName: String? {
+        platformValue.displayName
+    }
+
+    public var email: String? {
+        platformValue.email
+    }
+
+    public var phoneNumber: String? {
+        platformValue.phoneNumber
+    }
+
+    public var photoURL: URL? {
+        guard let uri = platformValue.photoUrl else { return nil }
+        return URL(string: uri.toString())
     }
 }
 
