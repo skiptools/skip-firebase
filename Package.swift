@@ -24,10 +24,10 @@ let package = Package(
         .library(name: "SkipFirebasePerformance", targets: ["SkipFirebasePerformance"]),
     ],
     dependencies: [
-        .package(url: "https://source.skip.tools/skip.git", from: "1.8.0"),
-        .package(url: "https://source.skip.tools/skip-foundation.git", from: "1.3.15"),
-        .package(url: "https://source.skip.tools/skip-model.git", from: "1.7.2"),
-        .package(url: "https://source.skip.tools/skip-ui.git", from: "1.50.3"),
+        .package(url: "https://github.com/skiptools/skip.git", from: "1.8.0"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", from: "1.3.15"),
+        .package(url: "https://github.com/skiptools/skip-model.git", from: "1.7.2"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", from: "1.50.3"),
         .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.14.0")
     ],
     targets: [
@@ -158,8 +158,8 @@ let package = Package(
 
 if ProcessInfo.processInfo.environment["SKIP_BRIDGE"] ?? "0" != "0" {
     package.dependencies += [
-        .package(url: "https://source.skip.tools/skip-fuse.git", "0.0.0"..<"2.0.0"),
-        .package(url: "https://source.skip.tools/skip-fuse-ui.git", from: "1.10.0"),
+        .package(url: "https://github.com/skiptools/skip-fuse.git", "0.0.0"..<"2.0.0"),
+        .package(url: "https://github.com/skiptools/skip-fuse-ui.git", from: "1.10.0"),
     ]
     package.targets.forEach({ target in
         target.dependencies += [.product(name: "SkipFuse", package: "skip-fuse")]
