@@ -62,6 +62,16 @@ public final class RemoteConfig {
         let _: com.google.firebase.remoteconfig.FirebaseRemoteConfigInfo = remoteconfig.ensureInitialized().await()
     }
 
+    /// Adds a listener that receives real-time Remote Config updates.
+    /// https://firebase.google.com/docs/reference/swift/firebaseremoteconfig/api/reference/Classes/RemoteConfig#addonconfigupdatelistener(remoteconfigupdatecompletion:)
+    public func addOnConfigUpdateListener(
+        remoteConfigUpdateCompletion listener: @escaping (RemoteConfigUpdate?, Error?) -> Void
+    ) -> ConfigUpdateListenerRegistration {
+        let androidListener = RemoteConfigUpdateListener(listener: listener)
+        let registration = remoteconfig.addOnConfigUpdateListener(androidListener)
+        return ConfigUpdateListenerRegistration(registration: registration)
+    }
+
     // MARK: - Get values
 
     public func configValue(forKey key: String?) -> RemoteConfigValue {
@@ -136,6 +146,60 @@ public final class RemoteConfig {
     public func defaultValue(forKey key: String?) -> RemoteConfigValue? {
         guard let key else { return nil }
         return RemoteConfigValue(remoteconfig.getValue(key))
+    }
+}
+
+// MARK: - Real-time Updates
+
+public final class RemoteConfigUpdate {
+    public let platformValue: com.google.firebase.remoteconfig.ConfigUpdate
+
+    public init(platformValue: com.google.firebase.remoteconfig.ConfigUpdate) {
+        self.platformValue = platformValue
+    }
+
+    /// The parameter keys that changed in this update.
+    public var updatedKeys: Set<String> {
+        var result = Set<String>()
+        for key in platformValue.getUpdatedKeys() {
+            result.insert(key)
+        }
+        return result
+    }
+}
+
+public class ConfigUpdateListenerRegistration: KotlinConverting<com.google.firebase.remoteconfig.ConfigUpdateListenerRegistration> {
+    public let registration: com.google.firebase.remoteconfig.ConfigUpdateListenerRegistration
+
+    public init(registration: com.google.firebase.remoteconfig.ConfigUpdateListenerRegistration) {
+        self.registration = registration
+    }
+
+    // SKIP @nooverride
+    public override func kotlin(nocopy: Bool = false) -> com.google.firebase.remoteconfig.ConfigUpdateListenerRegistration {
+        registration
+    }
+
+    /// Stops receiving real-time Remote Config updates for this listener.
+    public func remove() {
+        registration.remove()
+    }
+}
+
+// SKIP @nobridge
+private final class RemoteConfigUpdateListener: com.google.firebase.remoteconfig.ConfigUpdateListener {
+    private let listener: (RemoteConfigUpdate?, Error?) -> Void
+
+    init(listener: @escaping (RemoteConfigUpdate?, Error?) -> Void) {
+        self.listener = listener
+    }
+
+    public override func onUpdate(configUpdate: com.google.firebase.remoteconfig.ConfigUpdate) {
+        listener(RemoteConfigUpdate(platformValue: configUpdate), nil)
+    }
+
+    public override func onError(error: com.google.firebase.remoteconfig.FirebaseRemoteConfigException) {
+        listener(nil, ErrorException(error))
     }
 }
 

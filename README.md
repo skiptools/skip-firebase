@@ -29,7 +29,7 @@ See the `Package.swift` files in the
 | `SkipFirebaseStorage` | ~80% | Bucket and reference resolution, upload (`putFile`/`putData` in both callback and `async` forms), download (`getData`/`write(toFile:)`), `StorageMetadata` read/write, `downloadURL`, `delete`, pause/resume/cancel on uploads, `list`/`listAll` with pagination (`pageToken`), live `Progress` snapshot observers on uploads and file downloads | Full `StorageError` code mapping, `putStream`/`putString` |
 | `SkipFirebaseMessaging` | ~70% | FCM token retrieval + auto-refresh, topic subscribe/unsubscribe, `MessagingDelegate`, `MessagingService` integrating with iOS-style `UNUserNotificationCenterDelegate`, intent routing, localized `loc_key`/`loc_args` title/body, `RemoteMessage` → `UNNotification` translation | Per-sender FCM token APIs and notification-service-extension helpers (`populateNotificationContent`, `exportDeliveryMetricsToBigQuery`) are stubbed out as `@available(*, unavailable)` |
 | `SkipFirebaseAnalytics` | ~70% | `logEvent`, user properties/ID, consent (`setConsent` with `ConsentType`/`ConsentStatus`), session ID, `setSessionTimeoutInterval`, `setDefaultEventParameters`, `appInstanceID`, all standard event/parameter/user-property name constants, SwiftUI `.analyticsScreen` modifier | `initiateOnDeviceConversionMeasurement` (email/phone variants), `handleEvents(forSession:)`, deep-link helpers |
-| `SkipFirebaseRemoteConfig` | ~70% | `fetch`/`activate`/`fetchAndActivate`, `ensureInitialized`, value retrieval, keys-by-prefix, `RemoteConfigSettings` (intervals + timeout), defaults, `RemoteConfigValue` (string/bool/number/data/json/source) | `addOnConfigUpdateListener` (real-time config updates), `setCustomSignals` |
+| `SkipFirebaseRemoteConfig` | ~75% | `fetch`/`activate`/`fetchAndActivate`, `ensureInitialized`, real-time config updates (`addOnConfigUpdateListener`), value retrieval, keys-by-prefix, `RemoteConfigSettings` (intervals + timeout), defaults, `RemoteConfigValue` (string/bool/number/data/json/source) | `setCustomSignals` |
 | `SkipFirebaseAppCheck` | ~60% | Token retrieval (`token(forcingRefresh:)`, `limitedUseToken`), token-change listener bridged through `NotificationCenter`, debug provider factory, `AppCheckErrorCode` | iOS-only `DeviceCheckProviderFactory`/`AppAttestProviderFactory` (no Android equivalent), custom `AppCheckProvider` implementations |
 | `SkipFirebaseCrashlytics` | ~75% | `log`, `setCustomValue`/`setCustomKeysAndValues`, `setUserID`, `didCrashDuringPreviousExecution`, `checkForUnsentReports`/`sendUnsentReports`/`deleteUnsentReports`, `record(error:userInfo:)`, `recordExceptionModel`, `FIRExceptionModel`/`FIRStackFrame` | `logWithFormat` and `checkAndUpdateUnsentReports` are marked `@available(*, unavailable)`; no per-`FirebaseApp` instance accessor |
 | `SkipFirebaseFunctions` | ~75% | Default/regional/emulator instance, `httpsCallable(_:)` and `httpsCallable(_:options:)` (name and URL-based), `HTTPSCallableOptions` with `requireLimitedUseAppCheckTokens`, `async`/`await` `call`, completion-based `call`, `timeoutInterval`, automatic Kotlin→Swift result conversion via `deepSwift` | Streaming RPCs (`stream`), `Callable<Request, Response>` Codable wrapper, `customDomain`-based factory |
@@ -54,7 +54,7 @@ See the `Package.swift` files in the
 - **`runTransaction`** in Firestore is not implemented — the `Transaction` class is currently a passthrough wrapper with no operations. Multi-document atomic reads-then-writes need to be expressed as `WriteBatch` commits or as Kotlin-side code today.
 - **`Codable` decoding API differs by platform** — on Android use `snapshot.decoded()` with explicit type annotation (`let m: MyModel = try snapshot.decoded()`); on iOS use `FirebaseFirestoreSwift`'s `snapshot.data(as: MyModel.self)`. The `setData(from:)` encoding API works identically on both platforms.
 - **`SkipFirebaseFunctions`** does not support streaming RPCs (`stream`). The Firebase Android SDK has no SSE/streaming equivalent to the iOS `AsyncThrowingStream`-based `stream` API — Android Functions calls are always one-shot request/response. Any code that iterates over `.stream(...)` on iOS will not compile on Android. The `Callable<Request, Response>` Codable convenience wrapper is also not bridged; use `call(_ data: Any?)` directly and decode the result manually on Android.
-- **`SkipFirebaseRemoteConfig`** does not yet expose `addOnConfigUpdateListener` (real-time config updates) or custom signals.
+- **`SkipFirebaseRemoteConfig`** does not yet expose custom signals.
 - **`SkipFirebaseAppCheck`** ships only the `Debug` provider factory; custom provider implementations are not yet bridgeable.
 - **`SkipFirebaseInstallations`** cannot bridge the `InstallationIDDidChange` notification or the `InstallationIDDidChangeAppNameKey` userInfo key. The Firebase Android SDK has no equivalent push-notification mechanism for installation ID changes — it exposes no broadcast, callback, or listener that fires when the ID rotates. As a result, any code that observes `NotificationCenter.default.publisher(for: .InstallationIDDidChange)` on iOS will compile on Android but never receive an event. If your app relies on this to, for example, re-upload the installation ID to your backend after it changes, you will need an alternative strategy on Android (such as fetching the ID on every app foreground, or polling after Firebase SDK upgrades).
 
@@ -191,6 +191,27 @@ public actor Model {
 
     ...
 }
+```
+
+## Remote Config
+
+`SkipFirebaseRemoteConfig` supports fetching values manually and listening for real-time Remote Config updates. Realtime updates are delivered through `addOnConfigUpdateListener`; activate the fetched values in the callback when your UI can safely apply the change.
+
+```swift
+import SkipFirebaseRemoteConfig
+
+let remoteConfig = RemoteConfig.remoteConfig()
+let registration = remoteConfig.addOnConfigUpdateListener { update, error in
+    guard error == nil else { return }
+
+    Task {
+        _ = try? await remoteConfig.activate()
+        // Read updated values with configValue(forKey:) here.
+    }
+}
+
+// Later, when the listener is no longer needed:
+registration.remove()
 ```
 
 ## Messaging
