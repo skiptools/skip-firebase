@@ -670,9 +670,15 @@ public class UserProfileChangeRequest/*: KotlinConverting<com.google.firebase.au
 
 public class AuthCredential: KotlinConverting<com.google.firebase.auth.AuthCredential> {
     public let platformValue: com.google.firebase.auth.AuthCredential
-    
+
     public init(_ platformValue: com.google.firebase.auth.AuthCredential) {
         self.platformValue = platformValue
+    }
+
+    /// The identity provider this credential belongs to, e.g. `"google.com"` or `"password"`.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/AuthCredential#getProvider()
+    public var provider: String {
+        platformValue.getProvider()
     }
 
     // Bridging this function creates a Swift function that "overrides" nothing
@@ -697,6 +703,31 @@ public class EmailAuthProvider {
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/EmailAuthProvider#getCredentialWithLink(java.lang.String,java.lang.String)
     public static func credentialWithLink(email: String, link: String) -> AuthCredential {
         let credential = com.google.firebase.auth.EmailAuthProvider.getCredentialWithLink(email, link)
+        return AuthCredential(credential)
+    }
+}
+
+// https://firebase.google.com/docs/reference/swift/firebaseauth/api/reference/Classes/GoogleAuthProvider
+// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/GoogleAuthProvider
+public class GoogleAuthProvider {
+    /// A string constant identifying the Google identity provider.
+    ///
+    /// Spelled out rather than taken from `GoogleAuthProvider.PROVIDER_ID`: the Java
+    /// constant arrives with an implicitly-unwrapped type, and bridging that to a
+    /// native Swift caller fails with "'?' does not appear to be a bridged type".
+    /// The iOS SDK spells the same constant out.
+    public static let id: String = "google.com"
+
+    /// Build a credential from the tokens a Google sign-in returns, for use with
+    /// `Auth.signIn(with:)`, `User.link(with:)` and `User.reauthenticate(with:)`.
+    ///
+    /// On Android the tokens come from Credential Manager / Google Identity Services;
+    /// on iOS from the GoogleSignIn SDK. `accessToken` may be empty when the caller only
+    /// has an ID token, which is what Credential Manager returns.
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/GoogleAuthProvider#getCredential(java.lang.String,java.lang.String)
+    public static func credential(withIDToken idToken: String, accessToken: String) -> AuthCredential {
+        let token: String? = accessToken.isEmpty ? nil : accessToken
+        let credential = com.google.firebase.auth.GoogleAuthProvider.getCredential(idToken, token)
         return AuthCredential(credential)
     }
 }

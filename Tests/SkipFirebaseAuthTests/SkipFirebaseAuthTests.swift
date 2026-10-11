@@ -34,5 +34,19 @@ let logger: Logger = Logger(subsystem: "SkipBase", category: "Tests")
             auth.removeStateDidChangeListener(listener)
         }
     }
+
+    /// Runs for real on both platforms: building a Google credential needs no network
+    /// and no Firebase app, so the assertion is an actual check rather than a shape test.
+    func testGoogleAuthProviderCredential() throws {
+        XCTAssertEqual("google.com", GoogleAuthProvider.id)
+
+        let credential = GoogleAuthProvider.credential(withIDToken: "test-id-token", accessToken: "test-access-token")
+        XCTAssertEqual("google.com", credential.provider)
+
+        // Credential Manager hands out an ID token without an access token, so the
+        // empty-access-token case has to build the same kind of credential.
+        let idTokenOnly = GoogleAuthProvider.credential(withIDToken: "test-id-token", accessToken: "")
+        XCTAssertEqual("google.com", idTokenOnly.provider)
+    }
 }
 
