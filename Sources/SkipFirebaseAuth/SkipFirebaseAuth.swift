@@ -401,6 +401,17 @@ public class User: Equatable, KotlinConverting<com.google.firebase.auth.Firebase
         }
     }
 
+    /// Sets the user's password. Matches iOS `updatePassword(to:)`.
+    /// Throws `FirebaseAuthWeakPasswordException`/`FirebaseAuthRecentLoginRequiredException`
+    /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#updatePassword(java.lang.String)
+    public func updatePassword(to password: String) async throws {
+        do {
+            platformValue.updatePassword(password).await()
+        } catch is com.google.firebase.FirebaseException {
+            throw mapAuthNSError(error)
+        }
+    }
+
     /// Refreshes the user's profile data (e.g. `isEmailVerified`) from the Firebase server.
     /// https://firebase.google.com/docs/reference/android/com/google/firebase/auth/FirebaseUser#reload()
     public func reload() async throws {
