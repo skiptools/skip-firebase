@@ -24,11 +24,11 @@ let package = Package(
         .library(name: "SkipFirebasePerformance", targets: ["SkipFirebasePerformance"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/skiptools/skip.git", from: "1.8.0"),
-        .package(url: "https://github.com/skiptools/skip-foundation.git", from: "1.3.15"),
-        .package(url: "https://github.com/skiptools/skip-model.git", from: "1.7.2"),
-        .package(url: "https://github.com/skiptools/skip-ui.git", from: "1.50.3"),
-        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.14.0")
+        .package(url: "https://github.com/skiptools/skip.git", from: "1.9.13"),
+        .package(url: "https://github.com/skiptools/skip-foundation.git", from: "1.4.6"),
+        .package(url: "https://github.com/skiptools/skip-model.git", from: "1.8.0"),
+        .package(url: "https://github.com/skiptools/skip-ui.git", from: "1.61.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.19.2")
     ],
     targets: [
         .target(name: "SkipFirebaseCore", dependencies: [
@@ -167,9 +167,14 @@ if ProcessInfo.processInfo.environment["SKIP_BRIDGE"] ?? "0" != "0" {
             target.dependencies += [.product(name: "SkipFuseUI", package: "skip-fuse-ui")]
         }
     })
-    // all library types must be dynamic to support bridging
+    // Use dynamic libraries for bridging, except Core, which must remain automatic
+    // to avoid Swift 6.4 conflicts when its target is also linked statically.
     package.products = package.products.map({ product in
         guard let libraryProduct = product as? Product.Library else { return product }
-        return .library(name: libraryProduct.name, type: .dynamic, targets: libraryProduct.targets)
+        return .library(
+            name: libraryProduct.name,
+            type: libraryProduct.name == "SkipFirebaseCore" ? nil : .dynamic,
+            targets: libraryProduct.targets
+        )
     })
 }
