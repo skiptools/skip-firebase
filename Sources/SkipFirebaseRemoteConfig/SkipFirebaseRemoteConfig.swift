@@ -143,6 +143,17 @@ public final class RemoteConfig {
         remoteconfig.setDefaultsAsync(map)
     }
 
+    /// Sets config defaults from string values.
+    ///
+    /// `setDefaults(_:)` takes `[String: NSObject]`, which has no bridgeable form, so a natively
+    /// compiled (Fuse) app cannot call it on Android. Booleans and numbers can be passed as their
+    /// string form (`"false"`, `"43200"`); Remote Config parses them when read.
+    public func setDefaults(strings defaults: [String: String]) {
+        let map = java.util.HashMap<String, Any>()
+        for (k, v) in defaults { map.put(k, v) }
+        remoteconfig.setDefaultsAsync(map)
+    }
+
     public func defaultValue(forKey key: String?) -> RemoteConfigValue? {
         guard let key else { return nil }
         return RemoteConfigValue(remoteconfig.getValue(key))
