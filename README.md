@@ -531,8 +531,3 @@ This usually means that com.google.gms:google-services was not applied to your g
 ```
 
 The app's `com.google.gms:google-services` plugin must be applied to the `build.gradle.kts` file for the app's target.
-
-## License
-
-This software is licensed under the 
-[Mozilla Public License 2.0](https://www.mozilla.org/MPL/).
