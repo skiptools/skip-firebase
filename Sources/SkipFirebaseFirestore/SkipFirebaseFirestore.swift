@@ -69,6 +69,9 @@ fileprivate func firestoreDeepSwift(value: Any?) -> Any? {
     if let gp = value as? com.google.firebase.firestore.GeoPoint {
         return GeoPoint(latitude: gp.latitude, longitude: gp.longitude)
     }
+    if let ref = value as? com.google.firebase.firestore.DocumentReference {
+        return DocumentReference(ref: ref)
+    }
     if let map = value as? kotlin.collections.Map<Any?, Any?> {
         return firestoreDeepSwift(map: map)
     }
